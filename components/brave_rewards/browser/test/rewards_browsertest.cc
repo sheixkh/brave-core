@@ -10,6 +10,7 @@
 #include "base/test/bind.h"
 #include "base/time/time.h"
 #include "base/time/time_override.h"
+#include "bat/ledger/global_constants.h"
 #include "bat/ledger/internal/uphold/uphold_util.h"
 #include "brave/browser/brave_rewards/rewards_service_factory.h"
 #include "brave/browser/extensions/api/brave_action_api.h"
@@ -311,7 +312,7 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, ZeroBalanceWalletClaimNotCalled) {
   auto test_callback =
       [&](
           const ledger::type::Result result,
-          ledger::type::UpholdWalletPtr wallet) {
+          ledger::type::ExternalWalletPtr wallet) {
         auto requests = response_->GetRequests();
         EXPECT_EQ(result, ledger::type::Result::LEDGER_OK);
         EXPECT_FALSE(requests.empty());
@@ -329,7 +330,9 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, ZeroBalanceWalletClaimNotCalled) {
         run_loop.Quit();
       };
 
-  rewards_service_->GetUpholdWallet(base::BindLambdaForTesting(test_callback));
+  rewards_service_->GetExternalWallet(
+      ledger::constant::kWalletUphold,
+      base::BindLambdaForTesting(test_callback));
   run_loop.Run();
 }
 
@@ -458,7 +461,7 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, DISABLED_UpholdLimitNoBAT) {
   }
 }
 
-IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, BAPCutoffNonJP) {
+IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, DISABLED_BAPCutoffNonJP) {
   rewards_browsertest_util::StartProcess(rewards_service_);
   rewards_browsertest_util::CreateWallet(rewards_service_);
   rewards_service_->FetchPromotions();
@@ -472,7 +475,7 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, BAPCutoffNonJP) {
   }
 }
 
-IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, BAPCutoffBefore) {
+IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, DISABLED_BAPCutoffBefore) {
   rewards_browsertest_util::StartProcess(rewards_service_);
   rewards_browsertest_util::CreateWallet(rewards_service_);
   rewards_service_->FetchPromotions();
@@ -489,7 +492,7 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, BAPCutoffBefore) {
   }
 }
 
-IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, BAPCutoffAfter) {
+IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, DISABLED_BAPCutoffAfter) {
   rewards_browsertest_util::StartProcess(rewards_service_);
   rewards_browsertest_util::CreateWallet(rewards_service_);
   rewards_service_->FetchPromotions();
@@ -506,7 +509,7 @@ IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, BAPCutoffAfter) {
   }
 }
 
-IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, BAPPopup) {
+IN_PROC_BROWSER_TEST_F(RewardsBrowserTest, DISABLED_BAPPopup) {
   // Open the rewards popup.
   content::WebContents* popup_contents = context_helper_->OpenRewardsPopup();
   ASSERT_TRUE(popup_contents);
