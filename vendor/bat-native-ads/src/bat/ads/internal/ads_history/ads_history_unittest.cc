@@ -49,20 +49,6 @@ TEST_F(BatAdsAdsHistoryTest, AddAdNotificationsToHistory) {
   ASSERT_EQ(2UL, history.size());
 }
 
-TEST_F(BatAdsAdsHistoryTest, HistoryRespectsMaximumSizeForAdNotifications) {
-  // Arrange
-  AdNotificationInfo ad;
-
-  // Act
-  for (size_t i = 0; i < history::kMaximumEntries + 1; i++) {
-    history::AddAdNotification(ad, ConfirmationType::kViewed);
-  }
-
-  // Assert
-  const std::deque<AdHistoryInfo> history = Client::Get()->GetAdsHistory();
-  ASSERT_EQ(history::kMaximumEntries, history.size());
-}
-
 TEST_F(BatAdsAdsHistoryTest, AddNewTabPageAdToEmptyHistory) {
   // Arrange
   NewTabPageAdInfo ad;
@@ -86,20 +72,6 @@ TEST_F(BatAdsAdsHistoryTest, AddNewTabPageAdsToHistory) {
   // Assert
   const std::deque<AdHistoryInfo> history = Client::Get()->GetAdsHistory();
   ASSERT_EQ(2UL, history.size());
-}
-
-TEST_F(BatAdsAdsHistoryTest, HistoryRespectsMaximumSizeForNewTabPageAds) {
-  // Arrange
-  NewTabPageAdInfo ad;
-
-  // Act
-  for (size_t i = 0; i < history::kMaximumEntries + 1; i++) {
-    history::AddNewTabPageAd(ad, ConfirmationType::kViewed);
-  }
-
-  // Assert
-  const std::deque<AdHistoryInfo> history = Client::Get()->GetAdsHistory();
-  ASSERT_EQ(history::kMaximumEntries, history.size());
 }
 
 TEST_F(BatAdsAdsHistoryTest, AddPromotedContentAdToEmptyHistory) {
@@ -127,20 +99,6 @@ TEST_F(BatAdsAdsHistoryTest, AddPromotedContentAdsToHistory) {
   ASSERT_EQ(2UL, history.size());
 }
 
-TEST_F(BatAdsAdsHistoryTest, HistoryRespectsMaximumSizeForPromotedContentAds) {
-  // Arrange
-  PromotedContentAdInfo ad;
-
-  // Act
-  for (size_t i = 0; i < history::kMaximumEntries + 1; i++) {
-    history::AddPromotedContentAd(ad, ConfirmationType::kViewed);
-  }
-
-  // Assert
-  const std::deque<AdHistoryInfo> history = Client::Get()->GetAdsHistory();
-  ASSERT_EQ(history::kMaximumEntries, history.size());
-}
-
 TEST_F(BatAdsAdsHistoryTest, AddMultipleAdTypesToHistory) {
   // Arrange
 
@@ -159,45 +117,20 @@ TEST_F(BatAdsAdsHistoryTest, AddMultipleAdTypesToHistory) {
   ASSERT_EQ(3UL, history.size());
 }
 
-TEST_F(BatAdsAdsHistoryTest, HistoryRespectsMaximumSizeForMultipleAdTypes) {
+TEST_F(BatAdsAdsHistoryTest, PurgedHistoryEntriesAfterDays) {
   // Arrange
+  NewTabPageAdInfo new_tab_page_ad;
+  history::AddNewTabPageAd(new_tab_page_ad, ConfirmationType::kViewed);
+
+  AdvanceClock(base::TimeDelta::FromDays(7) + base::TimeDelta::FromSeconds(1));
 
   // Act
-  for (size_t i = 0; i < history::kMaximumEntries + 1; i++) {
-    switch (i % 3) {
-      case 0: {
-        AdNotificationInfo ad_notification;
-        history::AddAdNotification(ad_notification, ConfirmationType::kViewed);
-        break;
-      }
-
-      case 1: {
-        NewTabPageAdInfo new_tab_page_ad;
-        history::AddNewTabPageAd(new_tab_page_ad, ConfirmationType::kViewed);
-        break;
-      }
-
-      case 2: {
-        PromotedContentAdInfo promoted_content_ad;
-        history::AddPromotedContentAd(promoted_content_ad,
-                                      ConfirmationType::kViewed);
-        break;
-      }
-    }
-  }
+  PromotedContentAdInfo promoted_content_ad;
+  history::AddPromotedContentAd(promoted_content_ad, ConfirmationType::kViewed);
 
   // Assert
   const std::deque<AdHistoryInfo> history = Client::Get()->GetAdsHistory();
-  ASSERT_EQ(history::kMaximumEntries, history.size());
-}
-
-TEST_F(BatAdsAdsHistoryTest, MaximumHistoryEntries) {
-  // Arrange
-
-  // Act
-
-  // Assert
-  ASSERT_EQ(1120UL, history::kMaximumEntries);
+  ASSERT_EQ(1UL, history.size());
 }
 
 }  // namespace ads
