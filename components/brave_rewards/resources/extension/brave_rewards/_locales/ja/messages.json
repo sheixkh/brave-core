@@ -4,7 +4,7 @@
     "description": "Title in welcome screen for the panel"
   },
   "welcomeButtonTextOne": {
-    "message": "今すぐ獲得しましょう！",
+    "message": "今すぐ広告閲覧報酬を獲得しましょう！",
     "description": "CTA on welcome screen in the panel, existing users"
   },
   "welcomeButtonTextTwo": {
@@ -12,12 +12,16 @@
     "description": "CTA on welcome screen in the panel, new users"
   },
   "welcomeDescOne": {
-    "message": "広告表示に対する報酬を受け取り、お気に入りコンテンツのクリエイターを支援しましょう。",
+    "message": "広告表示に対する報酬を受け取り、先払いでお気に入りコンテンツのクリエイターを支援しましょう。",
     "description": "Entry text for welcome screen in the panel, existing user"
   },
   "welcomeDescTwo": {
-    "message": "プライバシーを尊重する広告を見ることでトークンを獲得できます。",
+    "message": "プライバシーを尊重する広告を見ることでポイントを得られるようになりました。",
     "description": "Entry text for welcome screen in the panel, new user"
+  },
+  "welcomeDescPoints": {
+    "message": "あなたはプライバシーを尊重する広告を見ることでポイントを得られるようになりました。",
+    "description": "Entry text for welcome screen in the panel, points"
   },
   "welcomeFooterTextOne": {
     "message": "改善点をチェックする",
@@ -36,12 +40,28 @@
     "description": "Main header title for welcome screen in the panel, new user"
   },
   "yourWallet": {
-    "message": "あなたのウォレット",
+    "message": "ウォレット",
     "description": "Title of wallet section where we display data about wallet"
   },
   "grants": {
-    "message": "付与トークン",
+    "message": "付与ポイント",
     "description": "Title for grant section in wallet summary"
+  },
+  "details": {
+    "message": "詳細",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "残高",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "BATポイント",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "はBrave Rewardsにおいて、あなたの気に入ったコンテンツの制作者に寄付するために利用できます。BATポイントはBATに交換できません。",
+    "description": "Text for BAT Point helper message"
   },
   "on": {
     "message": ":",
@@ -56,11 +76,11 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "毎月このサイトにチップを払う",
+    "message": "毎月の支援",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
-    "message": "自動支援に含める",
+    "message": "自動支援の対象にする",
     "description": "Label for checkbox that allows user to exclude publishers from auto contribute"
   },
   "donateNow": {
@@ -68,11 +88,11 @@
     "description": "CTA for sending tip form site banner"
   },
   "enableTips": {
-    "message": "ヒントをオンにする",
+    "message": "チップをオンにする",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
   },
   "for": {
-    "message": "のための",
+    "message": ":",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
   },
   "rewardsSummary": {
@@ -128,15 +148,25 @@
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "トークン付与の通知",
-    "description": "Title for grant notification"
+    "message": "$currency$付与",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
-    "message": "取得された付与トークン",
+    "message": "取得済のポイント",
     "description": "Title for grant section in wallet summary"
   },
+  "pointGrantClaimed": {
+    "message": "獲得したポイント付与",
+    "description": "Title for point grant section in wallet summary"
+  },
   "earningsAds": {
-    "message": "広告収益",
+    "message": "広告閲覧報酬",
     "description": "Title for ads section in wallet summary"
   },
   "rewardsContribute": {
@@ -152,8 +182,8 @@
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "毎月のチップ",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "毎月の支援額",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
     "message": "オフ",
@@ -164,12 +194,8 @@
     "description": "Used in notification to dismiss notification"
   },
   "braveAdsLaunchMsg": {
-    "message": "広告を見て報酬を得ることができようになりました。",
+    "message": "広告を見ることによって報酬を獲得できるようになりました。",
     "description": "Message for ads launch notification"
-  },
-  "braveAdsLaunchTitle": {
-    "message": "Brave Ads を受信しました！",
-    "description": "Message used in notification to let users know Ads is available"
   },
   "braveAdsTitle": {
     "message": "Brave Ads",
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "あなたは$amount$ BAT支援しました",
+    "message": "$amount$$currency$ 支援しました。$currency$",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -206,11 +236,11 @@
     "description": "Description for backup wallet notification"
   },
   "insufficientFundsNotification": {
-    "message": "あなたのBrave Rewardsアカウントは入金を待っています。",
+    "message": "Brave Rewardsアカウントは入金を待っています。",
     "description": "Description for new insufficient funds notification"
   },
   "insufficientFunds": {
-    "message": "資金不足",
+    "message": "資金が不足しています",
     "description": "Title for insufficient funds notification"
   },
   "braveRewardsCreatingText": {
@@ -218,15 +248,15 @@
     "description": "Used in a button displaying wallet creation process"
   },
   "contributeNotificationError": {
-    "message": "支援の処理中に問題が発生しました。",
+    "message": "支援の実行中に問題が発生しました。",
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "自動支援のためにスケジュールされた毎月の支払いと毎月のチップは、残高不足のため完了できませんでした。30日後に再実行します。",
+    "message": "資金が不足しているため、あなたの自動支援への予定されていた毎月の支払いと毎月の支援が完了できませんでした。30日以内に再試行します。",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
-    "message": "あなたのチップを送ることができません。時間をおいて、もう一度試してください。",
+    "message": "チップを送ることができませんでした。時間をおいてもう一度試してください。",
     "description": "We show this string in notification when tip fails"
   },
   "noActivity": {
@@ -234,7 +264,7 @@
     "description": "Allows the user to see that there have been no transactions or other activity in their wallet"
   },
   "captchaDrag": {
-    "message": "BAT アイコンを次までドラッグする:",
+    "message": "アイコンを次までドラッグする:",
     "description": "Directs the user to drag the BAT icon"
   },
   "captchaProveHuman": {
@@ -254,16 +284,12 @@
     "description": "Claim text"
   },
   "newTokenGrant": {
-    "message": "無料のトークン付与",
+    "message": "無料のポイント",
     "description": "Token grant label"
   },
   "grantExpire": {
-    "message": "付与トークンの有効期限",
+    "message": "付与ポイントの有効期限",
     "description": "Grant expiry label"
-  },
-  "grantAlreadyClaimedText": {
-    "message": "申し訳ありません、この付与トークンはすでに取得されているようです。",
-    "description": "Description of the error when grant is already claimed."
   },
   "grantGeneralErrorButton": {
     "message": "OK",
@@ -274,27 +300,15 @@
     "description": "Error text when user is having problems claiming a grant."
   },
   "grantGeneralErrorTitle": {
-    "message": "おや、問題が発生しました。後からもう一度試してみてください。",
+    "message": "おや、問題が発生しました。後でもう一度試してみて下さい。",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "OK",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "申し訳ありません、この付与トークンはすでに期限が切れているようです。",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "この付与トークンは、すでにご利用になれません。",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "ステータスを更新する",
     "description": "Text of link that allows to check verified status of unverified publisher"
   },
   "unVerifiedPublisher": {
-    "message": "認証されていません",
+    "message": "認証が完了していません",
     "description": "Status of the publisher shown in the panel"
   },
   "unVerifiedText": {
@@ -302,15 +316,15 @@
     "description": "Notice about unverified publisher."
   },
   "unVerifiedTextMore": {
-    "message": "詳細を見る",
+    "message": "Learn more.",
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "{{reservedAmount}} BAT を贈る相手に、支援を受け取る登録を行っていないクリエイターを指名しました。あなたのブラウザは、クリエイターからの認証を受けるか、90日が経過するまで試し続けます。",
+    "message": "{{reservedAmount}} {{currency}}分を、まだ支援の受け取り登録が完了していないクリエイターに送信しました。あなたのブラウザはそのクリエイターが受け取り設定を完了するかもしくは90日間が経過するまで、支援の実行を試み続けます。",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
-    "message": "詳細を見る",
+    "message": "Learn more.",
     "description": "Text for the link that explains more about reserved amount"
   },
   "disabledPanelOff": {
@@ -334,7 +348,7 @@
     "description": "Failure title for wallet creation"
   },
   "walletFailedButton": {
-    "message": "再試行",
+    "message": "やり直し",
     "description": "Button for re-try after wallet creation failed"
   },
   "addFunds": {
@@ -342,7 +356,7 @@
     "description": "Button for adding funds"
   },
   "rewardsSettings": {
-    "message": "[Rewards]設定",
+    "message": "Rewards設定",
     "description": "Button for opening settings page"
   },
   "earningsClaimDefault": {
@@ -354,11 +368,11 @@
     "description": "The word 'and'"
   },
   "braveRewardsSubTitle": {
-    "message": "ウェブサイト閲覧で報酬を得よう！",
+    "message": "ウェブサイト\n閲覧で報酬を得よう！",
     "description": "Subtitle for wallet disabled panel"
   },
   "disabledPanelTextTwo": {
-    "message": "プライバシーを尊重する広告表示してトークンを稼ぎ、あなたのお気に入りのコンテンツ制作者を支援しましょう！",
+    "message": "プライバシーを尊重する広告表示してトークンを稼ぎ、お気に入りのコンテンツ制作者を支援しましょう！",
     "description": "Text block for wallet disabled panel"
   },
   "enableRewards": {
@@ -378,27 +392,31 @@
     "description": "Terms of Service"
   },
   "welcomeBack": {
-    "message": "お帰りなさい！",
+    "message": "おかえりなさい!",
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "あなたの毎月支払いのチップが処理されましした！",
-    "description": "Message for monthly tips processed notification"
+    "message": "毎月定期支援が処理されました！",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "支払いとチップ",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "「Rewardsに加入する」をクリックすることで、次のことを理解し、同意したものと見なされます",
     "description": "Terms of service panel opt-in text"
   },
   "bat": {
-    "message": "BAT",
+    "message": "BAP",
     "description": "BAT text for displaying converted tip amount."
   },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
+  },
   "turnOnAds": {
-    "message": "広告表示を有効にする",
+    "message": "広告をオンにする",
     "description": "Prompt to turn on Ads via notification"
   },
   "adsEarnings": {
@@ -422,7 +440,7 @@
     "description": "Icon label for Reddit tips"
   },
   "githubTipsHoverText": {
-    "message": "ヒントを送る",
+    "message": "チップを送る",
     "description": "Hover text for GitHub tips action"
   },
   "githubTipsIconLabel": {
@@ -444,7 +462,7 @@
     "description": "Notification text that tells user his wallet is under funded for pending contribution to complete"
   },
   "pendingContributionTitle": {
-    "message": "保留中のコントリビューション",
+    "message": "保留中の支援",
     "description": "Notification title for pending contribution type"
   },
   "grantFinishTitleUGP": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "あなたの付与トークンは処理中です。",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "あなたの$currency$は処理中です。",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
-    "message": "無料のトークン付与",
+    "message": "無料のポイント",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "無料のポイント付与",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Brave Adsの報酬！",
+    "message": "広告報酬を獲得しました! ",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "Brave Adsから付与された報酬はもうすぐ届きます。",
+    "message": "報酬をあなたのBrave Rewardsウォレットに入金中です。",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "あなたに付与されたBrave Ads Token",
+    "message": "あなたの報酬額",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "この検証済みクリエイターは、お客様の検証済みウォレットからチップを受け取るためのアカウントの検証（KYC）をまだ行っていません。チップは、検証が完了するまで、お客様のウォレット内にとどまります。",
+    "message": "このBrave認定クリエーターは、Braveユーザーからの支援を受け取るためのアカウント設定を完了していません。設定が完了するまで、チップは全て送ったユーザーのウォレット内に留まります。",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "ウォレットの検証を完了",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "設定…",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "ポイント",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "ポイント",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "トークン",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "ポイント",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "トークン付与の通知",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "ポイント付与",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "$name$!さん、こんにちは！",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "キャンセル",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "金額を変更",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "ログイン",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "ウォレットを認証すると、資金をより効率的に管理することができます。",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "Upholdアカウントを作成するには、最低25 BATが必要です。 後でもう一度ためしてください。\n認証済みのUpholdアカウントをすでにお持ちの場合は、引き続きログインを行ってください。",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "接続済み",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "保留中",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "ご注意：承認するとトランザクションは「Uphold 」に表示されます。 たとえば、受信者とチップの金額を確認できます。",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "トークンを獲得して還元する",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "プライバシーを尊重する広告を表示してトークンを獲得し、お気に入りのサイトやコンテンツクリエイターを自動的にサポートします。",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "Brave Rewardsの使用を開始",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "クイックツアーに参加",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "続行することで、お客様は$tos_link_begin$利用規約$tos_link_end$および$pp_link_begin$プライバシーポリシー$pp_link_end$に同意したことになります。",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "戻る",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "クイックツアーを見てみましょう",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "続ける",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "完了",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "スキップ",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "今はスキップ",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "Brave Rewardsへようこそ！",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Braveプライベート広告は、従来の広告とは異なり、コンテンツクリエイターをサポートするためのトークンで報酬がもらえ、すべては個人情報を非公開にして行われます。",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "広告はどこに表示されますか？",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Braveプライベート広告は通常の通知として表示されます。これらの広告をどのくらいの頻度で表示するかは設定で操作します。",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "報酬を受け取るタイミング",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "当月中にBraveプライベート広告から獲得したトークンは、翌月の5日に届きます。",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "クリエイターへの支援がもっと簡単に",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "クリエイターは、弊社が「アテンション」として測定するあなたのエンゲージメントレベルに基づいて、あなたからのトークンによる寄付を自動的に受け取ります。",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "チップでお礼を言おう",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "チッピングは、あなたが好きなコンテンツやクリエイターを個人的に応援し、サポートする方法の1つです。チッピングしよう！",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "トークンで何ができますか？",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "トークンはクリエイターをサポートする以外にも使用できます。加盟店が参加すると、デジタルコンテンツやその他の商品を購入することができます。",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "やったー、準備完了です！",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "Brave Rewardsを使用することで、ウェブを誰にとってもより良い場所にすることができます。そしてそれは素晴らしいことです！",
+    "description": ""
   }
 }

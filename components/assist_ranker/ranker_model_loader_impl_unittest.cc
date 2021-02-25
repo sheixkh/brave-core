@@ -1,3 +1,8 @@
+/* Copyright (c) 2019 The Brave Authors. All rights reserved.
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 #include "components/assist_ranker/ranker_model_loader_impl.h"
 
 #include <initializer_list>
@@ -8,9 +13,9 @@
 #include "base/memory/ref_counted.h"
 #include "base/strings/stringprintf.h"
 #include "base/task/post_task.h"
-#include "base/test/bind_test_util.h"
+#include "base/test/bind.h"
 #include "base/test/scoped_feature_list.h"
-#include "base/test/scoped_task_environment.h"
+#include "base/test/task_environment.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "components/assist_ranker/proto/ranker_model.pb.h"
 #include "components/assist_ranker/proto/translate_ranker_model.pb.h"
@@ -51,7 +56,7 @@ class RankerModelLoaderImplTest : public ::testing::Test {
   void OnModelAvailable(std::unique_ptr<RankerModel> model);
 
   // Sets up the task scheduling/task-runner environment for each test.
-  base::test::ScopedTaskEnvironment scoped_task_environment_;
+  base::test::TaskEnvironment task_environment_;
 
   // Override the default URL loader to return custom responses for tests.
   network::TestURLLoaderFactory test_loader_factory_;
@@ -92,7 +97,7 @@ bool RankerModelLoaderImplTest::DoLoaderTest(const base::FilePath& model_path,
       test_shared_loader_factory_, model_path, model_url,
       "RankerModelLoaderImplTest");
   loader->NotifyOfRankerActivity();
-  scoped_task_environment_.RunUntilIdle();
+  task_environment_.RunUntilIdle();
 
   return true;
 }

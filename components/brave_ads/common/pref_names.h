@@ -10,17 +10,16 @@ namespace brave_ads {
 
 namespace prefs {
 
-extern const char kEnabled[];
+extern const char kAdsWereDisabled[];
+extern const char kHasAdsP3AState[];
 
-extern const char kAdsPerHour[];
-extern const char kAdsPerDay[];
-
-extern const char kIdleThreshold[];
-
-extern const char kShouldShowOnboarding[];
-extern const char kOnboardingTimestamp[];
+extern const char kP2AStoragePrefNamePrefix[];
 
 extern const char kShouldShowMyFirstAdNotification[];
+
+extern const char kSupportedCountryCodesLastSchemaVersion[];
+extern const char kSupportedCountryCodesSchemaVersion[];
+extern const int kSupportedCountryCodesSchemaVersionNumber;
 
 extern const char kVersion[];
 extern const int kCurrentVersionNumber;

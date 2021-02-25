@@ -8,8 +8,6 @@ import { Button, Heading } from 'brave-ui/components'
 // Constants
 import { TorrentObj } from '../constants/webtorrentState'
 
-let clipboardCopy = require('clipboard-copy')
-
 interface Props {
   name?: string | string[]
   torrent?: TorrentObj
@@ -18,6 +16,8 @@ interface Props {
   onStartTorrent: (torrentId: string, tabId: number) => void
   onStopDownload: (tabId: number) => void
 }
+
+const remoteProtocols = ['http:', 'https:', 'ftp:', 'sftp:', 'ws:', 'wss:']
 
 export default class TorrentViewerHeader extends React.PureComponent<
   Props,
@@ -29,10 +29,64 @@ export default class TorrentViewerHeader extends React.PureComponent<
       : this.props.onStartTorrent(this.props.torrentId, this.props.tabId)
   }
 
-  onCopyClick = () => {
+  removeDownloadListener = () => {
+    chrome.downloads.onDeterminingFilename.removeListener(this.downloadListener)
+  }
+
+  downloadListener = (item: chrome.downloads.DownloadItem) => {
+    if (!item || !item.url || item.url !== this.props.torrentId) {
+      // Only listen for downloads initiated by Webtorrent.
+      this.removeDownloadListener()
+      return
+    }
+    const url = new URL(item.finalUrl || item.url)
+    if (!url || !remoteProtocols.includes(url.protocol) ||
+        url.hostname === '127.0.0.1') {
+      // Non-remote files are trusted.
+      this.removeDownloadListener()
+      return
+    }
+    if (!item.filename || !item.filename.endsWith('.torrent')) {
+      try {
+        chrome.downloads.cancel(item.id, this.onTorrentDownloadError)
+      } catch (e) {
+        this.removeDownloadListener()
+        console.error(e)
+      }
+    }
+  }
+
+  onTorrentDownloadError = () => {
+    this.removeDownloadListener()
+    const msg = 'Error: file is not a .torrent.'
+    // By default, alert() shows up on every tab that has loaded webtorrent.
+    // We only want it to show on the current tab.
+    chrome.tabs.query({
+      active: true,
+      lastFocusedWindow: true
+    }, (tabs) => {
+      const tab = tabs[0]
+      if (tab && typeof tab.id === 'number') {
+        chrome.tabs.executeScript(tab.id, {
+          code: `alert('${msg}')`
+        })
+        return
+      }
+      alert(msg)
+    })
+  }
+
+  onCopyClick = async () => {
     if (this.props.torrentId.startsWith('magnet:')) {
-      clipboardCopy(this.props.torrentId)
+      try {
+        await navigator.clipboard.writeText(this.props.torrentId)
+        console.log('Copy succeeded')
+      } catch (e) {
+        console.log('Copy failed')
+      }
     } else {
+      // Listen for malicious files pretending to be .torrents (#11488)
+      chrome.downloads.onDeterminingFilename.addListener(this.downloadListener)
       let a = document.createElement('a')
       a.download = ''
       a.href = this.props.torrentId

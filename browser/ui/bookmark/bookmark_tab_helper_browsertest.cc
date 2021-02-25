@@ -20,6 +20,7 @@
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "url/gurl.h"
 
@@ -56,26 +57,27 @@ void AddBookmarkNode(Profile* profile) {
 
 IN_PROC_BROWSER_TEST_F(BookmarkTabHelperBrowserTest, BookmarkBarOnNTPTest) {
   auto* profile = browser()->profile();
+  auto* contents = browser()->tab_strip_model()->GetActiveWebContents();
 
-  // Check Bookmark bar is hidden by default.
+  // Check Bookmark bar is hidden by default for non NTP.
+  EXPECT_FALSE(IsNTP(contents));
   EXPECT_EQ(BookmarkBar::HIDDEN, browser()->bookmark_bar_state());
 
-  // Check default is on.
+  // Check show bookarks on NTP is on by default.
   EXPECT_TRUE(profile->GetPrefs()->GetBoolean(kAlwaysShowBookmarkBarOnNTP));
 
   // Loading NTP.
-  auto* contents = browser()->tab_strip_model()->GetActiveWebContents();
   EXPECT_TRUE(content::NavigateToURL(contents,
                                      GURL(chrome::kChromeUINewTabURL)));
   EXPECT_TRUE(IsNTP(contents));
 
-  // Check bookmark bar on NTP is hidden if bookmark bar is empty and
-  // kBookmarkBar is off.
-  EXPECT_EQ(BookmarkBar::HIDDEN, browser()->bookmark_bar_state());
+  // Check bookmark bar on NTP is shown even if bookmark bar is empty.
+  EXPECT_EQ(BookmarkBar::SHOW, browser()->bookmark_bar_state());
 
   AddBookmarkNode(profile);
 
-  // Check bookmark is visible on NTP after adding bookmark.
+  // Check bookmark is also visible on NTP after adding bookmark regardless of
+  // show bookmark bar option value.
   chrome::ToggleBookmarkBar(browser());
   EXPECT_EQ(BookmarkBar::SHOW, browser()->bookmark_bar_state());
   chrome::ToggleBookmarkBar(browser());

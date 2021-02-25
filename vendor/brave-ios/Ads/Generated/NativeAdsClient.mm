@@ -15,114 +15,114 @@ NativeAdsClient::~NativeAdsClient() {
   bridge_ = nil;
 }
 
-bool NativeAdsClient::IsEnabled() const {
-  return [bridge_ isAdsEnabled];
-}
-
-uint64_t NativeAdsClient::GetAdsPerDay() const {
-  return [bridge_ getAdsPerDay];
-}
-
-uint64_t NativeAdsClient::GetAdsPerHour() const {
-  return [bridge_ getAdsPerHour];
-}
-
-void NativeAdsClient::GetClientInfo(ads::ClientInfo * info) const {
-  [bridge_ getClientInfo:info];
-}
-
-const std::string NativeAdsClient::GetLocale() const {
-  return [bridge_ getLocale];
-}
-
 bool NativeAdsClient::IsNetworkConnectionAvailable() const {
   return [bridge_ isNetworkConnectionAvailable];
-}
-
-void NativeAdsClient::SetIdleThreshold(const int threshold) {
-  [bridge_ setIdleThreshold:threshold];
 }
 
 bool NativeAdsClient::IsForeground() const {
   return [bridge_ isForeground];
 }
 
-const std::vector<std::string> NativeAdsClient::GetUserModelLanguages() const {
-  return [bridge_ getUserModelLanguages];
+bool NativeAdsClient::CanShowBackgroundNotifications() const {
+    return [bridge_ canShowBackgroundNotifications];
 }
 
-void NativeAdsClient::LoadUserModelForLanguage(const std::string & language, ads::OnLoadCallback callback) const {
-  [bridge_ loadUserModelForLanguage:language callback:callback];
+void NativeAdsClient::ShowNotification(const ads::AdNotificationInfo & info) {
+  [bridge_ showNotification:info];
 }
 
-void NativeAdsClient::ShowNotification(std::unique_ptr<ads::NotificationInfo> info) {
-  [bridge_ showNotification:std::move(info)];
-}
-
-bool NativeAdsClient::ShouldShowNotifications() const {
+bool NativeAdsClient::ShouldShowNotifications() {
   return [bridge_ shouldShowNotifications];
 }
 
-void NativeAdsClient::CloseNotification(const std::string& id) {
-  [bridge_ closeNotification:id];
+void NativeAdsClient::CloseNotification(const std::string & uuid) {
+  [bridge_ closeNotification:uuid];
 }
 
-void NativeAdsClient::SetCatalogIssuers(std::unique_ptr<ads::IssuersInfo> info) {
-  [bridge_ setCatalogIssuers:std::move(info)];
+void NativeAdsClient::UrlRequest(ads::UrlRequestPtr url_request, ads::UrlRequestCallback callback) {
+  [bridge_ UrlRequest:std::move(url_request) callback:callback];
 }
 
-void NativeAdsClient::ConfirmAd(std::unique_ptr<ads::NotificationInfo> info) {
-  [bridge_ confirmAd:std::move(info)];
-}
-
-void NativeAdsClient::ConfirmAction(const std::string & uuid, const std::string & creative_set_id, const ads::ConfirmationType & type) {
-  [bridge_ confirmAction:uuid creativeSetId:creative_set_id confirmationType:type];
-}
-
-uint32_t NativeAdsClient::SetTimer(const uint64_t time_offset) {
-  return [bridge_ setTimer:time_offset];
-}
-
-void NativeAdsClient::KillTimer(uint32_t timer_id) {
-  [bridge_ killTimer:timer_id];
-}
-
-void NativeAdsClient::URLRequest(const std::string & url, const std::vector<std::string> & headers, const std::string & content, const std::string & content_type, const ads::URLRequestMethod method, ads::URLRequestCallback callback) {
-  [bridge_ URLRequest:url headers:headers content:content contentType:content_type method:method callback:callback];
-}
-
-void NativeAdsClient::Save(const std::string & name, const std::string & value, ads::OnSaveCallback callback) {
+void NativeAdsClient::Save(const std::string & name, const std::string & value, ads::ResultCallback callback) {
   [bridge_ save:name value:value callback:callback];
 }
 
-void NativeAdsClient::Load(const std::string & name, ads::OnLoadCallback callback) {
+void NativeAdsClient::LoadUserModelForId(const std::string & id, ads::LoadCallback callback) {
+  [bridge_ loadUserModelForId:id callback:callback];
+}
+
+void NativeAdsClient::Load(const std::string & name, ads::LoadCallback callback) {
   [bridge_ load:name callback:callback];
 }
 
-void NativeAdsClient::Reset(const std::string & name, ads::OnResetCallback callback) {
-  [bridge_ reset:name callback:callback];
+std::string NativeAdsClient::LoadResourceForId(const std::string & id) {
+  return [bridge_ loadResourceForId:id];
 }
 
-const std::string NativeAdsClient::LoadJsonSchema(const std::string & name) {
-  return [bridge_ loadJsonSchema:name];
+void NativeAdsClient::Log(const char * file, const int line, const int verbose_level, const std::string & message) {
+  [bridge_ log:file line:line verboseLevel:verbose_level message:message];
 }
 
-void NativeAdsClient::LoadSampleBundle(ads::OnLoadSampleBundleCallback callback) {
-  [bridge_ loadSampleBundle:callback];
+void NativeAdsClient::RunDBTransaction(ads::DBTransactionPtr transaction, ads::RunDBTransactionCallback callback) {
+  [bridge_ runDBTransaction:std::move(transaction) callback:callback];
 }
 
-void NativeAdsClient::SaveBundleState(std::unique_ptr<ads::BundleState> state, ads::OnSaveCallback callback) {
-  [bridge_ saveBundleState:std::move(state) callback:callback];
+void NativeAdsClient::OnAdRewardsChanged() {
+  [bridge_ onAdRewardsChanged];
 }
 
-void NativeAdsClient::GetAds(const std::string & category, ads::OnGetAdsCallback callback) {
-  [bridge_ getAds:category callback:callback];
+void NativeAdsClient::SetBooleanPref(const std::string & path, const bool value) {
+  [bridge_ setBooleanPref:path value:value];
 }
 
-void NativeAdsClient::EventLog(const std::string & json) const {
-  [bridge_ eventLog:json];
+bool NativeAdsClient::GetBooleanPref(const std::string & path) const {
+  return [bridge_ getBooleanPref:path];
 }
 
-std::unique_ptr<ads::LogStream> NativeAdsClient::Log(const char * file, const int line, const ads::LogLevel log_level) const {
-  return [bridge_ log:file line:line logLevel:log_level];
+void NativeAdsClient::SetIntegerPref(const std::string & path, const int value) {
+  [bridge_ setIntegerPref:path value:value];
+}
+
+int NativeAdsClient::GetIntegerPref(const std::string & path) const {
+  return [bridge_ getIntegerPref:path];
+}
+
+void NativeAdsClient::SetDoublePref(const std::string & path, const double value) {
+  [bridge_ setDoublePref:path value:value];
+}
+
+double NativeAdsClient::GetDoublePref(const std::string & path) const {
+  return [bridge_ getDoublePref:path];
+}
+
+void NativeAdsClient::SetStringPref(const std::string & path, const std::string & value) {
+  [bridge_ setStringPref:path value:value];
+}
+
+std::string NativeAdsClient::GetStringPref(const std::string& path) const {
+  return [bridge_ getStringPref:path];
+}
+
+void NativeAdsClient::SetInt64Pref(const std::string& path, const int64_t value) {
+  [bridge_ setInt64Pref:path value:value];
+}
+
+int64_t NativeAdsClient::GetInt64Pref(const std::string& path) const {
+  return [bridge_ getInt64Pref:path];
+}
+
+void NativeAdsClient::SetUint64Pref(const std::string& path, const uint64_t value) {
+  [bridge_ setUint64Pref:path value:value];
+}
+
+uint64_t NativeAdsClient::GetUint64Pref(const std::string& path) const {
+  return [bridge_ getUint64Pref:path];
+}
+
+void NativeAdsClient::ClearPref(const std::string & path) {
+  [bridge_ clearPref:path];
+}
+
+void NativeAdsClient::RecordP2AEvent(const std::string& name, const ads::P2AEventType type, const std::string& value) {
+  [bridge_ recordP2AEvent:name type:type value:value];
 }

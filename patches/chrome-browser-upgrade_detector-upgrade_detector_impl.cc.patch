@@ -1,22 +1,13 @@
 diff --git a/chrome/browser/upgrade_detector/upgrade_detector_impl.cc b/chrome/browser/upgrade_detector/upgrade_detector_impl.cc
-index cfb6b7d48c13fe41472d3a557adba267249e20a8..341a417a97543649e7246da9a01027c34291553d 100644
+index 4c0d5fed0d792f3339c84a44541508a105628b13..b22565422f7f856da47aea3ff0c3d00a1daeda28 100644
 --- a/chrome/browser/upgrade_detector/upgrade_detector_impl.cc
 +++ b/chrome/browser/upgrade_detector/upgrade_detector_impl.cc
-@@ -219,7 +219,7 @@ UpgradeDetectorImpl::UpgradeDetectorImpl(const base::Clock* clock,
- #if defined(OS_WIN)
- // Only enable upgrade notifications for Google Chrome builds. Chromium does not
- // use an auto-updater.
--#if defined(GOOGLE_CHROME_BUILD)
-+#if defined(GOOGLE_CHROME_BUILD) || (defined(BRAVE_CHROMIUM_BUILD) && defined(OFFICIAL_BUILD))
-   // There might be a policy/enterprise environment preventing updates, so
-   // validate updatability and then call StartTimerForUpgradeCheck
-   // appropriately. Skip this step if a past attempt has been made to enable
-@@ -555,7 +555,7 @@ void UpgradeDetectorImpl::OnRelaunchNotificationPeriodPrefChanged() {
-     NotifyOnUpgrade();
- }
+@@ -457,7 +457,7 @@ void UpgradeDetectorImpl::Init() {
+   // On Windows, only enable upgrade notifications for Google Chrome builds.
+   // Chromium does not use an auto-updater.
+ #if !defined(OS_WIN) || BUILDFLAG(GOOGLE_CHROME_BRANDING) || \
+-    BUILDFLAG(ENABLE_CHROMIUM_UPDATER)
++    BUILDFLAG(ENABLE_CHROMIUM_UPDATER) || defined(OFFICIAL_BUILD)
  
--#if defined(OS_WIN) && defined(GOOGLE_CHROME_BUILD)
-+#if defined(OS_WIN) && (defined(GOOGLE_CHROME_BUILD) || (defined(BRAVE_CHROMIUM_BUILD) && defined(OFFICIAL_BUILD)))
- void UpgradeDetectorImpl::OnAutoupdatesEnabledResult(
-     bool auto_updates_enabled) {
-   DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
+   // On macOS, only enable upgrade notifications if the updater (Keystone) is
+   // present.

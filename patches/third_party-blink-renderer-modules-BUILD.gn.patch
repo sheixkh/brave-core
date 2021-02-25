@@ -1,12 +1,20 @@
 diff --git a/third_party/blink/renderer/modules/BUILD.gn b/third_party/blink/renderer/modules/BUILD.gn
-index ca586dc0bdf75d92674d5594a1aa7cfda072c261..d4725d90690e335c2bb94fa8f69accaaa610bfe7 100644
+index edd4884efdb32c069f1df90d70a97063ba1cd480..c5f6aa1a3b8f7cffc07a27197ad3d6f04db376b9 100644
 --- a/third_party/blink/renderer/modules/BUILD.gn
 +++ b/third_party/blink/renderer/modules/BUILD.gn
-@@ -184,6 +184,7 @@ target("jumbo_" + modules_target_type, "modules") {
-     "//third_party/webrtc_overrides:init_webrtc",
-     "//third_party/zlib",
-   ]
-+  deps += [ "//brave/third_party/blink/renderer" ]
+@@ -16,6 +16,7 @@ if (is_android) {
+ }
  
-   public_deps = sub_modules
-   allow_circular_includes_from = sub_modules
+ visibility = [ "//third_party/blink/renderer/*" ]
++visibility += brave_blink_renderer_modules_visibility
+ 
+ config("modules_implementation") {
+   defines = [ "BLINK_MODULES_IMPLEMENTATION=1" ]
+@@ -176,6 +177,7 @@ component("modules") {
+     "//third_party/blink/renderer/modules/xr",
+   ]
+ 
++  sub_modules += brave_blink_sub_modules
+   if (is_android) {
+     sub_modules += [ "//third_party/blink/renderer/modules/remote_objects" ]
+   } else {

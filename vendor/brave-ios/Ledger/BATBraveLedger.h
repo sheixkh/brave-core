@@ -3,10 +3,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import <Foundation/Foundation.h>
-#import "Records.h"
 #import "ledger.mojom.objc.h"
 #import "BATRewardsNotification.h"
 #import "BATBraveLedgerObserver.h"
+#import "BATPromotionSolution.h"
 
 @class BATBraveAds;
 
@@ -15,10 +15,15 @@ NS_ASSUME_NONNULL_BEGIN
 typedef void (^BATFaviconFetcher)(NSURL *pageURL, void (^completion)(NSURL * _Nullable faviconURL));
 
 /// The error domain for ledger related errors
-extern NSString * const BATBraveLedgerErrorDomain NS_SWIFT_NAME(BraveLedgerErrorDomain);
+OBJC_EXPORT NSString * const BATBraveLedgerErrorDomain NS_SWIFT_NAME(BraveLedgerErrorDomain);
 
-extern NSNotificationName const BATBraveLedgerNotificationAdded NS_SWIFT_NAME(BraveLedger.NotificationAdded);
+OBJC_EXPORT NSNotificationName const BATBraveLedgerNotificationAdded NS_SWIFT_NAME(BraveLedger.NotificationAdded);
 
+typedef NSString *BATBraveGeneralLedgerNotificationID NS_SWIFT_NAME(GeneralLedgerNotificationID) NS_STRING_ENUM;
+OBJC_EXPORT BATBraveGeneralLedgerNotificationID const BATBraveGeneralLedgerNotificationIDWalletNowVerified;
+OBJC_EXPORT BATBraveGeneralLedgerNotificationID const BATBraveGeneralLedgerNotificationIDWalletDisconnected;
+
+OBJC_EXPORT 
 NS_SWIFT_NAME(BraveLedger)
 @interface BATBraveLedger : NSObject
 
@@ -30,6 +35,24 @@ NS_SWIFT_NAME(BraveLedger)
 - (instancetype)initWithStateStoragePath:(NSString *)path;
 
 - (instancetype)init NS_UNAVAILABLE;
+
+#pragma mark - Initialization
+
+/// Whether or not the ledger service has been initialized already
+@property (nonatomic, readonly, getter=isInitialized) BOOL initialized;
+
+/// Whether or not the ledger service is currently initializing
+@property (nonatomic, readonly, getter=isInitializing) BOOL initializing;
+
+/// The result when initializing the ledger service. Should be
+/// `BATResultLedgerOk` if `initialized` is `true`
+///
+/// If this is not `BATResultLedgerOk`, rewards is not usable for the user
+@property (nonatomic, readonly) BATResult initializationResult;
+
+/// Whether or not data migration failed when initializing and the user should
+/// be notified.
+@property (nonatomic, readonly) BOOL dataMigrationFailed;
 
 #pragma mark - Observers
 
@@ -45,28 +68,31 @@ NS_SWIFT_NAME(BraveLedger)
 
 /// Whether or not to use staging servers. Defaults to false
 @property (nonatomic, class, getter=isDebug) BOOL debug;
-/// Whether or not to use production servers. Defaults to true
-@property (nonatomic, class, getter=isProduction) BOOL production;
+/// The environment that ledger is communicating with
+@property (nonatomic, class) BATEnvironment environment;
 /// Marks if this is being ran in a test environment. Defaults to false
 @property (nonatomic, class, getter=isTesting) BOOL testing;
 /// Number of minutes between reconciles override. Defaults to 0 (no override)
-@property (nonatomic, class) int reconcileTime;
+@property (nonatomic, class) int reconcileInterval;
 /// Whether or not to use short contribution retries. Defaults to false
 @property (nonatomic, class) BOOL useShortRetries;
 
 #pragma mark - Wallet
 
-/// Whether or not the wallet has been created
-@property (nonatomic, readonly, getter=isWalletCreated) BOOL walletCreated;
+/// Whether or not the wallet is currently in the process of being created
+@property (nonatomic, readonly, getter=isInitializingWallet) BOOL initializingWallet;
 
 /// Creates a cryptocurrency wallet
 - (void)createWallet:(nullable void (^)(NSError * _Nullable error))completion;
 
-/// Fetch details about the users wallet (if they have one) and assigns it to `walletInfo`
-- (void)fetchWalletDetails:(nullable void (^)(BATWalletProperties * _Nullable))completion;
+/// Get the brave wallet's payment ID and seed for ads confirmations
+- (void)currentWalletInfo:(void (^)(BATBraveWallet *_Nullable wallet))completion;
 
-/// The users wallet info if one has been created
-@property (nonatomic, readonly, nullable) BATWalletProperties *walletInfo;
+/// Get parameters served from the server
+- (void)getRewardsParameters:(nullable void (^)(BATRewardsParameters * _Nullable))completion;
+
+/// The parameters send from the server
+@property (nonatomic, readonly, nullable) BATRewardsParameters *rewardsParameters;
 
 /// Fetch details about the users wallet (if they have one) and assigns it to `balance`
 - (void)fetchBalance:(nullable void (^)(BATBalance * _Nullable))completion;
@@ -81,16 +107,38 @@ NS_SWIFT_NAME(BraveLedger)
 - (void)recoverWalletUsingPassphrase:(NSString *)passphrase
                           completion:(nullable void (^)(NSError * _Nullable))completion;
 
-@property (nonatomic, readonly) double defaultContributionAmount;
-
 /// Retrieves the users most up to date balance to determin whether or not the
 /// wallet has a sufficient balance to complete a reconcile
 - (void)hasSufficientBalanceToReconcile:(void (^)(BOOL sufficient))completion;
 
 /// Returns reserved amount of pending contributions to publishers.
-@property (nonatomic, readonly) double reservedAmount;
+- (void)pendingContributionsTotal:(void (^)(double amount))completion NS_SWIFT_NAME(pendingContributionsTotal(completion:));
+
+/// Links a desktop brave wallet given some payment ID
+- (void)linkBraveWalletToPaymentId:(NSString *)paymentId
+                        completion:(void (^)(BATResult result))completion
+    NS_SWIFT_NAME(linkBraveWallet(paymentId:completion:));
+
+/// Get the amount of BAT that is transferrable via wallet linking
+- (void)transferrableAmount:(void (^)(double amount))completion;
+
+#pragma mark - User Wallets
+
+/// The last updated external wallet if a user has hooked one up
+@property (nonatomic, readonly, nullable) BATUpholdWallet *upholdWallet;
+
+- (void)fetchUpholdWallet:(nullable void (^)(BATUpholdWallet * _Nullable wallet))completion;
+
+- (void)disconnectWalletOfType:(BATWalletType)walletType
+                    completion:(nullable void (^)(BATResult result))completion;
+
+- (void)authorizeExternalWalletOfType:(BATWalletType)walletType
+                           queryItems:(NSDictionary<NSString *, NSString *> *)queryItems
+                           completion:(void (^)(BATResult result, NSURL * _Nullable redirectURL))completion;
 
 #pragma mark - Publishers
+
+@property (nonatomic, readonly, getter=isLoadingPublisherList) BOOL loadingPublisherList;
 
 /// Get publisher info & its activity based on its publisher key
 ///
@@ -101,7 +149,7 @@ NS_SWIFT_NAME(BraveLedger)
 - (void)listActivityInfoFromStart:(unsigned int)start
                             limit:(unsigned int)limit
                            filter:(BATActivityInfoFilter *)filter
-                       completion:(void (NS_NOESCAPE ^)(NSArray<BATPublisherInfo *> *))completion;
+                       completion:(void (^)(NSArray<BATPublisherInfo *> *))completion;
 
 /// Start a fetch to get a publishers activity information given a URL
 ///
@@ -111,9 +159,6 @@ NS_SWIFT_NAME(BraveLedger)
                         publisherBlob:(nullable NSString *)publisherBlob
                                 tabId:(uint64_t)tabId;
 
-/// Returns activity info for current reconcile stamp.
-- (nullable BATPublisherInfo *)currentActivityInfoWithPublisherId:(NSString *)publisherId;
-
 /// Update a publishers exclusion state
 - (void)updatePublisherExclusionState:(NSString *)publisherId
                                 state:(BATPublisherExclude)state
@@ -122,8 +167,6 @@ NS_SWIFT_NAME(BraveLedger)
 /// Restore all sites which had been previously excluded
 - (void)restoreAllExcludedPublishers;
 
-@property (nonatomic, readonly) NSUInteger numberOfExcludedPublishers;
-
 /// Get the publisher banner given some publisher key
 ///
 /// This key is _not_ always the URL's host. Use `publisherActivityFromURL`
@@ -131,18 +174,23 @@ NS_SWIFT_NAME(BraveLedger)
 ///
 /// @note `completion` callback is called synchronously
 - (void)publisherBannerForId:(NSString *)publisherId
-                  completion:(void (NS_NOESCAPE ^)(BATPublisherBanner * _Nullable banner))completion;
+                  completion:(void (^)(BATPublisherBanner * _Nullable banner))completion;
 
 /// Refresh a publishers verification status
 - (void)refreshPublisherWithId:(NSString *)publisherId
-                    completion:(void (^)(BOOL verified))completion;
+                    completion:(void (^)(BATPublisherStatus status))completion;
+
+#pragma mark - SKUs
+
+- (void)processSKUItems:(NSArray<BATSKUOrderItem *> *)items
+             completion:(void (^)(BATResult result, NSString *orderID))completion;
 
 #pragma mark - Tips
 
 /// Get a list of publishers who the user has recurring tips on
 ///
 /// @note `completion` callback is called synchronously
-- (void)listRecurringTips:(void (NS_NOESCAPE ^)(NSArray<BATPublisherInfo *> *))completion;
+- (void)listRecurringTips:(void (^)(NSArray<BATPublisherInfo *> *))completion;
 
 - (void)addRecurringTipToPublisherWithId:(NSString *)publisherId
                                   amount:(double)amount
@@ -153,40 +201,49 @@ NS_SWIFT_NAME(BraveLedger)
 /// Get a list of publishers who the user has made direct tips too
 ///
 /// @note `completion` callback is called synchronously
-- (void)listOneTimeTips:(void (NS_NOESCAPE ^)(NSArray<BATPublisherInfo *> *))completion;
+- (void)listOneTimeTips:(void (^)(NSArray<BATPublisherInfo *> *))completion;
 
 - (void)tipPublisherDirectly:(BATPublisherInfo *)publisher
-                      amount:(int)amount
+                      amount:(double)amount
                     currency:(NSString *)currency
                   completion:(void (^)(BATResult result))completion;
 
 
-#pragma mark - Grants
+#pragma mark - Promotions
 
-@property (nonatomic, readonly) NSArray<BATGrant *> *pendingGrants;
+@property (nonatomic, readonly) NSArray<BATPromotion *> *pendingPromotions;
 
-- (void)fetchAvailableGrantsForLanguage:(NSString *)language
-                              paymentId:(NSString *)paymentId;
+@property (nonatomic, readonly) NSArray<BATPromotion *> *finishedPromotions;
 
-- (void)fetchAvailableGrantsForLanguage:(NSString *)language
-                              paymentId:(NSString *)paymentId
-                             completion:(nullable void (^)(NSArray<BATGrant *> *grants))completion;
+/// Updates `pendingPromotions` and `finishedPromotions` based on the database
+- (void)updatePendingAndFinishedPromotions:(nullable void (^)())completion;
 
-- (void)grantCaptchaForPromotionId:(NSString *)promoID
-                     promotionType:(NSString *)promotionType
-                        completion:(void (^)(NSString *image, NSString *hint))completion;
+- (void)fetchPromotions:(nullable void (^)(NSArray<BATPromotion *> *grants))completion;
 
-- (void)solveGrantCaptchWithPromotionId:(NSString *)promotionId
-                               solution:(NSString *)solution;
+- (void)claimPromotion:(NSString *)promotionId
+             publicKey:(NSString *)deviceCheckPublicKey
+            completion:(void (^)(BATResult result, NSString * _Nonnull nonce))completion;
+
+- (void)attestPromotion:(NSString *)promotionId
+               solution:(BATPromotionSolution *)solution
+             completion:(nullable void (^)(BATResult result, BATPromotion * _Nullable promotion))completion;
+
+#pragma mark - Pending Contributions
+
+- (void)pendingContributions:(void (^)(NSArray<BATPendingContributionInfo *> *publishers))completion;
+
+- (void)removePendingContribution:(BATPendingContributionInfo *)info
+                       completion:(void (^)(BATResult result))completion;
+
+- (void)removeAllPendingContributions:(void (^)(BATResult result))completion;
 
 #pragma mark - History
 
-@property (nonatomic, readonly) NSDictionary<NSString *, BATBalanceReportInfo *> *balanceReports;
+- (void)balanceReportForMonth:(BATActivityMonth)month
+                         year:(int)year
+                   completion:(void (^)(BATBalanceReportInfo * _Nullable info))completion;
 
-- (BATBalanceReportInfo *)balanceReportForMonth:(BATActivityMonth)month
-                                           year:(int)year;
-
-@property (nonatomic, readonly) BATAutoContributeProps *autoContributeProps;
+@property (nonatomic, readonly) BATAutoContributeProperties *autoContributeProperties;
 
 #pragma mark - Misc
 
@@ -198,6 +255,10 @@ NS_SWIFT_NAME(BraveLedger)
 - (NSString *)encodedURI:(NSString *)uri;
 
 - (void)rewardsInternalInfo:(void (NS_NOESCAPE ^)(BATRewardsInternalsInfo * _Nullable info))completion;
+
+- (void)allContributions:(void (^)(NSArray<BATContributionInfo *> *contributions))completion;
+
+@property (nonatomic, readonly, copy) NSString *rewardsDatabasePath;
 
 #pragma mark - Reporting
 
@@ -222,12 +283,10 @@ NS_SWIFT_NAME(BraveLedger)
 
 #pragma mark - Preferences
 
-/// Whether or not brave rewards is enabled
-@property (nonatomic, assign, getter=isEnabled) BOOL enabled;
 /// The number of seconds before a publisher is added.
-@property (nonatomic, assign) UInt64 minimumVisitDuration;
+@property (nonatomic, assign) int minimumVisitDuration;
 /// The minimum number of visits before a publisher is added
-@property (nonatomic, assign) UInt32 minimumNumberOfVisits;
+@property (nonatomic, assign) int minimumNumberOfVisits;
 /// Whether or not to allow auto contributions to unverified publishers
 @property (nonatomic, assign) BOOL allowUnverifiedPublishers;
 /// Whether or not to allow auto contributions to videos
@@ -236,24 +295,8 @@ NS_SWIFT_NAME(BraveLedger)
 @property (nonatomic, assign) double contributionAmount;
 /// Whether or not the user will automatically contribute
 @property (nonatomic, assign, getter=isAutoContributeEnabled) BOOL autoContributeEnabled;
-
-#pragma mark - Ads & Confirmations
-
-/// Confirm an ad and update confirmations (called from the ads layer)
-- (void)confirmAd:(NSString *)info;
-
-/// Confirm an action on an ad and update confirmations was sustained (called from ads layer)
-- (void)confirmAction:(NSString *)uuid creativeSetID:(NSString *)creativeSetID type:(NSString *)type;
-
-/// Set catalog issuers ad and update confirmations (called from the ads layer)
-- (void)setCatalogIssuers:(NSString *)issuers;
-
-/// Update ad totals on month roll over without fetching latest balances from
-/// server
-- (void)updateAdsRewards;
-
-/// Get the number of ads received and the estimated earnings of viewing said ads for this cycle
-- (void)adsDetailsForCurrentCycle:(void (^)(NSInteger adsReceived, double estimatedEarnings, NSDate * _Nullable nextPaymentDate))completion NS_SWIFT_NAME(adsDetailsForCurrentCycle(_:));
+/// A custom user agent for network operations on ledger
+@property (nonatomic, copy, nullable) NSString *customUserAgent;
 
 #pragma mark - Notifications
 
@@ -266,14 +309,6 @@ NS_SWIFT_NAME(BraveLedger)
 /// Clear all the notifications
 - (void)clearAllNotifications;
 
-@end
-
-// FIXME: This is a patch, need to use the actual verified state
-@interface BATPublisherInfo (BuildFix)
-@property (nonatomic, getter=isVerified) BOOL verified;
-@end
-@interface BATPendingContributionInfo (BuildFix)
-@property (nonatomic, getter=isVerified) BOOL verified;
 @end
 
 NS_ASSUME_NONNULL_END

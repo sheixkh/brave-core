@@ -5,9 +5,9 @@
 import rewardsPanelActions from './background/actions/rewardsPanelActions'
 
 import './background/store'
-import './background/twitterAuth'
 import './background/events/rewardsEvents'
 import './background/events/tabEvents'
+
 import batIconOn18Url from './img/rewards-on.png'
 import batIconOn36Url from './img/rewards-on@2x.png'
 import batIconOn54Url from './img/rewards-on@3x.png'
@@ -34,28 +34,7 @@ chrome.tabs.query({
   rewardsPanelActions.init(tabs)
 })
 
-chrome.runtime.onInstalled.addListener(function (details) {
-  if (details.reason === 'install') {
-    const initialNotificationDismissed = 'false'
-    chrome.storage.local.set({
-      'is_dismissed': initialNotificationDismissed
-    }, function () {
-      chrome.browserAction.setBadgeText({
-        text: '1'
-      })
-    })
-  }
-})
-
 chrome.runtime.onStartup.addListener(function () {
-  chrome.storage.local.get(['is_dismissed'], function (result) {
-    if (result && result['is_dismissed'] === 'false') {
-      chrome.browserAction.setBadgeText({
-        text: '1'
-      })
-    }
-  })
-
   chrome.runtime.onConnect.addListener(function (externalPort) {
     chrome.storage.local.set({
       'rewards_panel_open': 'true'
@@ -69,102 +48,14 @@ chrome.runtime.onStartup.addListener(function () {
   })
 })
 
-chrome.runtime.onConnect.addListener(function () {
-  chrome.storage.local.get(['is_dismissed'], function (result) {
-    if (result && result['is_dismissed'] === 'false') {
-      chrome.browserAction.setBadgeText({
-        text: ''
-      })
-      chrome.storage.local.remove(['is_dismissed'])
+chrome.runtime.onMessageExternal.addListener(
+  function (msg: any, sender: chrome.runtime.MessageSender, sendResponse: any) {
+    if (!msg) {
+      return
+    }
+    switch (msg.type) {
+      case 'OnPublisherData':
+        rewardsPanelActions.onPublisherData(msg.tabId, msg.info)
+        break
     }
   })
-})
-
-const tipTwitterMedia = (mediaMetaData: RewardsTip.MediaMetaData) => {
-  mediaMetaData.mediaType = 'twitter'
-  chrome.tabs.query({
-    active: true,
-    windowId: chrome.windows.WINDOW_ID_CURRENT
-  }, (tabs) => {
-    if (!tabs || tabs.length === 0) {
-      return
-    }
-    const tabId = tabs[0].id
-    if (tabId === undefined) {
-      return
-    }
-    chrome.braveRewards.tipTwitterUser(tabId, mediaMetaData)
-  })
-}
-
-const tipGitHubMedia = (mediaMetaData: RewardsTip.MediaMetaData) => {
-  mediaMetaData.mediaType = 'github'
-  chrome.tabs.query({
-    active: true,
-    windowId: chrome.windows.WINDOW_ID_CURRENT
-  }, (tabs) => {
-    if (!tabs || tabs.length === 0) {
-      return
-    }
-    const tabId = tabs[0].id
-    if (tabId === undefined) {
-      return
-    }
-    chrome.braveRewards.tipGitHubUser(tabId, mediaMetaData)
-  })
-}
-
-const tipRedditMedia = (mediaMetaData: RewardsTip.MediaMetaData) => {
-  mediaMetaData.mediaType = 'reddit'
-  chrome.tabs.query({
-    active: true,
-    windowId: chrome.windows.WINDOW_ID_CURRENT
-  }, (tabs) => {
-    if (!tabs || tabs.length === 0) {
-      return
-    }
-    const tabId = tabs[0].id
-    if (tabId === undefined) {
-      return
-    }
-    chrome.braveRewards.tipRedditUser(tabId, mediaMetaData)
-  })
-}
-
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  const action = typeof msg === 'string' ? msg : msg.type
-  switch (action) {
-    case 'tipInlineMedia': {
-      switch (msg.mediaMetaData.mediaType) {
-        case 'twitter':
-          tipTwitterMedia(msg.mediaMetaData)
-          break
-        case 'reddit':
-          tipRedditMedia(msg.mediaMetaData)
-          break
-        case 'github':
-          tipGitHubMedia(msg.mediaMetaData)
-          break
-      }
-      return false
-    }
-    case 'rewardsEnabled': {
-      // Check if rewards is enabled
-      chrome.braveRewards.getRewardsMainEnabled(function (enabled: boolean) {
-        sendResponse({ enabled })
-      })
-      // Must return true for asynchronous calls to sendResponse
-      return true
-    }
-    case 'inlineTipSetting': {
-      // Check if inline tip is enabled
-      chrome.braveRewards.getInlineTipSetting(msg.key, function (enabled: boolean) {
-        sendResponse({ enabled })
-      })
-      // Must return true for asynchronous calls to sendResponse
-      return true
-    }
-    default:
-      return false
-  }
-})

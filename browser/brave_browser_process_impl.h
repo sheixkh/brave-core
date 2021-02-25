@@ -8,22 +8,21 @@
 
 #include <memory>
 
-#include "brave/browser/tor/buildflags.h"
+#include "base/memory/ref_counted.h"
+#include "brave/components/brave_ads/browser/buildflags/buildflags.h"
 #include "brave/components/brave_component_updater/browser/brave_component.h"
 #include "brave/components/brave_referrals/buildflags/buildflags.h"
 #include "brave/components/greaselion/browser/buildflags/buildflags.h"
+#include "brave/components/ipfs/buildflags/buildflags.h"
+#include "brave/components/speedreader/buildflags.h"
+#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/browser_process_impl.h"
 #include "extensions/buildflags/buildflags.h"
-#include "third_party/widevine/cdm/buildflags.h"
 
 namespace brave {
 class BraveReferralsService;
-class BraveStatsUpdater;
+class BraveP3AService;
 }  // namespace brave
-
-#if BUILDFLAG(BUNDLE_WIDEVINE_CDM)
-class BraveWidevineBundleManager;
-#endif
 
 namespace brave_component_updater {
 #if BUILDFLAG(ENABLE_EXTENSIONS)
@@ -36,11 +35,13 @@ namespace brave_shields {
 class AdBlockService;
 class AdBlockCustomFiltersService;
 class AdBlockRegionalServiceManager;
-class AutoplayWhitelistService;
 class HTTPSEverywhereService;
-class ReferrerWhitelistService;
 class TrackingProtectionService;
 }  // namespace brave_shields
+
+namespace brave_stats {
+class BraveStatsUpdater;
+}  // namespace brave_stats
 
 namespace greaselion {
 #if BUILDFLAG(ENABLE_GREASELION)
@@ -48,11 +49,25 @@ class GreaselionDownloadService;
 #endif
 }  // namespace greaselion
 
-namespace extensions {
+namespace ntp_background_images {
+class NTPBackgroundImagesService;
+}  // namespace ntp_background_images
+
+namespace tor {
 class BraveTorClientUpdater;
 }
 
-using brave_component_updater::BraveComponent;
+namespace ipfs {
+class BraveIpfsClientUpdater;
+}
+
+namespace speedreader {
+class SpeedreaderRewriterService;
+}
+
+namespace brave_user_model {
+class UserModelFileService;
+}
 
 class BraveBrowserProcessImpl : public BrowserProcessImpl {
  public:
@@ -62,18 +77,17 @@ class BraveBrowserProcessImpl : public BrowserProcessImpl {
   // BrowserProcess implementation.
 
   ProfileManager* profile_manager() override;
+  NotificationPlatformBridge* notification_platform_bridge() override;
 
   void StartBraveServices();
   brave_shields::AdBlockService* ad_block_service();
   brave_shields::AdBlockCustomFiltersService* ad_block_custom_filters_service();
   brave_shields::AdBlockRegionalServiceManager*
   ad_block_regional_service_manager();
-  brave_shields::AutoplayWhitelistService* autoplay_whitelist_service();
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   brave_component_updater::ExtensionWhitelistService*
   extension_whitelist_service();
 #endif
-  brave_shields::ReferrerWhitelistService* referrer_whitelist_service();
 #if BUILDFLAG(ENABLE_GREASELION)
   greaselion::GreaselionDownloadService* greaselion_download_service();
 #endif
@@ -81,36 +95,50 @@ class BraveBrowserProcessImpl : public BrowserProcessImpl {
   brave_shields::HTTPSEverywhereService* https_everywhere_service();
   brave_component_updater::LocalDataFilesService* local_data_files_service();
 #if BUILDFLAG(ENABLE_TOR)
-  extensions::BraveTorClientUpdater* tor_client_updater();
+  tor::BraveTorClientUpdater* tor_client_updater();
 #endif
-#if BUILDFLAG(BUNDLE_WIDEVINE_CDM)
-  BraveWidevineBundleManager* brave_widevine_bundle_manager();
+#if BUILDFLAG(IPFS_ENABLED)
+  ipfs::BraveIpfsClientUpdater* ipfs_client_updater();
 #endif
-  brave::BraveStatsUpdater* brave_stats_updater();
+  brave::BraveP3AService* brave_p3a_service();
+  brave_stats::BraveStatsUpdater* brave_stats_updater();
+  ntp_background_images::NTPBackgroundImagesService*
+  ntp_background_images_service();
+#if BUILDFLAG(ENABLE_SPEEDREADER)
+  speedreader::SpeedreaderRewriterService* speedreader_rewriter_service();
+#endif
+#if BUILDFLAG(BRAVE_ADS_ENABLED)
+  brave_user_model::UserModelFileService* user_model_file_service();
+#endif
 
  private:
-  void CreateProfileManager();
+  // BrowserProcessImpl overrides:
+  void Init() override;
 
-  BraveComponent::Delegate* brave_component_updater_delegate();
+  void CreateProfileManager();
+  void CreateNotificationPlatformBridge();
+
+#if BUILDFLAG(ENABLE_TOR)
+  void OnTorEnabledChanged();
+#endif
+
+  void UpdateBraveDarkMode();
+  void OnBraveDarkModeChanged();
+
+  brave_component_updater::BraveComponent::Delegate*
+  brave_component_updater_delegate();
 
   // local_data_files_service_ should always be first because it needs
   // to be destroyed last
   std::unique_ptr<brave_component_updater::LocalDataFilesService>
       local_data_files_service_;
-  std::unique_ptr<BraveComponent::Delegate> brave_component_updater_delegate_;
+  std::unique_ptr<brave_component_updater::BraveComponent::Delegate>
+      brave_component_updater_delegate_;
   std::unique_ptr<brave_shields::AdBlockService> ad_block_service_;
-  std::unique_ptr<brave_shields::AdBlockCustomFiltersService>
-      ad_block_custom_filters_service_;
-  std::unique_ptr<brave_shields::AdBlockRegionalServiceManager>
-      ad_block_regional_service_manager_;
-  std::unique_ptr<brave_shields::AutoplayWhitelistService>
-      autoplay_whitelist_service_;
 #if BUILDFLAG(ENABLE_EXTENSIONS)
   std::unique_ptr<brave_component_updater::ExtensionWhitelistService>
       extension_whitelist_service_;
 #endif
-  std::unique_ptr<brave_shields::ReferrerWhitelistService>
-      referrer_whitelist_service_;
 #if BUILDFLAG(ENABLE_GREASELION)
   std::unique_ptr<greaselion::GreaselionDownloadService>
       greaselion_download_service_;
@@ -119,15 +147,28 @@ class BraveBrowserProcessImpl : public BrowserProcessImpl {
       tracking_protection_service_;
   std::unique_ptr<brave_shields::HTTPSEverywhereService>
       https_everywhere_service_;
-  std::unique_ptr<brave::BraveStatsUpdater> brave_stats_updater_;
+  std::unique_ptr<brave_stats::BraveStatsUpdater> brave_stats_updater_;
 #if BUILDFLAG(ENABLE_BRAVE_REFERRALS)
   std::unique_ptr<brave::BraveReferralsService> brave_referrals_service_;
 #endif
 #if BUILDFLAG(ENABLE_TOR)
-  std::unique_ptr<extensions::BraveTorClientUpdater> tor_client_updater_;
+  std::unique_ptr<tor::BraveTorClientUpdater> tor_client_updater_;
 #endif
-#if BUILDFLAG(BUNDLE_WIDEVINE_CDM)
-  std::unique_ptr<BraveWidevineBundleManager> brave_widevine_bundle_manager_;
+#if BUILDFLAG(IPFS_ENABLED)
+  std::unique_ptr<ipfs::BraveIpfsClientUpdater> ipfs_client_updater_;
+#endif
+  scoped_refptr<brave::BraveP3AService> brave_p3a_service_;
+  std::unique_ptr<ntp_background_images::NTPBackgroundImagesService>
+      ntp_background_images_service_;
+
+#if BUILDFLAG(ENABLE_SPEEDREADER)
+  std::unique_ptr<speedreader::SpeedreaderRewriterService>
+      speedreader_rewriter_service_;
+#endif
+
+#if BUILDFLAG(BRAVE_ADS_ENABLED)
+  std::unique_ptr<brave_user_model::UserModelFileService>
+      user_model_file_service_;
 #endif
 
   SEQUENCE_CHECKER(sequence_checker_);

@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Estàs navegant en aquest lloc sense cap protecció de privadesa i seguretat.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Estàs navegant en aquesta web sense les proteccions de privacitat i seguretat de Brave. No funciona bé amb els Escuts activats?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Informa d'una pàgina web inexistent",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Elements bloquejats",
@@ -51,6 +55,22 @@
     "message": "Rastrejadors entre llocs bloquejats",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Rastrejadors i anuncis bloquejats",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Rastrejadors & anuncis bloquejats (agressiu)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Rastrejadors i anuncis bloquejats (estàndard)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Permeteu tots els rastrejadors & anuncis",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Connexions actualitzades a HTTPS",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "Totes les galetes permeses",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Reconeixement de dispositius entre llocs bloquejats",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Impremtes digitals bloquejades",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Intents de reconeixement de dispositius bloquejats",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Impremtes digitals bloquejades (estàndard)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Tots els intents de reconeixement de dispositius permesos",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Empremta digital bloquejada (estrictament, pot trencar llocs)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Permet totes les empremtes dactilars",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Intents de reconeixement de dispositiu",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Intents d'identificació per empremta dactilar",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Hi ha seqüències d'ordres en aquest lloc",

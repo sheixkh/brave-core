@@ -18,15 +18,33 @@ export interface ClockState {
   date: Date
 }
 
-class Clock extends React.PureComponent<{}, ClockState> {
-  constructor (props: {}) {
+interface Props {
+  clockFormat: string
+  toggleClickFormat: () => void
+}
+
+class Clock extends React.PureComponent<Props, ClockState> {
+  private updateInterval: number
+
+  constructor (props: any) {
     super(props)
     this.state = this.getClockState(new Date())
+  }
+
+  componentDidUpdate (prevProps: Props) {
+    if (prevProps.clockFormat !== this.props.clockFormat) {
+      this.setState(this.getClockState(new Date()))
+    }
   }
 
   get dateTimeFormat (): any {
     // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/DateTimeFormat
     const options = { hour: 'numeric', minute: 'numeric' }
+    if (this.props.clockFormat === '24') {
+      options['hourCycle'] = 'h23'
+    } else if (this.props.clockFormat === '12') {
+      options['hourCycle'] = 'h12'
+    }
     return new Intl.DateTimeFormat(undefined, options)
   }
 
@@ -59,12 +77,22 @@ class Clock extends React.PureComponent<{}, ClockState> {
   }
 
   componentDidMount () {
-    window.setInterval(this.maybeUpdateClock.bind(this), 2000)
+    this.updateInterval = window.setInterval(this.maybeUpdateClock.bind(this), 2000)
+  }
+
+  componentWillUnmount () {
+    clearInterval(this.updateInterval)
+  }
+
+  onDoubleClick = () => {
+    if (this.props.toggleClickFormat) {
+      this.props.toggleClickFormat()
+    }
   }
 
   render () {
     return (
-      <StyledClock>
+      <StyledClock onDoubleClick={this.onDoubleClick}>
         <StyledTime>{this.formattedTime}</StyledTime>
       </StyledClock>
     )

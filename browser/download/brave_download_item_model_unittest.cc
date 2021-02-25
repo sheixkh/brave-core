@@ -46,7 +46,7 @@ const base::FilePath::CharType kDefaultDisplayFileName[] =
 
 class BraveDownloadItemModelTest : public testing::Test {
  public:
-  BraveDownloadItemModelTest() : model_(&item_), brave_model_(model_) {}
+  BraveDownloadItemModelTest() : model_(&item_), brave_model_(&model_) {}
   ~BraveDownloadItemModelTest() override {}
 
  protected:
@@ -90,18 +90,22 @@ TEST_F(BraveDownloadItemModelTest, GetOriginUrlText) {
     // Expected is_secure.
     bool expected_is_secure;
   } kTestCases[] = {
-    // Not secure.
-    {"http://example.com/foo.bar", "http://example.com", false},
-    // Secure.
-    {"https://example.com:5678/foo.bar", "https://example.com:5678", true},
-    // File, secure.
-    {"file:///c:/foo/bar/foo.bar", "file:///", true},
-    // about:, secure.
-    {"about:about", "about:about", true},
-    // invalid, not secure.
-    {"foo.bar.baz", "", false},
-    // empty, not secure.
-    {"", "", false},
+      // Not secure.
+      {"http://example.com/foo.bar", "http://example.com", false},
+      // Secure.
+      {"https://example.com:5678/foo.bar", "https://example.com:5678", true},
+      // File, secure.
+      {"file:///c:/foo/bar/foo.bar", "file:///", true},
+      // about:blank, secure.
+      {"about:blank", "about:blank", true},
+      // about:srcdoc, secure.
+      {"about:srcdoc", "about:srcdoc", true},
+      // Other about: URLs, not secure.
+      {"about:about", "about:about", true},
+      // invalid, not secure.
+      {"foo.bar.baz", "", false},
+      // empty, not secure.
+      {"", "", false},
   };
 
   SetupDownloadItemDefaults();
@@ -112,8 +116,8 @@ TEST_F(BraveDownloadItemModelTest, GetOriginUrlText) {
     bool is_secure = false;
     EXPECT_STREQ(
         test_case.expected_text,
-        base::UTF16ToUTF8(model().GetOriginURLText(is_secure)).c_str());
-    EXPECT_EQ(is_secure, test_case.expected_is_secure);
+        base::UTF16ToUTF8(model().GetOriginURLText(&is_secure)).c_str());
+    EXPECT_EQ(is_secure, test_case.expected_is_secure) << test_case.url;
     Mock::VerifyAndClearExpectations(&item());
   }
 }
@@ -130,19 +134,13 @@ TEST_F(BraveDownloadItemModelTest, GetTooltipText) {
     {"https://example.com:5678/foo.bar", "foo.bar\nhttps://example.com:5678"},
   };
 
-  const int kTooltipWidth = 1000;
-  const gfx::FontList& font_list =
-      ui::ResourceBundle::GetSharedInstance().GetFontList(
-          ui::ResourceBundle::BaseFont);
-
   SetupDownloadItemDefaults();
   for (unsigned i = 0; i < base::size(kTestCases); ++i) {
     const TestCase& test_case = kTestCases[i];
     EXPECT_CALL(item(), GetURL())
         .WillRepeatedly(ReturnRefOfCopy(GURL(test_case.url)));
-    EXPECT_TRUE(base::LowerCaseEqualsASCII(base::UTF16ToUTF8(
-      model().GetTooltipText(font_list, kTooltipWidth)),
-      test_case.expected_tooltip));
+    EXPECT_EQ(base::ToLowerASCII(base::UTF16ToUTF8(model().GetTooltipText())),
+              test_case.expected_tooltip);
     Mock::VerifyAndClearExpectations(&item());
   }
 }

@@ -19,6 +19,10 @@
     "message": "Voit nyt ansaita poletteja katselemalla yksityisyyttä kunnioittavia mainoksia.",
     "description": "Entry text for welcome screen in the panel, new user"
   },
+  "welcomeDescPoints": {
+    "message": "Voit nyt ansaita pisteitä yksityisyyttä kunnioittavien mainosten katselemisesta.",
+    "description": "Entry text for welcome screen in the panel, points"
+  },
   "welcomeFooterTextOne": {
     "message": "Katso, mitä on parannettu",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, existing user"
@@ -43,6 +47,22 @@
     "message": "Lahjoitukset",
     "description": "Title for grant section in wallet summary"
   },
+  "details": {
+    "message": "Tarkat tiedot",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "Saldosi",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "BAT-pisteet",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "voidaan käyttää Brave-palkinnoissa antamaan kannatusmaksuja suosikkisisällöntuottajillesi. BAT-pisteitä ei voi vaihtaa BATiin.",
+    "description": "Text for BAT Point helper message"
+  },
   "on": {
     "message": "päällä",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -56,7 +76,7 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "Anna tälle sivustolle tippi kuukausittain",
+    "message": "Kuukausittainen avustus",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
@@ -128,19 +148,29 @@
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "Token-tuet",
-    "description": "Title for grant notification"
+    "message": "$currency$-stipendit",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
     "message": "Lunastetut tunnuslahjoitukset",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "Pistestipendit lunastettu",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "Ansaitset mainoksilla",
     "description": "Title for ads section in wallet summary"
   },
   "rewardsContribute": {
-    "message": "Automaattinen lahjoitus",
+    "message": "Osallistu automaattisesti",
     "description": "Title for auto contribute section in wallet summary"
   },
   "oneTimeDonation": {
@@ -152,11 +182,11 @@
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "Kuukausittaiset tipit",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "Kuukausittaiset avustukset",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
-    "message": "Pois päältä ",
+    "message": "Pois käytöstä",
     "description": "Label used in toggle indicating that toggle is off"
   },
   "ok": {
@@ -164,12 +194,8 @@
     "description": "Used in notification to dismiss notification"
   },
   "braveAdsLaunchMsg": {
-    "message": "Voit nyt ansaita mainoksia katsomalla.",
+    "message": "Voit nyt ansaita mainosten katselulla.",
     "description": "Message for ads launch notification"
-  },
-  "braveAdsLaunchTitle": {
-    "message": "Brave-mainokset ovat täällä!",
-    "description": "Message used in notification to let users know Ads is available"
   },
   "braveAdsTitle": {
     "message": "Brave-mainokset",
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "Olet osallistunut $amount$ BAT:lla.",
+    "message": "Olet antanut avustusta $amount$ $currency$",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "Suunniteltu kuukausimaksusi automaattiosallistumiseen ja kuukausittaisiin tippeihin ei onnistunut riittämättömien varojen vuoksi. Yritämme uudestaan 30 päivän kuluttua.",
+    "message": "Ajoitettua kuukausittaista Auto-Contribute-maksuasi  ja kuukausittaisia tukimaksujasi ei voitu suorittaa riittämättömien varojen vuoksi. Kokeilemme uudelleen 30 päivän päästä.",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -261,10 +291,6 @@
     "message": "Lahjoituksen umpeutumispäivä",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "Valitettavasti tämä lahjoitus on jo näemmä lunastettu.",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
     "message": "OK",
     "description": "Button text for clearing the error."
@@ -276,18 +302,6 @@
   "grantGeneralErrorTitle": {
     "message": "Oho, jokin meni vikaan. Yritä myöhemmin uudelleen.",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "OK",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "Tämä lahjoitus on nähtävästi umpeutunut.",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "Tämä lahjoitus ei ole enää saatavilla.",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "Päivitä tila",
@@ -306,7 +320,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "Olet myöntänyt {{reservedAmount}} BATia kehittäjille, jotka eivät ole vielä rekisteröityneet vastaanottamaan avustuksia. Selaimesi pyrkii tekemään avustuksia joko kyseisen henkilön vahvistukseen asti tai kunnes 90 päivää on kulunut.",
+    "message": "Olet osoittanut {{reservedAmount}} {{currency}} tekijöille, jotka eivät ole vielä rekisteröityneet kannatusmaksujen vastaanottajiksi. Selaimesi jatkaa kannatusmaksuyritysten tekemistä siihen asti, että tekijät ovat vahvistaneet tai että on kulunut 90 vuorokautta.",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
@@ -314,7 +328,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "disabledPanelOff": {
-    "message": "Päältä",
+    "message": "Pois käytöstä",
     "description": "Off state text for Panel's disabled state"
   },
   "disabledPanelSettings": {
@@ -322,7 +336,7 @@
     "description": "Settings Link for Panel's disabled state"
   },
   "disabledPanelText": {
-    "message": "Et kerrytä tällä hetkellä palkintoetuja selaamisen aikana. Aseta palkinnot takaisin päälle kohteessa",
+    "message": "Et tällä hetkellä kerrytä palkintoetuja selaamisen aikana. Aseta palkinnot takaisin päälle osiosta",
     "description": "Text for Panel's disabled state"
   },
   "disabledPanelTitle": {
@@ -382,12 +396,12 @@
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "Kuukausitippisi on käsitelty!",
-    "description": "Message for monthly tips processed notification"
+    "message": "Kuukausittaiset tukimaksusi on käsitelty!",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "Lahjoitukset & tipit",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "Napauttamalla \"Liitä palkinnot\"-painiketta ilmaiset lukeneesi ja hyväksyväsi",
@@ -397,8 +411,12 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
+  },
   "turnOnAds": {
-    "message": "Aseta mainokset päälle",
+    "message": "Ota Ads käyttöön",
     "description": "Prompt to turn on Ads via notification"
   },
   "adsEarnings": {
@@ -444,7 +462,7 @@
     "description": "Notification text that tells user his wallet is under funded for pending contribution to complete"
   },
   "pendingContributionTitle": {
-    "message": "Odottava avustus",
+    "message": "Odottaa avustusta",
     "description": "Notification title for pending contribution type"
   },
   "grantFinishTitleUGP": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "Tunnuslahjoituksesi on matkalla.",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "$currency$-stipendisi on matkalla.",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "Ilmainen tunnuslahjoitus",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "Ilmaispistestipendi",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Brave-mainosten palkkiot!",
+    "message": "Olet ansainnut mainospalkinnon!",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "Brave-mainosten palkkiot ovat matkalla luoksesi.",
+    "message": "Palkintosi on matkalla Brave-palkintokukkaroosi.",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "Brave-mainostesi tunnuksen palkkio",
+    "message": "Palkintosummasi",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "Tämän vahvistetun tekijän on vielä vahvistettava (KYC) tilinsä voidakseen vastaanottaa tippejä vahvistetusta lompakostasi. Tipit pysyvät lompakossasi vahvistuksen suorittamiseen asti.",
+    "message": "Tämä Braven vahvistettu tekijä ei ole vielä asettanut tiliään hyväksymään avustuksia Braven käyttäjiltä.",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "Viimeistele lompakon vahvistus",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "Aseta...",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "poletit",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "Piste",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "Poletti",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "pistettä",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "Token-tuet",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "Pistestipendit",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "Hei, $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "Peruuta",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "Muuta summa",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "Kirjaudu",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "Lompakon todentaminen mahdollistaa varojesi tehokkaamman hallinnan.",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "Tarvitset vähintään 25 BAT luodaksesi Uphold-tilin. Yritä myöhemmin uudelleen.\nJos olet jos vahvistanut Uphold-tilisi, jatka kirjautumiseen.",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "Yhdistetty",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "Odottaa",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "Huomio: siirtosi näkyvät Uphold-palvelulle, kun vahvistat. He näkevät esimerkiksi vastaanottajan ja tippiesi määrän.",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "Ansaitse maksutunnuksia & osoita anteliaisuutta",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "Ansaitse maksutunnuksia katsomalla tietosuojaasi kunnioittavia mainoksia sekä tukemalla suosikkisivustojasi ja -kehittäjiäsi automaattisesti.",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "Aloita Brave-palkintojen käyttäminen",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "Tee pikakatsaus",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "Jatkamalla ilmaiset hyväksyväsi $tos_link_begin$käyttöehdot$tos_link_end$ ja $pp_link_begin$tietosuojakäytännön$pp_link_end$.",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "Palaa takaisin",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "Käydäänpä pikakierroksella",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "Jatka",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "Valmis",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "Ohita",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "Ohita toistaiseksi",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "Tervetuloa Brave-palkintoihin!",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Braven yksityismainokset palkitsevat sinut maksutunnuksilla, joiden avulla voit tukea sisällönkehittäjiä perinteisistä mainoksista poikkeavalla tavalla ja pitää samalla kaikki henkilökohtaiset tietosi yksityisinä.",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "Missä mainokset näkyvät?",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Braven yksityismainokset näkyvät normaaleina ilmoituksina. Voit päättää näiden mainosten esitystavan asetuksista käsin.",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "Milloin saat palkintosi",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "Käynnissä olevan kuun aikana Braven yksityismainosten kautta ansaitut maksutunnukset saapuvat seuraavan kuun 5. päivänä.",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "Anteliaisuus sujuu nyt vaivatta",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "Kehittävät saavat maksutunnuslahjoituksesi automaattisesti käyttötasojesi mukaan, joista käytämme termiä \"Huomio\".",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "Kiitä tippien muodossa",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "Tippaaminen kannustaa ja tukee suosikkisisältöäsi ja -kehittäjiäsi. Aloita siis tippaaminen!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "Mitä maksutunnuksilla voi tehdä?",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "Maksutunnuksia voidaan käyttää kehittäjien tukemiseen. Voit ostaa digitaalista sisältöä ynnä muuta sisältöä kauppiaiden tullessa mukaan.",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "Jee, valmista tuli!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "Brave Rewardien avulla voit tehdä verkosta turvallisemman paikan muille. Se vasta onkin upeaa!",
+    "description": ""
   }
 }

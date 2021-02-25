@@ -29,6 +29,10 @@ export const updatePersistentData: shieldState.UpdatePersistentData = (state, pe
   return { ...state, persistentData: { ...state.persistentData, ...persistentData } }
 }
 
+export const mergeSettingsData: shieldState.MergeSettingsData = (state, settingsData) => {
+  return { ...state.settingsData, settingsData }
+}
+
 export const updateActiveTab: shieldState.UpdateActiveTab = (state, windowId, tabId) => {
   let windows: shieldState.Windows = { ...state.windows } || {}
   windows[windowId] = tabId
@@ -56,6 +60,7 @@ export const updateTabShieldsData: shieldState.UpdateTabShieldsData = (state, ta
     braveShields: 'allow',
     ads: 'allow',
     trackers: 'allow',
+    cosmeticFiltering: 'allow',
     httpUpgradableResources: 'allow',
     javascript: 'allow',
     fingerprinting: 'allow',
@@ -91,7 +96,7 @@ export const updateResourceBlocked: shieldState.UpdateResourceBlocked = (state, 
     ...tabs[tabId]
   }
 
-  if (blockType === 'ads') {
+  if (blockType === 'shieldsAds') {
     tabs[tabId].adsBlockedResources = unique([ ...tabs[tabId].adsBlockedResources, subresource ])
     tabs[tabId].adsBlocked = tabs[tabId].adsBlockedResources.length
   } else if (blockType === 'trackers') {
@@ -112,6 +117,12 @@ export const updateResourceBlocked: shieldState.UpdateResourceBlocked = (state, 
   return { ...state, tabs }
 }
 
+export const saveCosmeticFilterRuleExceptions: shieldState.SaveCosmeticFilterRuleExceptions = (state, tabId, exceptions) => {
+  const tabs: shieldState.Tabs = { ...state.tabs }
+  tabs[tabId] = { ...tabs[tabId], ...{ cosmeticFilters: { ...tabs[tabId].cosmeticFilters, ruleExceptions: exceptions } } }
+  return { ...state, tabs }
+}
+
 export const resetBlockingStats: shieldState.ResetBlockingStats = (state, tabId) => {
   const tabs: shieldState.Tabs = { ...state.tabs }
   tabs[tabId] = { ...tabs[tabId], ...{ adsBlocked: 0, trackersBlocked: 0, httpsRedirected: 0, javascriptBlocked: 0, fingerprintingBlocked: 0 } }
@@ -129,8 +140,11 @@ export const updateShieldsIconBadgeText: shieldState.UpdateShieldsIconBadgeText 
   const tab: shieldState.Tab = state.tabs[tabId]
   if (tab) {
     const total = getTotalResourcesBlocked(tab)
-    // do not show any badge if there are no blocked items
-    setBadgeText(tabId, total > 99 ? '99+' : total > 0 ? total.toString() : '')
+    const text: string = state.settingsData.statsBadgeVisible
+      // do not show any badge if there are no blocked items
+      ? total > 99 ? '99+' : total > 0 ? total.toString() : ''
+      : ''
+    setBadgeText(tabId, text)
   }
 }
 

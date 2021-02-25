@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "base/bind.h"
-#include "base/bind_helpers.h"
+#include "base/callback_helpers.h"
 #include "base/logging.h"
 #include "base/macros.h"
 #include "base/memory/ptr_util.h"
@@ -49,23 +49,14 @@ bool BaseBraveShieldsService::Start() {
   return false;
 }
 
-void BaseBraveShieldsService::Stop() {
-  std::lock_guard<std::mutex> guard(initialized_mutex_);
-  Cleanup();
-  initialized_ = false;
-}
-
-bool BaseBraveShieldsService::ShouldStartRequest(const GURL& url,
-    content::ResourceType resource_type,
+void BaseBraveShieldsService::ShouldStartRequest(
+    const GURL& url,
+    blink::mojom::ResourceType resource_type,
     const std::string& tab_host,
+    bool* did_match_rule,
     bool* did_match_exception,
-    bool* cancel_request_explicitly,
-    std::string* redirect) {
-  if (did_match_exception) {
-    *did_match_exception = false;
-  }
-  // Intentionally don't set cancel_request_explicitly
-  return true;
+    bool* did_match_important,
+    std::string* mock_data_url) {
 }
 
 }  // namespace brave_shields

@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Usted está navegando por este sitio sin ningún tipo de protección de seguridad o privacidad.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Estás navegando por este sitio sin la protección de seguridad y privacidad de Brave. ¿No funcionan correctamente los escudos?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Informar sobre un sitio roto",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Elementos bloqueados",
@@ -51,6 +55,22 @@
     "message": "Bloquear rastreadores entre sitios",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Rastreadores y anuncios bloqueados",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Rastreadores y anuncios bloqueados (agresiva)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Rastreadores y anuncios bloqueados (estándar)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Permitir todos los rastreadores y anuncios",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Conexiones actualizadas a HTTPS",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "Todas las cookies han sido permitidas",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Bloquear reconocimiento de dispositivos entre sitios",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Creación de huella digital del dispositivo bloqueada",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Bloquear intentos de reconocimiento de dispositivos",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Huellas digitales bloqueadas (estándar)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Permitir todos los intentos de reconocimiento de dispositivos",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Huellas digitales bloqueadas (estricto, puede inhabilitar sitios)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Permitir todos los reconocimientos de huellas digitales",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Intentos de reconocimiento de dispositivos",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Intentos de reconocimiento de huellas digitales",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Secuencias de comandos en este sitio",

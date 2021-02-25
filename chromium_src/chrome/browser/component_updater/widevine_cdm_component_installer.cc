@@ -7,47 +7,35 @@
 #include "../../../../../chrome/browser/component_updater/widevine_cdm_component_installer.cc"  // NOLINT
 #undef RegisterWidevineCdmComponent
 
-#include "brave/browser/brave_browser_process_impl.h"
-#include "brave/common/pref_names.h"
-#include "chrome/browser/profiles/profile_manager.h"
-#include "chrome/browser/ui/webui/components_ui.h"
-#include "brave/common/extensions/extension_constants.h"
+#include "brave/browser/widevine/widevine_utils.h"
+#include "chrome/browser/component_updater/component_updater_utils.h"
 #include "components/component_updater/component_updater_service.h"
-#include "components/prefs/pref_service.h"
-#include "third_party/widevine/cdm/buildflags.h"
+#include "extensions/common/constants.h"
 
 namespace component_updater {
 
-#if BUILDFLAG(ENABLE_WIDEVINE_CDM_COMPONENT)
-
+namespace {
 
 void OnWidevineRegistered() {
-  ComponentsUI::OnDemandUpdate(widevine_extension_id);
+  component_updater::BraveOnDemandUpdate(widevine_extension_id);
 }
 
-void RegisterAndInstallWidevine() {
+void RegisterAndInstallWidevine(ComponentUpdateService* cus) {
   // This code is similar to RegisterWidevineCdmComponent_ChromiumImpl
   // but that ignores the callback, and we handle it so we can force
   // an on demand update.
   auto installer = base::MakeRefCounted<component_updater::ComponentInstaller>(
       std::make_unique<WidevineCdmComponentInstallerPolicy>());
-  installer->Register(g_browser_process->component_updater(),
-      base::Bind(&OnWidevineRegistered));
+  installer->Register(cus, base::Bind(&OnWidevineRegistered));
 }
 
-#endif
+}  // namespace
 
 // Do nothing unless the user opts in!
 void RegisterWidevineCdmComponent(ComponentUpdateService* cus) {
-#if BUILDFLAG(ENABLE_WIDEVINE_CDM_COMPONENT)
   DCHECK_CURRENTLY_ON(BrowserThread::UI);
-  PrefService* prefs = ProfileManager::GetActiveUserProfile()->GetPrefs();
-  bool widevine_opted_in =
-      prefs->GetBoolean(kWidevineOptedIn);
-  if (widevine_opted_in) {
-    RegisterAndInstallWidevine();
-  }
-#endif  // defined(ENABLE_WIDEVINE_CDM_COMPONENT)
+  if (IsWidevineOptedIn())
+    RegisterAndInstallWidevine(cus);
 }
 
 }  // namespace component_updater

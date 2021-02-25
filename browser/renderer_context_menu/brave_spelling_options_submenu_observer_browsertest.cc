@@ -17,7 +17,8 @@
 #include "components/language/core/browser/pref_names.h"
 #include "components/prefs/pref_service.h"
 #include "components/spellcheck/browser/pref_names.h"
-#include "content/public/common/context_menu_params.h"
+#include "content/public/browser/context_menu_params.h"
+#include "content/public/test/browser_test.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 namespace {
@@ -41,7 +42,7 @@ class BraveSpellingOptionsSubMenuObserverTest : public InProcessBrowserTest {
                  BraveSpellingOptionsSubMenuObserver::GTEST_MODE_NORMAL) {
     Clear();
     menu_.reset(new BraveMockRenderViewContextMenu(
-        incognito ? browser()->profile()->GetOffTheRecordProfile()
+        incognito ? browser()->profile()->GetPrimaryOTRProfile()
                   : browser()->profile()));
     std::unique_ptr<BraveSpellingOptionsSubMenuObserver> observer =
         std::make_unique<BraveSpellingOptionsSubMenuObserver>(menu_.get(),

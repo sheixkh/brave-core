@@ -13,6 +13,10 @@ const state: State = deepFreeze({
   persistentData: {
     isFirstAccess: true
   },
+  settingsData: {
+    showAdvancedView: false,
+    statsBadgeVisible: true
+  },
   tabs: {
     2: {
       id: 2,
@@ -166,6 +170,7 @@ describe('shieldsPanelState test', () => {
       expect(shieldsPanelState.updateTabShieldsData(state, this.tabId, {
         ads: 'allow',
         trackers: 'allow',
+        cosmeticFiltering: 'allow',
         httpUpgradableResources: 'allow',
         javascript: 'allow',
         fingerprinting: 'allow',
@@ -178,6 +183,7 @@ describe('shieldsPanelState test', () => {
             ...state.tabs[this.tabId],
             ads: 'allow',
             trackers: 'allow',
+            cosmeticFiltering: 'allow',
             httpUpgradableResources: 'allow',
             javascript: 'allow',
             fingerprinting: 'allow',
@@ -266,7 +272,7 @@ describe('shieldsPanelState test', () => {
   describe('updateResourceBlocked', () => {
     it('can update ads blocked count', () => {
       this.tabId = 2
-      expect(shieldsPanelState.updateResourceBlocked(state, this.tabId, 'ads', 'https://test.brave.com')).toEqual({
+      expect(shieldsPanelState.updateResourceBlocked(state, this.tabId, 'shieldsAds', 'https://test.brave.com')).toEqual({
         ...state,
         tabs: {
           ...state.tabs,

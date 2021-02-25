@@ -1,30 +1,12 @@
 diff --git a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-index 4e6688aa229453f1247ff2bba3f8046c4c28254f..8dced2a38e64b4468fe042c7ebee7d863ba2f877 100644
+index 93ba69365a92bf435072f6e2d5f0179a84367948..36d5f1b7378a6957ba455c97c7603680e58674a3 100644
 --- a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
 +++ b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
-@@ -37,6 +37,7 @@
- #include "base/location.h"
- #include "base/metrics/histogram_macros.h"
- #include "base/numerics/checked_math.h"
-+#include "brave/renderer/brave_content_settings_observer_helper.h"
- #include "build/build_config.h"
- #include "third_party/blink/public/common/features.h"
- #include "third_party/blink/public/platform/task_type.h"
-@@ -949,6 +950,8 @@ String HTMLCanvasElement::ToDataURLInternal(
- String HTMLCanvasElement::toDataURL(const String& mime_type,
-                                     const ScriptValue& quality_argument,
-                                     ExceptionState& exception_state) const {
-+  if (!AllowFingerprinting(GetDocument().GetFrame()))
-+    return String();
-   if (!OriginClean()) {
-     exception_state.ThrowSecurityError("Tainted canvases may not be exported.");
-     return String();
-@@ -967,6 +970,8 @@ void HTMLCanvasElement::toBlob(V8BlobCallback* callback,
-                                const String& mime_type,
-                                const ScriptValue& quality_argument,
-                                ExceptionState& exception_state) {
-+  if (!AllowFingerprinting(GetDocument().GetFrame()))
-+    return;
-   if (!OriginClean()) {
-     exception_state.ThrowSecurityError("Tainted canvases may not be exported.");
-     return;
+@@ -951,6 +951,7 @@ String HTMLCanvasElement::ToDataURLInternal(
+     if (!data_buffer)
+       return String("data:,");
+ 
++    BRAVE_TO_DATA_URL_INTERNAL
+     String data_url = data_buffer->ToDataURL(encoding_mime_type, quality);
+     base::TimeDelta elapsed_time = base::TimeTicks::Now() - start_time;
+     float sqrt_pixels =

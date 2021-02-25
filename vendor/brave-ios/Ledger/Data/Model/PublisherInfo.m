@@ -16,7 +16,6 @@
 @dynamic provider;
 @dynamic publisherID;
 @dynamic url;
-@dynamic verified;
 @dynamic activities;
 @dynamic contributions;
 @dynamic recurringDonations;

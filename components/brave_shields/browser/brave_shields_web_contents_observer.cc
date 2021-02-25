@@ -24,8 +24,8 @@
 #include "components/content_settings/core/common/content_settings_utils.h"
 #include "components/prefs/pref_registry_simple.h"
 #include "components/prefs/pref_service.h"
-#include "content/browser/frame_host/frame_tree_node.h"
-#include "content/browser/frame_host/navigator.h"
+#include "content/browser/renderer_host/frame_tree_node.h"
+#include "content/browser/renderer_host/navigator.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/navigation_handle.h"
@@ -35,6 +35,7 @@
 #include "content/public/browser/web_contents_user_data.h"
 #include "extensions/buildflags/buildflags.h"
 #include "ipc/ipc_message_macros.h"
+#include "mojo/public/cpp/bindings/associated_remote.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
 #include "brave/common/extensions/api/brave_shields.h"
@@ -55,11 +56,11 @@ namespace {
 // Content Settings are only sent to the main frame currently.
 // Chrome may fix this at some point, but for now we do this as a work-around.
 // You can verify if this is fixed by running the following test:
-// npm run test -- brave_browser_tests --filter=BraveContentSettingsObserverBrowserTest.*  // NOLINT
+// npm run test -- brave_browser_tests --filter=BraveContentSettingsAgentImplBrowserTest.*  // NOLINT
 // Chrome seems to also have a bug with RenderFrameHostChanged not updating
 // the content settings so this is fixed here too. That case is covered in
 // tests by:
-// npm run test -- brave_browser_tests --filter=BraveContentSettingsObserverBrowserTest.*  // NOLINT
+// npm run test -- brave_browser_tests --filter=BraveContentSettingsAgentImplBrowserTest.*  // NOLINT
 void UpdateContentSettingsToRendererFrames(content::WebContents* web_contents) {
   for (content::RenderFrameHost* frame : web_contents->GetAllFrames()) {
     Profile* profile =
@@ -72,7 +73,7 @@ void UpdateContentSettingsToRendererFrames(content::WebContents* web_contents) {
         frame->GetProcess()->GetChannel();
     // channel might be NULL in tests.
     if (channel) {
-      chrome::mojom::RendererConfigurationAssociatedPtr rc_interface;
+      mojo::AssociatedRemote<chrome::mojom::RendererConfiguration> rc_interface;
       channel->GetRemoteAssociatedInterface(&rc_interface);
       rc_interface->SetContentSettingRules(rules);
     }
@@ -250,7 +251,7 @@ void BraveShieldsWebContentsObserver::DispatchBlockedEvent(
       } else if (block_type == kJavaScript) {
         prefs->SetUint64(kJavascriptBlocked,
             prefs->GetUint64(kJavascriptBlocked) + 1);
-      } else if (block_type == kFingerprinting) {
+      } else if (block_type == kFingerprintingV2) {
         prefs->SetUint64(kFingerprintingBlocked,
             prefs->GetUint64(kFingerprintingBlocked) + 1);
       }
@@ -322,7 +323,7 @@ void BraveShieldsWebContentsObserver::OnFingerprintingBlockedWithDetail(
   if (!web_contents) {
     return;
   }
-  DispatchBlockedEventForWebContents(brave_shields::kFingerprinting,
+  DispatchBlockedEventForWebContents(brave_shields::kFingerprintingV2,
       base::UTF16ToUTF8(details), web_contents);
 }
 
@@ -339,11 +340,19 @@ void BraveShieldsWebContentsObserver::RegisterProfilePrefs(
 void BraveShieldsWebContentsObserver::ReadyToCommitNavigation(
     content::NavigationHandle* navigation_handle) {
   // when the main frame navigate away
+  content::ReloadType reload_type = navigation_handle->GetReloadType();
   if (navigation_handle->IsInMainFrame() &&
-      !navigation_handle->IsSameDocument() &&
-      navigation_handle->GetReloadType() == content::ReloadType::NONE) {
-    allowed_script_origins_.clear();
-    blocked_url_paths_.clear();
+      !navigation_handle->IsSameDocument()) {
+    if (reload_type == content::ReloadType::NONE) {
+      // For new loads, we reset the counters for both blocked scripts and URLs.
+      allowed_script_origins_.clear();
+      blocked_url_paths_.clear();
+    } else if (reload_type == content::ReloadType::NORMAL) {
+      // For normal reloads (or loads to the current URL, internally converted
+      // into reloads i.e see NavigationControllerImpl::NavigateWithoutEntry),
+      // we only reset the counter for blocked URLs, not the one for scripts.
+      blocked_url_paths_.clear();
+    }
   }
 
   navigation_handle->GetWebContents()->SendToAllFrames(

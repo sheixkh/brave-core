@@ -5,28 +5,47 @@
 
 #include "brave/components/brave_ads/browser/notification_helper_linux.h"
 
+#include "base/logging.h"
+#include "brave/common/brave_channel_info.h"
+#include "chrome/browser/fullscreen.h"
+
 namespace brave_ads {
 
 NotificationHelperLinux::NotificationHelperLinux() = default;
 
 NotificationHelperLinux::~NotificationHelperLinux() = default;
 
-bool NotificationHelperLinux::ShouldShowNotifications() const {
-  // Unable to find a way of detecting if notifications are enabled within the
-  // operating system so always return true
+bool NotificationHelperLinux::ShouldShowNotifications() {
+  if (IsFullScreenMode()) {
+    LOG(WARNING) << "Notification not made: Full screen mode";
+    return false;
+  }
+
+  if (brave::IsNightlyOrDeveloperBuild()) {
+    return true;
+  }
+
+  // TODO(https://github.com/brave/brave-browser/issues/5542): Investigate how
+  // we can detect if notifications are enabled within the Linux operating
+  // system
+
   return true;
 }
 
-bool NotificationHelperLinux::ShowMyFirstAdNotification() const {
+bool NotificationHelperLinux::ShowMyFirstAdNotification() {
   return false;
 }
 
-NotificationHelperLinux* NotificationHelperLinux::GetInstance() {
+bool NotificationHelperLinux::CanShowBackgroundNotifications() const {
+  return true;
+}
+
+NotificationHelperLinux* NotificationHelperLinux::GetInstanceImpl() {
   return base::Singleton<NotificationHelperLinux>::get();
 }
 
-NotificationHelper* NotificationHelper::GetInstance() {
-  return NotificationHelperLinux::GetInstance();
+NotificationHelper* NotificationHelper::GetInstanceImpl() {
+  return NotificationHelperLinux::GetInstanceImpl();
 }
 
 }  // namespace brave_ads

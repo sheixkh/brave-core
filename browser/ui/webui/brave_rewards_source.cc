@@ -5,6 +5,8 @@
 
 #include "brave/browser/ui/webui/brave_rewards_source.h"
 
+#include <utility>
+
 #include "base/memory/ref_counted_memory.h"
 #include "chrome/browser/bitmap_fetcher/bitmap_fetcher_service.h"
 #include "chrome/browser/bitmap_fetcher/bitmap_fetcher_service_factory.h"
@@ -14,35 +16,6 @@
 #include "url/gurl.h"
 
 namespace {
-
-typedef base::RepeatingCallback<void(BitmapFetcherService::RequestId request_id,
-                                     const GURL& url,
-                                     const SkBitmap& bitmap)>
-    RewardsResourceFetcherCallback;
-
-// Calls the specified callback when the requested image is downloaded.  This
-// is a separate class instead of being implemented on BraveRewardsSource
-// because BitmapFetcherService currently takes ownership of this object.
-class RewardsResourceFetcherObserver : public BitmapFetcherService::Observer {
- public:
-  explicit RewardsResourceFetcherObserver(
-      const GURL& url,
-      const RewardsResourceFetcherCallback& rewards_resource_fetcher_callback)
-      : url_(url),
-        rewards_resource_fetcher_callback_(rewards_resource_fetcher_callback) {}
-
-  void OnImageChanged(BitmapFetcherService::RequestId request_id,
-                      const SkBitmap& image) override {
-    DCHECK(!image.empty());
-    rewards_resource_fetcher_callback_.Run(request_id, url_, image);
-  }
-
- private:
-  GURL url_;
-  const RewardsResourceFetcherCallback rewards_resource_fetcher_callback_;
-
-  DISALLOW_COPY_AND_ASSIGN(RewardsResourceFetcherObserver);
-};
 
 scoped_refptr<base::RefCountedMemory> BitmapToMemory(const SkBitmap* image) {
   base::RefCountedBytes* image_bytes = new base::RefCountedBytes;
@@ -63,19 +36,23 @@ std::string BraveRewardsSource::GetSource() {
 }
 
 void BraveRewardsSource::StartDataRequest(
-    const std::string& path,
-    const content::ResourceRequestInfo::WebContentsGetter& wc_getter,
-    const content::URLDataSource::GotDataCallback& got_data_callback) {
-  GURL url(path);
-  if (!url.is_valid()) {
-    got_data_callback.Run(nullptr);
+    const GURL& url,
+    const content::WebContents::Getter& wc_getter,
+    content::URLDataSource::GotDataCallback got_data_callback) {
+  // URL here comes in the form of
+  // chrome://rewards-image/https://rewards.brave.com/...
+  // We need to take the path and make it into a URL.
+  GURL actual_url(URLDataSource::URLToRequestPath(url));
+  if (!actual_url.is_valid()) {
+    std::move(got_data_callback).Run(nullptr);
     return;
   }
 
-  auto it = find(resource_fetchers_.begin(), resource_fetchers_.end(), url);
+  auto it =
+      find(resource_fetchers_.begin(), resource_fetchers_.end(), actual_url);
   if (it != resource_fetchers_.end()) {
     LOG(WARNING) << "Already fetching specified Brave Rewards resource, url: "
-                 << url;
+                 << actual_url;
     return;
   }
 
@@ -101,15 +78,13 @@ void BraveRewardsSource::StartDataRequest(
           policy_exception_justification:
             "Not implemented."
         })");
-    resource_fetchers_.emplace_back(path);
-    request_ids_.push_back(image_service->RequestImage(
-        url,
-        // Image Service takes ownership of the observer.
-        new RewardsResourceFetcherObserver(
-            url,
-            base::BindRepeating(&BraveRewardsSource::OnBitmapFetched,
-                                base::Unretained(this), got_data_callback)),
-        traffic_annotation));
+    resource_fetchers_.emplace_back(actual_url);
+    image_service->RequestImage(
+        actual_url,
+        base::BindOnce(&BraveRewardsSource::OnBitmapFetched,
+                       base::Unretained(this), std::move(got_data_callback),
+                       actual_url),
+        traffic_annotation);
   }
 }
 
@@ -131,33 +106,27 @@ bool BraveRewardsSource::ShouldReplaceExistingSource() {
 
 bool BraveRewardsSource::ShouldServiceRequest(
     const GURL& url,
-    content::ResourceContext* resource_context,
+    content::BrowserContext* browser_context,
     int render_process_id) {
-  return URLDataSource::ShouldServiceRequest(url, resource_context,
+  return URLDataSource::ShouldServiceRequest(url, browser_context,
                                              render_process_id);
 }
 
 void BraveRewardsSource::OnBitmapFetched(
-    const content::URLDataSource::GotDataCallback& got_data_callback,
-    BitmapFetcherService::RequestId request_id,
+    content::URLDataSource::GotDataCallback got_data_callback,
     const GURL& url,
     const SkBitmap& bitmap) {
   if (bitmap.isNull()) {
     LOG(ERROR) << "Failed to retrieve Brave Rewards resource, url: " << url;
-    got_data_callback.Run(nullptr);
+    std::move(got_data_callback).Run(nullptr);
     return;
   }
 
-  got_data_callback.Run(BitmapToMemory(&bitmap).get());
+  std::move(got_data_callback).Run(BitmapToMemory(&bitmap).get());
 
   auto it_url =
-      find(resource_fetchers_.begin(), resource_fetchers_.end(), url.spec());
+      find(resource_fetchers_.begin(), resource_fetchers_.end(), url);
   if (it_url != resource_fetchers_.end()) {
     resource_fetchers_.erase(it_url);
-  }
-
-  auto it_ids = find(request_ids_.begin(), request_ids_.end(), request_id);
-  if (it_ids != request_ids_.end()) {
-    request_ids_.erase(it_ids);
   }
 }

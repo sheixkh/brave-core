@@ -8,22 +8,29 @@
 #include <algorithm>
 #include <utility>
 
+#include "base/feature_list.h"
+#include "base/metrics/histogram_macros.h"
 #include "base/task/post_task.h"
 #include "brave/browser/net/brave_ad_block_tp_network_delegate_helper.h"
 #include "brave/browser/net/brave_common_static_redirect_network_delegate_helper.h"
 #include "brave/browser/net/brave_httpse_network_delegate_helper.h"
 #include "brave/browser/net/brave_site_hacks_network_delegate_helper.h"
 #include "brave/browser/net/brave_stp_util.h"
+#include "brave/browser/net/global_privacy_control_network_delegate_helper.h"
 #include "brave/browser/translate/buildflags/buildflags.h"
 #include "brave/common/pref_names.h"
 #include "brave/components/brave_referrals/buildflags/buildflags.h"
 #include "brave/components/brave_rewards/browser/buildflags/buildflags.h"
 #include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
+#include "brave/components/ipfs/buildflags/buildflags.h"
 #include "chrome/browser/browser_process.h"
 #include "components/prefs/pref_change_registrar.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/common/url_constants.h"
+#include "extensions/common/constants.h"
+#include "net/base/net_errors.h"
 
 #if BUILDFLAG(ENABLE_BRAVE_REFERRALS)
 #include "brave/browser/net/brave_referrals_network_delegate_helper.h"
@@ -34,27 +41,34 @@
 #endif
 
 #if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-#include "brave/components/brave_webtorrent/browser/net/brave_torrent_redirect_network_delegate_helper.h"
+#include "brave/browser/net/brave_torrent_redirect_network_delegate_helper.h"
 #endif
 
 #if BUILDFLAG(ENABLE_BRAVE_TRANSLATE_GO)
 #include "brave/browser/net/brave_translate_redirect_network_delegate_helper.h"
 #endif
 
-BraveRequestHandler::BraveRequestHandler()
-    : task_runner_(base::ThreadTaskRunnerHandle::Get()) {
+#if BUILDFLAG(IPFS_ENABLED)
+#include "brave/browser/net/ipfs_redirect_network_delegate_helper.h"
+#include "brave/components/ipfs/features.h"
+#endif
+
+static bool IsInternalScheme(std::shared_ptr<brave::BraveRequestInfo> ctx) {
+  DCHECK(ctx);
+  return ctx->request_url.SchemeIs(extensions::kExtensionScheme) ||
+         ctx->request_url.SchemeIs(content::kChromeUIScheme);
+}
+
+BraveRequestHandler::BraveRequestHandler() {
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   SetupCallbacks();
   // Initialize the preference change registrar.
-  base::PostTaskWithTraits(
-      FROM_HERE, {content::BrowserThread::UI},
-      base::Bind(&BraveRequestHandler::InitPrefChangeRegistrarOnUI,
-                 weak_factory_.GetWeakPtr()));
+  InitPrefChangeRegistrar();
 }
 
 BraveRequestHandler::~BraveRequestHandler() = default;
 
 void BraveRequestHandler::SetupCallbacks() {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   brave::OnBeforeURLRequestCallback callback =
       base::Bind(brave::OnBeforeURLRequest_SiteHacksWork);
   before_url_request_callbacks_.push_back(callback);
@@ -79,8 +93,22 @@ void BraveRequestHandler::SetupCallbacks() {
   before_url_request_callbacks_.push_back(callback);
 #endif
 
+#if BUILDFLAG(IPFS_ENABLED)
+  if (base::FeatureList::IsEnabled(ipfs::features::kIpfsFeature)) {
+    callback = base::BindRepeating(ipfs::OnBeforeURLRequest_IPFSRedirectWork);
+    before_url_request_callbacks_.push_back(callback);
+    brave::OnHeadersReceivedCallback ipfs_headers_received_callback =
+        base::Bind(ipfs::OnHeadersReceived_IPFSRedirectWork);
+    headers_received_callbacks_.push_back(ipfs_headers_received_callback);
+  }
+#endif
+
   brave::OnBeforeStartTransactionCallback start_transaction_callback =
       base::Bind(brave::OnBeforeStartTransaction_SiteHacksWork);
+  before_start_transaction_callbacks_.push_back(start_transaction_callback);
+
+  start_transaction_callback =
+      base::Bind(brave::OnBeforeStartTransaction_GlobalPrivacyControlWork);
   before_start_transaction_callbacks_.push_back(start_transaction_callback);
 
 #if BUILDFLAG(ENABLE_BRAVE_REFERRALS)
@@ -96,7 +124,7 @@ void BraveRequestHandler::SetupCallbacks() {
 #endif
 }
 
-void BraveRequestHandler::InitPrefChangeRegistrarOnUI() {
+void BraveRequestHandler::InitPrefChangeRegistrar() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 #if BUILDFLAG(ENABLE_BRAVE_REFERRALS)
   PrefService* prefs = g_browser_process->local_state();
@@ -105,7 +133,7 @@ void BraveRequestHandler::InitPrefChangeRegistrarOnUI() {
   pref_change_registrar_->Add(
       kReferralHeaders,
       base::Bind(&BraveRequestHandler::OnReferralHeadersChanged,
-                 weak_factory_ui_.GetWeakPtr()));
+                 base::Unretained(this)));
   // Retrieve current referral headers, if any.
   OnReferralHeadersChanged();
 #endif
@@ -115,34 +143,27 @@ void BraveRequestHandler::OnReferralHeadersChanged() {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
   if (const base::ListValue* referral_headers =
           g_browser_process->local_state()->GetList(kReferralHeaders)) {
-    task_runner_->PostTask(FROM_HERE,
-        base::Bind(&BraveRequestHandler::SetReferralHeaders,
-                   weak_factory_ui_.GetWeakPtr(),
-                   referral_headers->DeepCopy()));
+    referral_headers_list_.reset(referral_headers->DeepCopy());
   }
 }
 
-void BraveRequestHandler::SetReferralHeaders(
-    base::ListValue* referral_headers) {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  referral_headers_list_.reset(referral_headers);
+bool BraveRequestHandler::IsRequestIdentifierValid(
+    uint64_t request_identifier) {
+  return base::Contains(callbacks_, request_identifier);
 }
 
 int BraveRequestHandler::OnBeforeURLRequest(
     std::shared_ptr<brave::BraveRequestInfo> ctx,
     net::CompletionOnceCallback callback,
     GURL* new_url) {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  if (before_url_request_callbacks_.empty()) {
+  if (before_url_request_callbacks_.empty() || IsInternalScheme(ctx)) {
     return net::OK;
   }
+  SCOPED_UMA_HISTOGRAM_TIMER("Brave.OnBeforeURLRequest_Handler");
   ctx->new_url = new_url;
   ctx->event_type = brave::kOnBeforeRequest;
   callbacks_[ctx->request_identifier] = std::move(callback);
-  base::PostTaskWithTraits(FROM_HERE, {content::BrowserThread::IO},
-                           base::Bind(&BraveRequestHandler::RunNextCallback,
-                                      weak_factory_.GetWeakPtr(),
-                                      ctx));
+  RunNextCallback(ctx);
   return net::ERR_IO_PENDING;
 }
 
@@ -150,18 +171,14 @@ int BraveRequestHandler::OnBeforeStartTransaction(
     std::shared_ptr<brave::BraveRequestInfo> ctx,
     net::CompletionOnceCallback callback,
     net::HttpRequestHeaders* headers) {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  if (before_start_transaction_callbacks_.empty()) {
+  if (before_start_transaction_callbacks_.empty() || IsInternalScheme(ctx)) {
     return net::OK;
   }
   ctx->event_type = brave::kOnBeforeStartTransaction;
   ctx->headers = headers;
   ctx->referral_headers_list = referral_headers_list_.get();
   callbacks_[ctx->request_identifier] = std::move(callback);
-  base::PostTaskWithTraits(FROM_HERE, {content::BrowserThread::IO},
-                           base::Bind(&BraveRequestHandler::RunNextCallback,
-                                      weak_factory_.GetWeakPtr(),
-                                      ctx));
+  RunNextCallback(ctx);
   return net::ERR_IO_PENDING;
 }
 
@@ -171,14 +188,15 @@ int BraveRequestHandler::OnHeadersReceived(
     const net::HttpResponseHeaders* original_response_headers,
     scoped_refptr<net::HttpResponseHeaders>* override_response_headers,
     GURL* allowed_unsafe_redirect_url) {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   if (!ctx->tab_origin.is_empty()) {
     brave::RemoveTrackableSecurityHeadersForThirdParty(
         ctx->request_url, url::Origin::Create(ctx->tab_origin),
         original_response_headers, override_response_headers);
   }
 
-  if (headers_received_callbacks_.empty()) {
+  if (headers_received_callbacks_.empty() &&
+      !ctx->request_url.SchemeIs(content::kChromeUIScheme)) {
+    // Extension scheme not excluded since brave_webtorrent needs it.
     return net::OK;
   }
 
@@ -188,16 +206,12 @@ int BraveRequestHandler::OnHeadersReceived(
   ctx->override_response_headers = override_response_headers;
   ctx->allowed_unsafe_redirect_url = allowed_unsafe_redirect_url;
 
-  base::PostTaskWithTraits(FROM_HERE, {content::BrowserThread::IO},
-                           base::Bind(&BraveRequestHandler::RunNextCallback,
-                                      weak_factory_.GetWeakPtr(),
-                                      ctx));
+  RunNextCallback(ctx);
   return net::ERR_IO_PENDING;
 }
 
 void BraveRequestHandler::OnURLRequestDestroyed(
     std::shared_ptr<brave::BraveRequestInfo> ctx) {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
   if (base::Contains(callbacks_, ctx->request_identifier)) {
     callbacks_.erase(ctx->request_identifier);
   }
@@ -206,31 +220,23 @@ void BraveRequestHandler::OnURLRequestDestroyed(
 void BraveRequestHandler::RunCallbackForRequestIdentifier(
     uint64_t request_identifier,
     int rv) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-  task_runner_->PostTask(FROM_HERE, base::BindOnce(
-      &BraveRequestHandler::RunCallbackForRequestIdentifierInTaskRunner,
-      weak_factory_io_.GetWeakPtr(), request_identifier, rv));
-}
-
-void BraveRequestHandler::RunCallbackForRequestIdentifierInTaskRunner(
-    uint64_t request_identifier,
-    int rv) {
-  DCHECK_CALLED_ON_VALID_SEQUENCE(sequence_checker_);
-  if (!base::Contains(callbacks_, request_identifier))
-    return;
-
   std::map<uint64_t, net::CompletionOnceCallback>::iterator it =
       callbacks_.find(request_identifier);
   // We intentionally do the async call to maintain the proper flow
   // of URLLoader callbacks.
-  task_runner_->PostTask(FROM_HERE, base::BindOnce(std::move(it->second), rv));
+  base::PostTask(FROM_HERE, {content::BrowserThread::UI},
+                 base::BindOnce(std::move(it->second), rv));
 }
 
 // TODO(iefremov): Merge all callback containers into one and run only one loop
 // instead of many (issues/5574).
 void BraveRequestHandler::RunNextCallback(
     std::shared_ptr<brave::BraveRequestInfo> ctx) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+
+  if (!base::Contains(callbacks_, ctx->request_identifier)) {
+    return;
+  }
 
   // Continue processing callbacks until we hit one that returns PENDING
   int rv = net::OK;
@@ -240,10 +246,9 @@ void BraveRequestHandler::RunNextCallback(
            ctx->next_url_request_index) {
       brave::OnBeforeURLRequestCallback callback =
           before_url_request_callbacks_[ctx->next_url_request_index++];
-      brave::ResponseCallback next_callback = base::Bind(
-          &BraveRequestHandler::RunNextCallback,
-          weak_factory_.GetWeakPtr(),
-          ctx);
+      brave::ResponseCallback next_callback =
+          base::Bind(&BraveRequestHandler::RunNextCallback,
+                     weak_factory_.GetWeakPtr(), ctx);
       rv = callback.Run(next_callback, ctx);
       if (rv == net::ERR_IO_PENDING) {
         return;
@@ -257,10 +262,9 @@ void BraveRequestHandler::RunNextCallback(
            ctx->next_url_request_index) {
       brave::OnBeforeStartTransactionCallback callback =
           before_start_transaction_callbacks_[ctx->next_url_request_index++];
-      brave::ResponseCallback next_callback = base::Bind(
-          &BraveRequestHandler::RunNextCallback,
-          weak_factory_.GetWeakPtr(),
-          ctx);
+      brave::ResponseCallback next_callback =
+          base::Bind(&BraveRequestHandler::RunNextCallback,
+                     weak_factory_.GetWeakPtr(), ctx);
       rv = callback.Run(ctx->headers, next_callback, ctx);
       if (rv == net::ERR_IO_PENDING) {
         return;
@@ -273,10 +277,9 @@ void BraveRequestHandler::RunNextCallback(
     while (headers_received_callbacks_.size() != ctx->next_url_request_index) {
       brave::OnHeadersReceivedCallback callback =
           headers_received_callbacks_[ctx->next_url_request_index++];
-      brave::ResponseCallback next_callback = base::Bind(
-          &BraveRequestHandler::RunNextCallback,
-          weak_factory_.GetWeakPtr(),
-          ctx);
+      brave::ResponseCallback next_callback =
+          base::Bind(&BraveRequestHandler::RunNextCallback,
+                     weak_factory_.GetWeakPtr(), ctx);
       rv = callback.Run(ctx->original_response_headers,
                         ctx->override_response_headers,
                         ctx->allowed_unsafe_redirect_url, next_callback, ctx);
@@ -296,13 +299,15 @@ void BraveRequestHandler::RunNextCallback(
 
   if (ctx->event_type == brave::kOnBeforeRequest) {
     if (!ctx->new_url_spec.empty() &&
-        ctx->new_url_spec != ctx->request_url.spec()) {
+        (ctx->new_url_spec != ctx->request_url.spec()) &&
+        IsRequestIdentifierValid(ctx->request_identifier)) {
       *ctx->new_url = GURL(ctx->new_url_spec);
     }
-    if (ctx->blocked_by == brave::kAdBlocked) {
-      if (ctx->cancel_request_explicitly) {
+    if (ctx->blocked_by == brave::kAdBlocked ||
+        ctx->blocked_by == brave::kOtherBlocked) {
+      if (!ctx->ShouldMockRequest()) {
         RunCallbackForRequestIdentifier(ctx->request_identifier,
-                                        net::ERR_ABORTED);
+                                        net::ERR_BLOCKED_BY_CLIENT);
         return;
       }
     }

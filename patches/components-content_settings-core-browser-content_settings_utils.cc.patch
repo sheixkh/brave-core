@@ -1,19 +1,12 @@
 diff --git a/components/content_settings/core/browser/content_settings_utils.cc b/components/content_settings/core/browser/content_settings_utils.cc
-index 4cba738c02ff5526e6757513bfb14b1256efa705..49d1b761b24e0fcb3684066305be2aba87fe726d 100644
+index b462833a618434afb05e4bdbbf4163f7079e5adb..5f702e3c0472446dbf7dfda4290466553324020a 100644
 --- a/components/content_settings/core/browser/content_settings_utils.cc
 +++ b/components/content_settings/core/browser/content_settings_utils.cc
-@@ -146,6 +146,14 @@ void GetRendererContentSettingRules(const HostContentSettingsMap* map,
-                              &(rules->client_hints_rules));
-   map->GetSettingsForOneType(CONTENT_SETTINGS_TYPE_POPUPS, ResourceIdentifier(),
+@@ -145,6 +145,7 @@ void GetRendererContentSettingRules(const HostContentSettingsMap* map,
+                              &(rules->script_rules));
+   map->GetSettingsForOneType(ContentSettingsType::POPUPS,
                               &(rules->popup_redirect_rules));
-+  map->GetSettingsForOneType(
-+      CONTENT_SETTINGS_TYPE_PLUGINS,
-+      "fingerprinting",
-+      &(rules->fingerprinting_rules));
-+  map->GetSettingsForOneType(
-+      CONTENT_SETTINGS_TYPE_PLUGINS,
-+      "braveShields",
-+      &(rules->brave_shields_rules));
++  BRAVE_GET_RENDER_CONTENT_SETTING_RULES
  }
  
  bool IsMorePermissive(ContentSetting a, ContentSetting b) {

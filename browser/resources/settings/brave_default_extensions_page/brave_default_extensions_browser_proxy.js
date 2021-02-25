@@ -2,48 +2,78 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-cr.define('settings', function() {
+// clang-format off
+// #import {addSingletonGetter, sendWithPromise} from 'chrome://resources/js/cr.m.js';
+// clang-format on
+
+cr.define('settings', function () {
   /** @interface */
-  class BraveDefaultExtensionsBrowserProxy {
+  /* #export */ class BraveDefaultExtensionsBrowserProxy {
     /**
      * @param {boolean} value name.
      */
-    setWebTorrentEnabled(value) {}
-    setBraveWalletEnabled(value) {}
-    setHangoutsEnabled(value) {}
-    setIPFSCompanionEnabled(value) {}
-    getRestartNeeded() {}
+    setWebTorrentEnabled (value) {}
+    setHangoutsEnabled (value) {}
+    setTorEnabled (value) {}
+    isTorEnabled () {}
+    isTorManaged () {}
+    setWidevineEnabled() {}
+    isWidevineEnabled() {}
+    getRestartNeeded () {}
+    wasSignInEnabledAtStartup () {}
   }
 
   /**
    * @implements {settings.BraveDefaultExtensionsBrowserProxy}
    */
-  class BraveDefaultExtensionsBrowserProxyImpl {
+  /* #export */ class BraveDefaultExtensionsBrowserProxyImpl {
     /** @override */
-    setWebTorrentEnabled(value) {
-      chrome.send('setWebTorrentEnabled', [value]);
+    setWebTorrentEnabled (value) {
+      chrome.send('setWebTorrentEnabled', [value])
     }
-    setBraveWalletEnabled(value) {
-      chrome.send('setBraveWalletEnabled', [value]);
+
+    setHangoutsEnabled (value) {
+      chrome.send('setHangoutsEnabled', [value])
     }
-    setHangoutsEnabled(value) {
-      chrome.send('setHangoutsEnabled', [value]);
+
+    setMediaRouterEnabled (value) {
+      chrome.send('setMediaRouterEnabled', [value])
     }
-    setIPFSCompanionEnabled(value) {
-      chrome.send('setIPFSCompanionEnabled', [value]);
+
+    setTorEnabled (value) {
+      chrome.send('setTorEnabled', [value])
     }
-    setMediaRouterEnabled(value) {
-      chrome.send('setMediaRouterEnabled', [value]);
+
+    isTorEnabled () {
+      return cr.sendWithPromise('isTorEnabled')
     }
-    getRestartNeeded() {
-      return cr.sendWithPromise('getRestartNeeded');
+
+    isTorManaged () {
+      return cr.sendWithPromise('isTorManaged')
+    }
+
+    setWidevineEnabled (value) {
+      chrome.send('setWidevineEnabled', [value])
+    }
+
+    isWidevineEnabled () {
+      return cr.sendWithPromise('isWidevineEnabled')
+    }
+
+    getRestartNeeded () {
+      return cr.sendWithPromise('getRestartNeeded')
+    }
+
+    wasSignInEnabledAtStartup () {
+      return loadTimeData.getBoolean('signInAllowedOnNextStartupInitialValue')
     }
   }
 
-  cr.addSingletonGetter(BraveDefaultExtensionsBrowserProxyImpl);
+  cr.addSingletonGetter(BraveDefaultExtensionsBrowserProxyImpl)
 
+  // #cr_define_end
   return {
     BraveDefaultExtensionsBrowserProxy,
     BraveDefaultExtensionsBrowserProxyImpl
-  };
-});
+  }
+})

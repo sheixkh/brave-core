@@ -3,101 +3,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "brave/browser/net/url_context.h"
 
 #include <memory>
 #include <string>
 
-#include "brave/common/extensions/extension_constants.h"
-#include "brave/common/pref_names.h"
-#include "brave/common/url_constants.h"
 #include "brave/components/brave_shields/browser/brave_shields_util.h"
 #include "brave/components/brave_shields/browser/brave_shields_web_contents_observer.h"
-#include "brave/components/brave_shields/common/brave_shield_constants.h"
 #include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
+#include "brave/components/brave_webtorrent/browser/webtorrent_util.h"
+#include "brave/components/ipfs/buildflags/buildflags.h"
+#include "chrome/browser/content_settings/host_content_settings_map_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/profiles/profile_io_data.h"
-#include "chrome/browser/profiles/profile_manager.h"
-#include "components/prefs/testing_pref_service.h"
-#include "content/public/browser/resource_request_info.h"
-#include "net/base/upload_bytes_element_reader.h"
-#include "net/base/upload_data_stream.h"
+#include "content/public/browser/browser_thread.h"
+#include "net/base/isolation_info.h"
 
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-#include "extensions/browser/extension_registry.h"
-#include "extensions/browser/info_map.h"
+#if BUILDFLAG(IPFS_ENABLED)
+#include "brave/components/ipfs/ipfs_constants.h"
+#include "brave/components/ipfs/ipfs_utils.h"
+#include "brave/components/ipfs/pref_names.h"
+#include "chrome/common/channel_info.h"
+#include "components/prefs/pref_service.h"
+#include "components/user_prefs/user_prefs.h"
 #endif
 
 namespace brave {
 
 namespace {
-
-bool IsWebTorrentDisabled(content::BrowserContext* browser_context) {
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
-  DCHECK(browser_context);
-  auto* extension_registry =
-      extensions::ExtensionRegistry::Get(browser_context);
-
-  if (!extension_registry)
-    return true;
-
-  if (extension_registry->enabled_extensions().Contains(
-          brave_webtorrent_extension_id))
-    return false;
-#endif  // BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-
-  return true;
-}
-
-bool IsWebTorrentDisabled(content::ResourceContext* resource_context) {
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-  DCHECK(resource_context);
-
-  const ProfileIOData* io_data =
-    ProfileIOData::FromResourceContext(resource_context);
-  if (!io_data) {
-    return false;
-  }
-
-  const extensions::InfoMap* infoMap = io_data->GetExtensionInfoMap();
-  if (!infoMap) {
-    return false;
-  }
-
-  return !infoMap->extensions().Contains(brave_webtorrent_extension_id) ||
-    infoMap->disabled_extensions().Contains(brave_webtorrent_extension_id);
-#else
-  return true;
-#endif  // BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-}
-
-std::string GetUploadDataFromURLRequest(const net::URLRequest* request) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-  if (!request->has_upload())
-    return {};
-
-  const net::UploadDataStream* stream = request->get_upload();
-  if (!stream->GetElementReaders())
-    return {};
-
-  const auto* element_readers = stream->GetElementReaders();
-  if (element_readers->empty())
-    return {};
-
-  std::string upload_data;
-  for (const auto& element_reader : *element_readers) {
-    const net::UploadBytesElementReader* reader =
-        element_reader->AsBytesReader();
-    if (!reader) {
-      return {};
-    }
-    upload_data.append(reader->bytes(), reader->length());
-  }
-  return upload_data;
-}
 
 std::string GetUploadData(const network::ResourceRequest& request) {
   std::string upload_data;
@@ -106,8 +38,9 @@ std::string GetUploadData(const network::ResourceRequest& request) {
   }
   const auto* elements = request.request_body->elements();
   for (const network::DataElement& element : *elements) {
-    if (element.type() == network::mojom::DataElementType::kBytes) {
-      upload_data.append(element.bytes(), element.length());
+    if (element.type() == network::mojom::DataElementDataView::Tag::kBytes) {
+      const auto& bytes = element.As<network::DataElementBytes>().bytes();
+      upload_data.append(bytes.begin(), bytes.end());
     }
   }
 
@@ -118,74 +51,23 @@ std::string GetUploadData(const network::ResourceRequest& request) {
 
 BraveRequestInfo::BraveRequestInfo() = default;
 
+BraveRequestInfo::BraveRequestInfo(const GURL& url) : request_url(url) {}
+
 BraveRequestInfo::~BraveRequestInfo() = default;
 
-void BraveRequestInfo::FillCTXFromRequest(const net::URLRequest* request,
-    std::shared_ptr<brave::BraveRequestInfo> ctx) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
-  ctx->request_identifier = request->identifier();
-  ctx->request_url = request->url();
-  if (request->initiator().has_value()) {
-    ctx->initiator_url = request->initiator()->GetURL();
-  }
-
-  ctx->referrer = GURL(request->referrer());
-  ctx->referrer_policy = request->referrer_policy();
-
-  auto* request_info = content::ResourceRequestInfo::ForRequest(request);
-  if (request_info) {
-    ctx->resource_type = request_info->GetResourceType();
-    if (auto* context = request_info->GetContext()) {
-      ctx->is_webtorrent_disabled = IsWebTorrentDisabled(context);
-    }
-  }
-
-  brave_shields::GetRenderFrameInfo(request,
-                                    &ctx->render_frame_id,
-                                    &ctx->render_process_id,
-                                    &ctx->frame_tree_node_id);
-  if (!request->site_for_cookies().is_empty()) {
-    ctx->tab_url = request->site_for_cookies();
-  } else {
-    // We can not always use site_for_cookies since it can be empty in certain
-    // cases. See the comments in url_request.h
-    ctx->tab_url = GURL(request->network_isolation_key().ToString());
-    if (ctx->tab_url.is_empty()) {
-      ctx->tab_url = brave_shields::BraveShieldsWebContentsObserver::
-          GetTabURLFromRenderFrameInfo(ctx->render_process_id,
-                                       ctx->render_frame_id,
-                                       ctx->frame_tree_node_id).GetOrigin();
-    }
-  }
-  ctx->tab_origin = ctx->tab_url.GetOrigin();
-  ctx->allow_brave_shields = brave_shields::IsAllowContentSettingFromIO(
-      request, ctx->tab_origin, ctx->tab_origin, CONTENT_SETTINGS_TYPE_PLUGINS,
-      brave_shields::kBraveShields) &&
-    !request->site_for_cookies().SchemeIs(kChromeExtensionScheme);
-  ctx->allow_ads = brave_shields::IsAllowContentSettingFromIO(
-      request, ctx->tab_origin, ctx->tab_origin, CONTENT_SETTINGS_TYPE_PLUGINS,
-      brave_shields::kAds);
-  ctx->allow_http_upgradable_resource =
-      brave_shields::IsAllowContentSettingFromIO(request, ctx->tab_origin,
-          ctx->tab_origin, CONTENT_SETTINGS_TYPE_PLUGINS,
-      brave_shields::kHTTPUpgradableResources);
-  ctx->allow_referrers = brave_shields::IsAllowContentSettingFromIO(
-      request, ctx->tab_origin, ctx->tab_origin, CONTENT_SETTINGS_TYPE_PLUGINS,
-      brave_shields::kReferrers);
-
-  ctx->upload_data = GetUploadDataFromURLRequest(request);
-}
-
 // static
-void BraveRequestInfo::FillCTX(
+std::shared_ptr<brave::BraveRequestInfo> BraveRequestInfo::MakeCTX(
     const network::ResourceRequest& request,
     int render_process_id,
     int frame_tree_node_id,
     uint64_t request_identifier,
     content::BrowserContext* browser_context,
-    std::shared_ptr<brave::BraveRequestInfo> ctx) {
+    std::shared_ptr<brave::BraveRequestInfo> old_ctx) {
   DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
+
+  auto ctx = std::make_shared<brave::BraveRequestInfo>();
   ctx->request_identifier = request_identifier;
+  ctx->method = request.method;
   ctx->request_url = request.url;
   // TODO(iefremov): Replace GURL with Origin
   ctx->initiator_url =
@@ -195,9 +77,14 @@ void BraveRequestInfo::FillCTX(
   ctx->referrer_policy = request.referrer_policy;
 
   ctx->resource_type =
-      static_cast<content::ResourceType>(request.resource_type);
+      static_cast<blink::mojom::ResourceType>(request.resource_type);
 
-  ctx->is_webtorrent_disabled = IsWebTorrentDisabled(browser_context);
+  ctx->is_webtorrent_disabled =
+#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
+      !webtorrent::IsWebtorrentEnabled(browser_context);
+#else
+      true;
+#endif
 
   ctx->render_frame_id = request.render_frame_id;
   ctx->render_process_id = render_process_id;
@@ -205,16 +92,14 @@ void BraveRequestInfo::FillCTX(
 
   // TODO(iefremov): remove tab_url. Change tab_origin from GURL to Origin.
   // ctx->tab_url = request.top_frame_origin;
-  // TODO(iefremov): Replace with NetworkIsolationKey when it is available
-  // in ResourceRequest
-  // TODO(iefremov): c77 - navigation doesn't populate top_frame_origin any more
-  // and uses NetworkIsolationKey instead. According to
-  // services/network/public/mojom/url_loader.mojom, this field "will most
-  // likely be removed at some point".
-  if (base::nullopt != request.top_frame_origin) {
-    ctx->tab_origin = request.top_frame_origin->GetURL();
-  } else {
-    ctx->tab_origin = request.trusted_network_isolation_key.GetTopFrameOrigin()
+  if (request.trusted_params) {
+    // TODO(iefremov): Turns out it provides us a not expected value for
+    // cross-site top-level navigations. Fortunately for now it is not a problem
+    // for shields functionality. We should reconsider this machinery, also
+    // given that this is always empty for subresources.
+    ctx->network_isolation_key =
+        request.trusted_params->isolation_info.network_isolation_key();
+    ctx->tab_origin = request.trusted_params->isolation_info.top_frame_origin()
                           .value_or(url::Origin())
                           .GetURL();
   }
@@ -223,23 +108,61 @@ void BraveRequestInfo::FillCTX(
   // (See |BraveProxyingWebSocket|).
   if (ctx->tab_origin.is_empty()) {
     ctx->tab_origin = brave_shields::BraveShieldsWebContentsObserver::
-        GetTabURLFromRenderFrameInfo(ctx->render_process_id,
-                                     ctx->render_frame_id,
-                                     ctx->frame_tree_node_id).GetOrigin();
+                          GetTabURLFromRenderFrameInfo(ctx->render_process_id,
+                                                       ctx->render_frame_id,
+                                                       ctx->frame_tree_node_id)
+                              .GetOrigin();
+  }
+
+  if (old_ctx) {
+    ctx->internal_redirect = old_ctx->internal_redirect;
+    ctx->redirect_source = old_ctx->redirect_source;
   }
 
   Profile* profile = Profile::FromBrowserContext(browser_context);
+  auto* map = HostContentSettingsMapFactory::GetForProfile(profile);
   ctx->allow_brave_shields =
-      brave_shields::GetBraveShieldsEnabled(profile, ctx->tab_origin);
-  ctx->allow_ads =
-      brave_shields::GetAdControlType(profile, ctx->tab_origin) ==
-          brave_shields::ControlType::ALLOW;
+      brave_shields::GetBraveShieldsEnabled(map, ctx->tab_origin);
+  ctx->allow_ads = brave_shields::GetAdControlType(map, ctx->tab_origin) ==
+                   brave_shields::ControlType::ALLOW;
   ctx->allow_http_upgradable_resource =
-      !brave_shields::GetHTTPSEverywhereEnabled(profile, ctx->tab_origin);
-  ctx->allow_referrers =
-      brave_shields::AllowReferrers(profile, ctx->tab_origin);
-  ctx->upload_data = GetUploadData(request);
-}
+      !brave_shields::GetHTTPSEverywhereEnabled(map, ctx->tab_origin);
 
+  // HACK: after we fix multiple creations of BraveRequestInfo we should
+  // use only tab_origin. Since we recreate BraveRequestInfo during consequent
+  // stages of navigation, |tab_origin| changes and so does |allow_referrers|
+  // flag, which is not what we want for determining referrers.
+  ctx->allow_referrers = brave_shields::AllowReferrers(
+      map,
+      ctx->redirect_source.is_empty() ? ctx->tab_origin : ctx->redirect_source);
+  ctx->upload_data = GetUploadData(request);
+
+  ctx->browser_context = browser_context;
+#if BUILDFLAG(IPFS_ENABLED)
+  auto* prefs = user_prefs::UserPrefs::Get(browser_context);
+  ctx->ipfs_gateway_url =
+      ipfs::GetConfiguredBaseGateway(browser_context, chrome::GetChannel());
+  ctx->ipfs_auto_fallback = prefs->GetBoolean(kIPFSAutoRedirectGateway);
+
+  // ipfs:// navigations have no tab origin set, but we want it to be the tab
+  // origin of the gateway so that ad-block in particular won't give up early.
+  if (ipfs::IsLocalGatewayConfigured(browser_context) &&
+      ctx->tab_origin.is_empty() &&
+      ipfs::IsLocalGatewayURL(ctx->initiator_url)) {
+    ctx->tab_url = ctx->initiator_url;
+    ctx->tab_origin = ctx->initiator_url.GetOrigin();
+  }
+#endif
+
+  // TODO(fmarier): remove this once the hacky code in
+  // brave_proxying_url_loader_factory.cc is refactored. See
+  // BraveProxyingURLLoaderFactory::InProgressRequest::UpdateRequestInfo().
+  if (old_ctx) {
+    ctx->internal_redirect = old_ctx->internal_redirect;
+    ctx->redirect_source = old_ctx->redirect_source;
+  }
+
+  return ctx;
+}
 
 }  // namespace brave

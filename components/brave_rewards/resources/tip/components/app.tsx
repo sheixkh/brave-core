@@ -3,83 +3,40 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as React from 'react'
-import { bindActionCreators, Dispatch } from 'redux'
-import { connect } from 'react-redux'
 
-// Components
-import TipSite from './tipSite'
-import TipMediaUser from './tipMediaUser'
+import { HostContext } from '../lib/host_context'
+import { WithThemeVariables } from '../../shared/components/with_theme_variables'
 
-// Utils
-import * as rewardsActions from '../actions/tip_actions'
+import { AppError } from './app_error'
+import { PublisherBanner } from './publisher_banner'
+import { TipForm } from './tip_form'
+import { CloseIcon } from '../../shared/components/icons/close_icon'
 
-interface TipDialogArgs {
-  url: string
-  publisherKey: string
-  mediaMetaData?: RewardsTip.MediaMetaData
+import * as style from './app.style'
+
+export function App () {
+  const host = React.useContext(HostContext)
+  const [hostError, setHostError] = React.useState(host.state.hostError)
+
+  React.useEffect(() => {
+    return host.addListener((state) => {
+      setHostError(state.hostError)
+    })
+  })
+
+  return (
+    <WithThemeVariables>
+      <style.root>
+        <style.banner>
+          <PublisherBanner />
+        </style.banner>
+        <style.form>
+          <style.close>
+            <button onClick={host.closeDialog}><CloseIcon /></button>
+          </style.close>
+          {hostError ? <AppError hostError={hostError} /> : <TipForm />}
+        </style.form>
+      </style.root>
+    </WithThemeVariables>
+  )
 }
-
-interface Props extends RewardsTip.ComponentProps {
-  dialogArgs: TipDialogArgs
-}
-
-export class App extends React.Component<Props, {}> {
-  get actions () {
-    return this.props.actions
-  }
-
-  getTipBanner = (url: string, publisher: RewardsTip.Publisher, mediaMetaData: RewardsTip.MediaMetaData | undefined) => {
-    if (!mediaMetaData) {
-      return (
-        <TipSite
-          url={url}
-          publisher={publisher}
-        />
-      )
-    } else {
-      return (
-        <TipMediaUser
-          url={url}
-          publisher={publisher}
-          mediaMetaData={mediaMetaData}
-        />
-      )
-    }
-  }
-
-  render () {
-    const { publishers } = this.props.rewardsDonateData
-
-    if (!publishers) {
-      return null
-    }
-
-    const url = this.props.dialogArgs.url
-    const mediaMetaData = this.props.dialogArgs.mediaMetaData
-    const publisherKey = this.props.dialogArgs.publisherKey
-    const publisher = publishers[publisherKey]
-
-    if (!publisher) {
-      return null
-    }
-
-    return (
-      <div>
-        {this.getTipBanner(url, publisher, mediaMetaData)}
-      </div>
-    )
-  }
-}
-
-export const mapStateToProps = (state: RewardsTip.ApplicationState) => ({
-  rewardsDonateData: state.rewardsDonateData
-})
-
-export const mapDispatchToProps = (dispatch: Dispatch) => ({
-  actions: bindActionCreators(rewardsActions, dispatch)
-})
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(App)

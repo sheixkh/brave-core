@@ -6,18 +6,26 @@
 #ifndef BRAVE_BROWSER_BRAVE_DRM_TAB_HELPER_H_
 #define BRAVE_BROWSER_BRAVE_DRM_TAB_HELPER_H_
 
+#include <string>
+
+#include "base/scoped_observer.h"
 #include "brave/components/brave_drm/brave_drm.mojom.h"
-#include "content/public/browser/web_contents_binding_set.h"
+#include "components/component_updater/component_updater_service.h"
 #include "content/public/browser/web_contents_observer.h"
+#include "content/public/browser/web_contents_receiver_set.h"
 #include "content/public/browser/web_contents_user_data.h"
-#include "third_party/widevine/cdm/buildflags.h"
 
 // Reacts to DRM content detected on the renderer side.
 class BraveDrmTabHelper final
     : public content::WebContentsObserver,
       public content::WebContentsUserData<BraveDrmTabHelper>,
-      public brave_drm::mojom::BraveDRM {
+      public brave_drm::mojom::BraveDRM,
+      public component_updater::ComponentUpdateService::Observer {
  public:
+  // Copied from widevine_cdm_component_installer.cc.
+  // There is no shared constant value.
+  static const char kWidevineComponentId[];
+
   explicit BraveDrmTabHelper(content::WebContents* contents);
   ~BraveDrmTabHelper() override;
 
@@ -30,20 +38,24 @@ class BraveDrmTabHelper final
   // blink::mojom::BraveDRM
   void OnWidevineKeySystemAccessRequest() override;
 
+  // component_updater::ComponentUpdateService::Observer
+  void OnEvent(Events event, const std::string& id) override;
+
   WEB_CONTENTS_USER_DATA_KEY_DECL();
 
  private:
-  content::WebContentsFrameBindingSet<brave_drm::mojom::BraveDRM> bindings_;
+  content::WebContentsFrameReceiverSet<brave_drm::mojom::BraveDRM> receivers_;
 
-#if BUILDFLAG(ENABLE_WIDEVINE_CDM_COMPONENT) || BUILDFLAG(BUNDLE_WIDEVINE_CDM)
   // Permission request is done only once during the navigation. If user
   // chooses dismiss/deny, additional request is added again only when new
   // main frame navigation is started.
   bool is_permission_requested_ = false;
-#endif
 
   // True if we are notified that a page requested widevine availability.
   bool is_widevine_requested_ = false;
+
+  ScopedObserver<component_updater::ComponentUpdateService,
+                 component_updater::ComponentUpdateService::Observer> observer_;
 };
 
 #endif  // BRAVE_BROWSER_BRAVE_DRM_TAB_HELPER_H_

@@ -19,6 +19,10 @@
     "message": "Maaari ka na ngayong makakuha ng mga token sa pamamagitan ng panonood ng mga ad na nagpapahalaga sa privacy.",
     "description": "Entry text for welcome screen in the panel, new user"
   },
+  "welcomeDescPoints": {
+    "message": "Maaari ka na ngayong makakuha ng mga puntos sa pamamagitan ng panonood ng mga ad na nagpapahalaga sa privacy.",
+    "description": "Entry text for welcome screen in the panel, points"
+  },
   "welcomeFooterTextOne": {
     "message": "Tingnan kung ano ang pinahusay",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, existing user"
@@ -43,6 +47,22 @@
     "message": "Mga grant",
     "description": "Title for grant section in wallet summary"
   },
+  "details": {
+    "message": "Mga Detalye",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "Ang Iyong Balanse",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "Mga Puntos sa BAT",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "magagamit sa Brave Rewards para mag-ambag sa iyong mga paboritong content creator. Hindi maipapalit ang BAT Points para sa BAT.",
+    "description": "Text for BAT Point helper message"
+  },
   "on": {
     "message": "naka-on",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -56,7 +76,7 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "Nagbigay ng tip sa site na ito buwan-buwan",
+    "message": "Buwanang Kontribusyon",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
@@ -128,19 +148,29 @@
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "Mga Token Grant",
-    "description": "Title for grant notification"
+    "message": "Mga Grant na $currency$",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
     "message": "Mga Na-claim na Grant para sa Token",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "Na-claim na ang Mga Grant para sa Puntos",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "Mga kita mula sa Mga Ad",
     "description": "Title for ads section in wallet summary"
   },
   "rewardsContribute": {
-    "message": "Awtomatikong Pag-ambag",
+    "message": "Awtomatikong Mag-ambag",
     "description": "Title for auto contribute section in wallet summary"
   },
   "oneTimeDonation": {
@@ -152,8 +182,8 @@
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "Mga Buwanang Tip",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "Mga Buwanang Kontribusyon",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
     "message": "Naka-off",
@@ -167,10 +197,6 @@
     "message": "Maaari ka nang kumita ngayon sa pamamagitan ng panonood ng mga ad.",
     "description": "Message for ads launch notification"
   },
-  "braveAdsLaunchTitle": {
-    "message": "Dumating na ang Brave Ads!",
-    "description": "Message used in notification to let users know Ads is available"
-  },
   "braveAdsTitle": {
     "message": "Brave Ads",
     "description": "Notification title when we display info about ads"
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "Nag-ambag ka ng $amount$ BAT",
+    "message": "Nag-ambag ka ng $amount$ $currency$",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "Hindi makukumpleto ang iyong nakaiskedyul na buwanang pagbabayad para sa Awtomatikong Pag-ambag at mga buwanang tip dahil sa hindi sapat na pondo. Susubukan naming muli makalipas ang 30 araw.",
+    "message": "Hindi makukumpleto ang iyong nakaiskedyul na buwanang pagbabayad para sa Awtomatikong Pag-ambag at mga buwanang kontribusyon dahil hindi sapat ang pondo. Susubukan namin ulit pagkalipas ng 30 araw.",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -261,10 +291,6 @@
     "message": "Petsa ng Pag-expire ng Grant",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "Paumanhin, mukhang na-claim na ang grant na ito.",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
     "message": "OK",
     "description": "Button text for clearing the error."
@@ -276,18 +302,6 @@
   "grantGeneralErrorTitle": {
     "message": "Naku, may mali. Pakisubukang muli sa ibang pagkakataon.",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "OK",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "Paumanhin, mukhang nag-expire na ang grant na ito.",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "Hindi na available ang grant na ito.",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "I-refresh ang Status",
@@ -306,7 +320,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "Nagtakda ka ng {{reservedAmount}} (na) BAT para sa mga creator na hindi pa nagsa-sign up upang makatanggap ng mga ambag. Patuloy na susubukan ng iyong browser na mag-ambag hangang sa mag-verify sila, o hanggang sa lumipas ang 90 araw.",
+    "message": "Nagtalaga ka ng {{reservedAmount}} {{currency}} para sa mga creator na hindi pa nagsa-sign up para makatanggap ng mga kontribusyon. Patuloy na susubukan ng iyong browser na mag-ambag hanggang sa mag-verify sila, o hanggang sa lumipas ang 90 araw.",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
@@ -334,7 +348,7 @@
     "description": "Failure title for wallet creation"
   },
   "walletFailedButton": {
-    "message": "Subukang muli",
+    "message": "Muling subukan",
     "description": "Button for re-try after wallet creation failed"
   },
   "addFunds": {
@@ -382,12 +396,12 @@
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "Naproseso na ang iyong mga buwanang tip!",
-    "description": "Message for monthly tips processed notification"
+    "message": "Naproseso na ang iyong mga buwanang kontribusyon!",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "Mga Kontribusyon at Tip",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "Sa pamamagitan ng pag-click sa ‘Sumali sa Rewards’, isinasaad mong nabasa mo at sumasang-ayon ka sa",
@@ -397,8 +411,12 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
+  },
   "turnOnAds": {
-    "message": "I-on ang Ads",
+    "message": "I-on ang Mga Ad",
     "description": "Prompt to turn on Ads via notification"
   },
   "adsEarnings": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "Paparating na ang iyong grant para sa token.",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "Paparating na ang iyong grant na $currency$.",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "Libreng Grant para sa Token",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "Libreng Grant para sa Puntos",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Brave Ads Rewards!",
+    "message": "Nakakuha ka ng Ads Reward!",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "Paparating na ang iyong grant mula sa Brave Ads.",
+    "message": "Paparating na ang iyong Reward sa iyong Brave Rewards wallet.",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "Iyong Token Grant sa Brave Ads",
+    "message": "Ang Halaga ng Iyong Reward",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -476,7 +504,7 @@
     "description": "CTA in the footer to verify"
   },
   "walletButtonDisconnected":  {
-    "message": "Nakadiskonekta",
+    "message": "Nadiskonekta",
     "description": "CTA status button"
   },
   "walletButtonUnverified":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "Hindi pa nagagawa ng na-verify na creator na ito na i-verify (KYC) ang kanyang account para makatanggap ng mga tip mula sa iyong na-verify na wallet. Mananatili ang mga tip sa iyong wallet hanggang sa makumpleto ng mga ito ang pag-verify.",
+    "message": "Hindi pa nako-configure ng Creator na ito na Na-verify ng Brave ang kanyang account upang makatanggap ng mga kontribusyon mula sa mga User ng Brave. Mananatili sa iyong wallet ang anumang tip na ipapadala mo hanggang makumpleto nila ang prosesong ito.",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "Kumpletuhin ang pag-verify ng wallet",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "Magtakda...",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "mga token",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "Puntos",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "Token",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "mga puntos",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "Mga Token Grant",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "Mga Grant para sa Puntos",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "Kumusta, $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "I-cancel",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "Baguhin ang halaga",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "Mag-login",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "Nagbibigay-daan sa iyo ang pag-verify sa wallet na mas mabisa mong mapamahalaan ang iyong mga pondo.",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "Kailangang may minimum ka na 25 BAT para makagawa ng Uphold account. Pakisubukang muli sa ibang pagkakataon. \n Kung mayroon ka nang na-verify na Uphold account, magpatuloy sa pag-log in.",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "Nakakonekta",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "Nakabinbin",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "Tandaan: Makikita ang iyong mga transaksyon sa Uphold kapag nagbigay ka ng pahintulot; halimbawa, makikita nila ang recipient at halaga ng mga tip mo.",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "Makakuha ng Mga Token at Gumanti ng Tulong",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "Makakuha ng mga token sa pamamagitan ng pagtingin sa mga ad na gumagalang sa privacy at awtomatikong suportahan ang iyong mga paboritong site at creator ng content.",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "Simulang gamitin ang Brave Rewards",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "Mabilis na maglibot",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "Sa pamamagitan ng pagpapatuloy, sumasang-ayon ka sa $tos_link_begin$Mga Tuntunin ng Serbisyo$tos_link_end$ at $pp_link_begin$Patakaran sa Privacy$pp_link_end$.",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "Bumalik",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "Mabilisan tayong maglibot",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "Magpatuloy",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "Tapos na",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "Laktawan",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "Laktawan sa ngayon",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "Welcome sa Brave Rewards!",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Hindi tulad ng mga tradisyonal na ad, binibigyan ka ng Brave Private Ads ng mga token para suportahan ang mga creator ng content, ang lahat ng ito habang pinapanatiling pribado ang iyong personal na impormasyon. ",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "Saan lumalabas ang mga ad?",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Lalabas ang Brave Private Ads bilang normal na notification. Makokontrol mo kung gaano mo kadalas makikita ang mga ad na ito sa mga setting.",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "Kailan ka makakatanggap ng mga reward",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "Darating sa ika-5 ng susunod na buwan ang iyong mga naipong token mula sa Brave Private Ads sa kabuuan ng kasalukuyang buwan.",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "Ginawang walang kahirap-hirap ang pagganti ng tulong",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "Awtomatikong natatanggap ng mga creator ang iyong mga iniambag na token batay sa mga antas ng pakikilahok mo na sinusukat namin bilang 'Paalala.'",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "Magpasalamat sa pamamagitan ng mga tip",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "Ang pagbibigay ng tip ay isang paraan para personal na himukin at suportahan ang content o mga creator na gusto mo. Magbigay ng tip!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "Ano ang magagawa mo sa mga token?",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "Magagamit ang mga token hindi lang sa pagsuporta sa mga creator. Puwede kang bumili ng digital na content at iba pang produkto sa pagdating ng mga merchant.",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "Ayos, handa ka na!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "Sa pamamagitan ng paggamit sa Brave Rewards, nakakatulong kang gawing mas magandang lugar ang web para sa lahat. At mabuti iyon!",
+    "description": ""
   }
 }

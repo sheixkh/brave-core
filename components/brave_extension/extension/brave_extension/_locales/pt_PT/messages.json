@@ -20,12 +20,16 @@
     "description": "Partial string for the phrase `shields is up *for this site*`"
   },
   "enabledMessage": {
-    "message": "Se um site não abrir, tente desativar a proteção",
+    "message": "Se um ''site'' não abrir, tente desativar as proteções",
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Está a navegar neste site sem qualquer proteção de privacidade e segurança",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Está a navegar neste ''site'' sem as proteções de privacidade e de segurança do Brave. Não funciona direito com as «Proteções» ativadas?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Informar sobre um site danificado",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Itens bloqueados",
@@ -48,8 +52,24 @@
     "description": "Message for the main blocked resources text when there is at least one ad/track/script blocked and one connection upgrade (singular)"
   },
   "thirdPartyTrackersBlocked": {
-    "message": "Rastreadores cross-site bloqueados",
+    "message": "Rastreadores entre ''site'' bloqueados",
     "description": "Message for the scripts blocked row label"
+  },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Rastreadores & bloqueador de anúncios",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Rastreadores & anúncios bloqueados (agressivo)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Rastreadores & anúncios bloqueados (padrão)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Permitir rastreadores & anúncios",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
   },
   "connectionsUpgradedHTTPS": {
     "message": "Ligações atualizadas para HTTPS",
@@ -75,21 +95,25 @@
     "message": "Todos os cookies permitidos",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Reconhecimento de dispostivo cross-site bloqueado",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Fingerprinting bloqueada",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Tentativas de reconhecimento de dispositivo bloqueadas",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Impressão digital bloqueada (padrão)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Todas as tentativas de reconhecimento de dispositivos permitidas",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Impressão digital bloqueada (estrita, pode abrir sites)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Permitir todas as identificações",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Tentativas de reconhecimento de dispositivos",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Tentativas de impressão digital",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Scripts neste site",
@@ -144,7 +168,7 @@
     "description": "Message for action in dynamic list of resources blocked to *apply once*"
   },
   "changeDefaults": {
-    "message": "Alterar pré-definições de escudo global",
+    "message": "Alterar as predefinições da proteção global",
     "description": "Message for the button action linking to the settings page"
   },
   "addBlockElement": {
@@ -160,11 +184,11 @@
     "description": "Message for context menu that resets all cosmetic filters"
   },
   "advancedView": {
-    "message": "Vista Avançada",
+    "message": "Visualização Avançada",
     "description": "Message for the advanced view option"
   },
   "simpleView": {
-    "message": "Vista Simples",
+    "message": "Visualização Simples",
     "description": "Message for the simple view option"
   },
   "shieldsExplanation": {
@@ -172,11 +196,11 @@
     "description": "Message in read-only view explaining what Brave Shields do"
   },
   "blockedResoucesExplanation": {
-    "message": "Perseguidores Cross-site e outras coisas assustadoras são bloqueadas",
+    "message": "Rastreadores entre ''site'' e outras coisas assustadoras são bloqueadas",
     "description": "Message for the main trackers count in Shields simple view"
   },
   "webCompatWarning": {
-    "message": "A alteração das configurações do Shield para a presente vista pode afetar a compatibilidade da web para este site.",
+    "message": "Alterar as definições das «Proteções» nesta visualização pode afetar a compatibilidade neste ''site''.",
     "description": "Message for web compat warning when switching from simple to advanced view"
   },
   "gotIt": {

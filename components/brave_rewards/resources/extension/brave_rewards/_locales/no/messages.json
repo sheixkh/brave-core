@@ -4,11 +4,11 @@
     "description": "Title in welcome screen for the panel"
   },
   "welcomeButtonTextOne": {
-    "message": "Begynn å tjene nå!",
+    "message": "Begynn å tjene penger nå!",
     "description": "CTA on welcome screen in the panel, existing users"
   },
   "welcomeButtonTextTwo": {
-    "message": "Bli med i Rewards",
+    "message": "Bli med i Belønninger",
     "description": "CTA on welcome screen in the panel, new users"
   },
   "welcomeDescOne": {
@@ -19,12 +19,16 @@
     "message": "Du kan nå tjene tokens for å se på reklame som respekterer personvern.",
     "description": "Entry text for welcome screen in the panel, new user"
   },
+  "welcomeDescPoints": {
+    "message": "Du kan nå tjene poeng for å se på annonser som respekterer personvernet.",
+    "description": "Entry text for welcome screen in the panel, points"
+  },
   "welcomeFooterTextOne": {
     "message": "Sjekk hva som er forbedret",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, existing user"
   },
   "welcomeFooterTextTwo": {
-    "message": "Lær mer",
+    "message": "Les mer",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, new user"
   },
   "welcomeHeaderOne": {
@@ -32,16 +36,32 @@
     "description": "Main header title for welcome screen in the panel, existing user"
   },
   "welcomeHeaderTwo": {
-    "message": "Gjør deg klar til å oppleve et nytt internett. ",
+    "message": "Gjør deg klar til å oppleve et nytt internett.",
     "description": "Main header title for welcome screen in the panel, new user"
   },
   "yourWallet": {
-    "message": "Din lommebok",
+    "message": "Lommeboken din",
     "description": "Title of wallet section where we display data about wallet"
   },
   "grants": {
-    "message": "Stipend",
+    "message": "Tilskudd",
     "description": "Title for grant section in wallet summary"
+  },
+  "details": {
+    "message": "Detaljer",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "Saldoen din",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "BAT-poeng",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "kan brukes i Brave-belønninger for å bidra til dine foretrukne innholdsskapere. BAT-poeng kan ikke veksles inn i BAT.",
+    "description": "Text for BAT Point helper message"
   },
   "on": {
     "message": "på",
@@ -52,11 +72,11 @@
     "description": "Tells user that this particular publisher is a Brave Verified Creator"
   },
   "rewardsContributeAttentionScore": {
-    "message": "NB",
+    "message": "Obs",
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "Gi tips til denne siden hver måned",
+    "message": "Månedlig bidrag",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
@@ -88,7 +108,7 @@
     "description": "Month"
   },
   "monthDec": {
-    "message": "Desember",
+    "message": "desember",
     "description": "Month"
   },
   "monthFeb": {
@@ -96,11 +116,11 @@
     "description": "Month"
   },
   "monthJan": {
-    "message": "Januar",
+    "message": "januar",
     "description": "Month"
   },
   "monthJul": {
-    "message": "Juli",
+    "message": "juli",
     "description": "Month"
   },
   "monthJun": {
@@ -108,15 +128,15 @@
     "description": "Month"
   },
   "monthMar": {
-    "message": "Mars",
+    "message": "mars",
     "description": "Month"
   },
   "monthMay": {
-    "message": "Mai",
+    "message": "mai",
     "description": "Month"
   },
   "monthNov": {
-    "message": "November",
+    "message": "november",
     "description": "Month"
   },
   "monthOct": {
@@ -124,16 +144,26 @@
     "description": "Month"
   },
   "monthSep": {
-    "message": "September",
+    "message": "september",
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "Tilskudd til polletter",
-    "description": "Title for grant notification"
+    "message": "$currency$-tildelinger",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
     "message": "Tokenstipender gjort krav på",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "Poengtildelinger gjort krav på",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "Opptjente midler fra reklamer",
@@ -152,8 +182,8 @@
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "Månedlig tips",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "Månedlige bidrag",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
     "message": "Av",
@@ -164,12 +194,8 @@
     "description": "Used in notification to dismiss notification"
   },
   "braveAdsLaunchMsg": {
-    "message": "Nå kan du tjene på å se annonser.",
+    "message": "Nå kan du tjene tokener ved å se på annonser.",
     "description": "Message for ads launch notification"
-  },
-  "braveAdsLaunchTitle": {
-    "message": "Brave-annonser er her!",
-    "description": "Message used in notification to let users know Ads is available"
   },
   "braveAdsTitle": {
     "message": "Brave-annonser",
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "Du har bidratt med $amount$ BAT",
+    "message": "Du har bidratt med $amount$ $currency$",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -214,7 +244,7 @@
     "description": "Title for insufficient funds notification"
   },
   "braveRewardsCreatingText": {
-    "message": "Opprettelse av lommebok",
+    "message": "Opprett lommebok",
     "description": "Used in a button displaying wallet creation process"
   },
   "contributeNotificationError": {
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "Den månedlige betalingen din for auto-bidrag og månedlige tips kunne ikke gjennomføres på grunn av utilstrekkelige midler. Vi vil forsøke igjen om 30 dager.",
+    "message": "Den planlagte månedlige betalingen din for autobidrag og månedlige bidrag kunne ikke fullføres på grunn av utilstrekkelige midler. Vi prøver igjen om 30 dager.",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -261,10 +291,6 @@
     "message": "Utløpsdato for stipend",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "Beklager, men det ser ut til at dette stipendet allerede er gjort krav på.",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
     "message": "OK",
     "description": "Button text for clearing the error."
@@ -276,18 +302,6 @@
   "grantGeneralErrorTitle": {
     "message": "Opp sann, noe er galt. Prøv igjen senere.",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "OK",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "Beklager, men det ser ut til at dette stipendet allerede er utløpt.",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "Dette stipendet er ikke tilgjengelig lenger.",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "Oppdater status",
@@ -306,7 +320,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "Du har tildelt {{reservedAmount}} BAT til skapere som ikke har registrert seg for å motta bidrag ennå. Nettleseren din vil fortsette å prøve å bidra helt til de verifiserer bidraget eller til det har gått 90 dager.",
+    "message": "Du har satt av {{reservedAmount}} {{currency}} til skapere som ennå ikke har registrert seg for å motta bidrag. Nettleseren din fortsetter å prøve å bidra til vedkommende har verifisert seg, eller til det har gått 90 dager.",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
@@ -382,12 +396,12 @@
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "Dine månedlige tips har blitt behandlet!",
-    "description": "Message for monthly tips processed notification"
+    "message": "De månedlige bidragene dine er behandlet!",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "Bidrag og tips",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "Ved å klikke 'Aktiver Rewards' indikerer du at du har lest og aksepterer",
@@ -397,8 +411,12 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
+  },
   "turnOnAds": {
-    "message": "Slå på annonser",
+    "message": "Slå på Ads",
     "description": "Prompt to turn on Ads via notification"
   },
   "adsEarnings": {
@@ -444,7 +462,7 @@
     "description": "Notification text that tells user his wallet is under funded for pending contribution to complete"
   },
   "pendingContributionTitle": {
-    "message": "Venter på bidrag",
+    "message": "Ventende bidrag",
     "description": "Notification title for pending contribution type"
   },
   "grantFinishTitleUGP": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "Tokenstipendet ditt er på vei.",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "$currency$-tildelingen din er på vei.",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "Gratis tokenstipend",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "Gratis poengtildeling",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Brave annonsebelønninger!",
+    "message": "Du har tjent en annonsebelønning!",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "Belønningen din fra Brave Ads er på vei.",
+    "message": "Belønningen er på vei til Brave-belønningslommeboken din.",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "Din token fra Brave Ads",
+    "message": "Belønningsbeløpet ditt",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -480,7 +508,7 @@
     "description": "CTA status button"
   },
   "walletButtonUnverified":  {
-    "message": "Verifiser lommebok",
+    "message": "Verifiser lommeboken",
     "description": "CTA to verify wallet in the wallet "
   },
   "walletButtonVerified":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "Denne verifiserte skaperen har ennå ikke verifisert (KYC) kontoen sin for å motta tips fra den verifiserte lommeboken din. Tipsen blir værende i lommeboken din til vedkommende fullfører verifiseringen.",
+    "message": "Denne verifiserte Brave-skaperen har ikke konfigurert kontoen sin for mottak av bidrag fra Brave-brukere ennå. Tips du sender, blir værende i lommeboken din til vedkommende fullfører denne prosessen.",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "Fullfør lommebokverifiseringen",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "Angi …",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "sjetonger",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "Poeng",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "Token ",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "poeng",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "Tilskudd til polletter",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "Poengtildelinger",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "Hallo, $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "Avbryt",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "Endre beløp",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "Pålogging",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "Når du verifiserer lommeboken din, kan du administere midlene dine mer effektivt.",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "Du må ha minst 25 BAT for å opprette en Uphold-konto. Prøv på nytt senere.\nHvis du allerede har bekreftet Uphold-kontoen din, kan du logge på.",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "Tilkoblet",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "Påventende",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "Merk: Transaksjonene dine er synlige for Uphold så snart du autoriserer. De kan for eksempel se kvitteringen og tipsbeløpet ditt.",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "Tjen tokener og gi tilbake",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "Tjen tokener ved å se på personvern-respekterende annonser og støtt favorittnettstedene og innholdsprodusentene dine automatisk.",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "Begynn å bruke Brave Rewards",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "Ta en rask omvisning",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "Ved å fortsette samtykker du i $tos_link_begin$Vilkår for tjenesten$tos_link_end$ og $pp_link_begin$Personvernerklæringen$pp_link_end$.",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "Gå tilbake",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "La oss ta en rask omvisning",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "Fortsett",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "Ferdig",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "Hopp over",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "Hopp over i denne omgang",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "Velkommen til Brave Rewards!",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Brave Private Ads belønner deg med polletter for å støtte innholdsskapere, i motsetning til tradisjonelle annonser – samtidig som den personlige informasjonen din beskyttes.",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "Hvor vises annonsene?",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Brave Private Ads vil vises som et ordinært varsel. Du kontrollerer hvor ofte du ser disse annonsene i innstillingene.",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "Når mottar du belønninger",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "Pollettene du tjener på Brave Private Ads gjennom inneværende måned vil komme inn den 5. i neste måned.",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "Gi tilbake uten anstrengelser",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "Skapere mottar pollettbidragene dine automatisk basert på engasjementsnivåene dine, som vi måler som \"Oppmerksomhet\".",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "Si takk med tips",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "Tipsing er en måte å personlig oppmuntre og støtte innhold eller produsenter du elsker. Sett i gang å tipse!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "Hva kan du gjøre med tokener?",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "Polletter kan brukes til mer enn å støtte skapere. Du kan kjøpe digitalt innhold og andre artikler etter hvert som selgere blir med.",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "Hurra, du er helt klar!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "Når du bruker Brave Rewards bidrar du til å gjøre nettet til et bedre sted for alle. Og det er kjempebra!",
+    "description": ""
   }
 }

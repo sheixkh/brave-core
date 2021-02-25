@@ -6,113 +6,117 @@
 #ifndef BRAVELEDGER_UPHOLD_UPHOLD_H_
 #define BRAVELEDGER_UPHOLD_UPHOLD_H_
 
+#include <stdint.h>
+
 #include <string>
 #include <map>
 #include <memory>
 
-#include "bat/ledger/ledger.h"
+#include "base/containers/flat_map.h"
+#include "base/timer/timer.h"
 #include "bat/ledger/internal/uphold/uphold_user.h"
+#include "bat/ledger/ledger.h"
 
-namespace bat_ledger {
+namespace ledger {
 class LedgerImpl;
+
+namespace endpoint {
+class UpholdServer;
 }
 
-namespace braveledger_uphold {
+namespace uphold {
+
+struct Transaction {
+  std::string address;
+  double amount;
+  std::string message;
+};
 
 class UpholdTransfer;
 class UpholdCard;
 class UpholdAuthorization;
 class UpholdWallet;
 
-using TransactionCallback = std::function<void(ledger::Result, bool created)>;
-using FetchBalanceCallback = std::function<void(ledger::Result, double)>;
+using FetchBalanceCallback = std::function<void(type::Result, double)>;
 using CreateCardCallback =
-    std::function<void(ledger::Result, const std::string&)>;
-using CreateAnonAddressCallback =
-    std::function<void(ledger::Result, const std::string&)>;
+    std::function<void(type::Result, const std::string&)>;
 
 class Uphold {
  public:
-  explicit Uphold(bat_ledger::LedgerImpl* ledger);
+  explicit Uphold(LedgerImpl* ledger);
 
   ~Uphold();
 
+  void Initialize();
+
   void StartContribution(
-      const std::string& viewing_id,
+      const std::string& contribution_id,
+      type::ServerPublisherInfoPtr info,
+      const double amount,
+      ledger::ResultCallback callback);
+
+  void FetchBalance(FetchBalanceCallback callback);
+
+  void TransferFunds(
+      const double amount,
       const std::string& address,
-      double amount,
-      ledger::ExternalWalletPtr wallet);
-
-  void FetchBalance(std::map<std::string, ledger::ExternalWalletPtr> wallets,
-                    FetchBalanceCallback callback);
-
-  void TransferFunds(double amount,
-                     const std::string& address,
-                     ledger::ExternalWalletPtr wallet,
-                     TransactionCallback callback);
+      client::TransactionCallback callback);
 
   void WalletAuthorization(
-    const std::map<std::string, std::string>& args,
-    std::map<std::string, ledger::ExternalWalletPtr> wallets,
-    ledger::ExternalWalletAuthorizationCallback callback);
+      const base::flat_map<std::string, std::string>& args,
+      ledger::ExternalWalletAuthorizationCallback callback);
 
-  void TransferAnonToExternalWallet(
-      ledger::ExternalWalletPtr wallet,
-      const bool allow_zero_balance,
-      ledger::ExternalWalletCallback callback);
+  void GenerateWallet(ledger::ResultCallback callback);
 
-  void GenerateExternalWallet(
-    std::map<std::string, ledger::ExternalWalletPtr> wallets,
-    ledger::ExternalWalletCallback callback);
+  void CreateCard(CreateCardCallback callback);
 
-  void CreateCard(
-      ledger::ExternalWalletPtr wallet,
-      CreateCardCallback callback);
+  void DisconnectWallet(const bool manual = false);
 
-  void DisconnectWallet();
+  void GetUser(GetUserCallback callback);
 
-  void GetUser(
-    ledger::ExternalWalletPtr wallet,
-    GetUserCallback callback);
+  type::UpholdWalletPtr GetWallet();
 
-  void CreateAnonAddressIfNecessary(
-      ledger::ExternalWalletPtr wallet,
-      CreateAnonAddressCallback callback);
+  bool SetWallet(type::UpholdWalletPtr wallet);
 
  private:
   void ContributionCompleted(
-      const ledger::Result result,
-      const bool created,
-      const std::string& viewing_id,
-      const double fee = 0,
-      const ledger::ExternalWallet& wallet = {});
-
-  void OnFeeCompleted(ledger::Result result,
-                    bool created,
-                    const std::string &viewing_id);
+      const type::Result result,
+      const std::string& transaction_id,
+      const std::string& contribution_id,
+      const double fee,
+      const std::string& publisher_key,
+      ledger::ResultCallback callback);
 
   void OnFetchBalance(
-    FetchBalanceCallback callback,
-    int response_status_code,
-    const std::string& response,
-    const std::map<std::string, std::string>& headers);
+      const type::Result result,
+      const double available,
+      FetchBalanceCallback callback);
 
-  void OnTransferAnonToExternalWalletCallback(
-    ledger::ExternalWalletCallback callback,
-    const ledger::ExternalWallet& wallet,
-    ledger::Result result);
+  void SaveTransferFee(const std::string& contribution_id, const double amount);
 
-  void OnDisconectWallet(
-    ledger::Result result,
-    ledger::ExternalWalletPtr wallet);
+  void StartTransferFeeTimer(const std::string& fee_id);
+
+  void OnTransferFeeCompleted(
+      const type::Result result,
+      const std::string& transaction_id,
+      const std::string& contribution_id);
+
+  void TransferFee(const std::string& contribution_id, const double amount);
+
+  void OnTransferFeeTimerElapsed(const std::string& id);
+
+  void RemoveTransferFee(const std::string& contribution_id);
 
   std::unique_ptr<UpholdTransfer> transfer_;
   std::unique_ptr<UpholdCard> card_;
   std::unique_ptr<UpholdUser> user_;
   std::unique_ptr<UpholdAuthorization> authorization_;
   std::unique_ptr<UpholdWallet> wallet_;
-  bat_ledger::LedgerImpl* ledger_;  // NOT OWNED
+  std::unique_ptr<endpoint::UpholdServer> uphold_server_;
+  LedgerImpl* ledger_;  // NOT OWNED
+  std::map<std::string, base::OneShotTimer> transfer_fee_timers_;
 };
 
-}  // namespace braveledger_uphold
+}  // namespace uphold
+}  // namespace ledger
 #endif  // BRAVELEDGER_UPHOLD_UPHOLD_H_

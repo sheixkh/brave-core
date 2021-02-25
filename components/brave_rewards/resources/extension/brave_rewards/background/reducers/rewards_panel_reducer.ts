@@ -2,91 +2,104 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { OnboardingCompletedStore } from '../../../../shared/lib/onboarding_completed_store'
 import { types } from '../../constants/rewards_panel_types'
-import * as storage from '../storage'
+import { Reducer } from 'redux'
 import { setBadgeText } from '../browserAction'
 import { isPublisherConnectedOrVerified } from '../../utils'
 
-const getWindowId = (id: number) => {
-  return `id_${id}`
+const onboardingCompletedStore = new OnboardingCompletedStore()
+
+const getTabKey = (id: number) => {
+  return `key_${id}`
 }
 
-export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, action: any) => {
-  if (state === undefined) {
-    state = storage.load()
-    setBadgeText(state)
+const updateBadgeTextAllWindows = (windows: chrome.windows.Window[], state?: RewardsExtension.State) => {
+  if (!state || windows.length === 0) {
+    return
+  }
+
+  windows.forEach((window => {
+    const tabKey = getTabKey(window.id)
+    const publishers: Record<string, RewardsExtension.Publisher> = state.publishers
+    const publisher = publishers[tabKey]
+
+    if (!publisher || !window.tabs) {
+      return
+    }
+
+    let tab = window.tabs.find((tab) => tab.active)
+
+    if (!tab) {
+      return
+    }
+
+    setBadgeText(state, isPublisherConnectedOrVerified(publisher.status), tab.id)
+  }))
+
+}
+
+const handledByGreaselion = (url: URL) => {
+  if (!url) {
+    return false
+  }
+
+  return url.hostname.endsWith('.github.com') ||
+         url.hostname === 'github.com' ||
+         url.hostname.endsWith('.reddit.com') ||
+         url.hostname === 'reddit.com' ||
+         url.hostname.endsWith('.twitch.tv') ||
+         url.hostname === 'twitch.tv' ||
+         url.hostname.endsWith('.twitter.com') ||
+         url.hostname === 'twitter.com' ||
+         url.hostname.endsWith('.vimeo.com') ||
+         url.hostname === 'vimeo.com' ||
+         url.hostname.endsWith('.youtube.com') ||
+         url.hostname === 'youtube.com'
+}
+
+export const rewardsPanelReducer: Reducer<RewardsExtension.State | undefined> = (state: RewardsExtension.State, action: any) => {
+  if (!state) {
+    return
   }
   const payload = action.payload
   switch (action.type) {
-    case types.CREATE_WALLET:
-      chrome.braveRewards.createWallet()
-      state = { ...state }
-      state.walletCreating = true
-      state.walletCreateFailed = false
-      state.walletCreated = false
-      state.walletCorrupted = false
-      break
-    case types.ON_WALLET_INITIALIZED: {
-      const result: RewardsExtension.Result = payload.result
-      state = { ...state }
-      if (result === RewardsExtension.Result.WALLET_CREATED) {
-        state.walletCreated = true
-        state.walletCreateFailed = false
-        state.walletCreating = false
-        state.walletCorrupted = false
-        chrome.braveRewards.saveAdsSetting('adsEnabled', 'true')
-        chrome.storage.local.get(['is_dismissed'], function (result) {
-          if (result && result['is_dismissed'] === 'false') {
-            chrome.browserAction.setBadgeText({
-              text: ''
-            })
-            chrome.storage.local.remove(['is_dismissed'])
-          }
-        })
-      } else if (result === RewardsExtension.Result.WALLET_CORRUPT) {
-        state.walletCorrupted = true
-      } else if (result !== RewardsExtension.Result.LEDGER_OK) {
-        state.walletCreateFailed = true
-        state.walletCreating = false
-        state.walletCreated = false
-        state.walletCorrupted = false
-      }
-      break
-    }
     case types.ON_TAB_RETRIEVED: {
       const tab: chrome.tabs.Tab = payload.tab
       if (
         !tab ||
+        !tab.id ||
         !tab.url ||
         tab.incognito ||
-        !tab.active ||
-        !state.walletCreated ||
-        !state.enabledMain
+        !tab.active
       ) {
         break
       }
 
-      const id = getWindowId(tab.windowId)
+      const tabKey = getTabKey(tab.id)
       const publishers: Record<string, RewardsExtension.Publisher> = state.publishers
-      const publisher = publishers[id]
-      const validKey = publisher && publisher.publisher_key && publisher.publisher_key.length > 0
+      const publisher = publishers[tabKey]
+      const validKey = publisher && publisher.publisherKey && publisher.publisherKey.length > 0
 
       if (!publisher || (publisher.tabUrl !== tab.url || !validKey)) {
         // Invalid publisher for tab, re-fetch publisher.
-        chrome.braveRewards.getPublisherData(
-          tab.windowId,
-          tab.url,
-          tab.favIconUrl || '',
-          payload.publisherBlob || '')
-
-        if (publisher) {
-          delete publishers[id]
+        if (!handledByGreaselion(new URL(tab.url))) {
+          chrome.braveRewards.getPublisherData(
+            tab.id,
+            tab.url,
+            tab.favIconUrl || '',
+            payload.publisherBlob || '')
         }
 
-        publishers[id] = {
+        if (publisher) {
+          delete publishers[tabKey]
+        }
+
+        publishers[tabKey] = {
           tabUrl: tab.url,
           tabId: tab.id
         }
+
       } else if (publisher &&
                  publisher.tabUrl === tab.url &&
                  (publisher.tabId !== tab.id || payload.activeTabIsLoadingTriggered) &&
@@ -95,7 +108,7 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
         // or the same tab but it has been unloaded and re-loaded.
         // Set state.
         setBadgeText(state, isPublisherConnectedOrVerified(publisher.status), tab.id)
-        publishers[id].tabId = tab.id
+        publishers[tabKey].tabId = tab.id
       }
 
       state = {
@@ -107,13 +120,13 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
     case types.ON_PUBLISHER_DATA: {
       const publisher = payload.publisher
       let publishers: Record<string, RewardsExtension.Publisher> = state.publishers
-      const id = getWindowId(payload.windowId)
+      const tabKey = getTabKey(payload.windowId)
 
-      if (publisher && !publisher.publisher_key) {
-        delete publishers[id]
+      if (publisher && !publisher.publisherKey) {
+        delete publishers[tabKey]
       } else {
-        publishers[id] = { ...publishers[id], ...publisher }
-        const newPublisher = publishers[id]
+        publishers[tabKey] = { ...publishers[tabKey], ...publisher }
+        const newPublisher = publishers[tabKey]
 
         if (newPublisher.tabId) {
           setBadgeText(state, isPublisherConnectedOrVerified(newPublisher.status), newPublisher.tabId)
@@ -126,20 +139,9 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
       }
       break
     }
-    case types.GET_WALLET_PROPERTIES:
-      chrome.braveRewards.getWalletProperties()
-      break
-    case types.ON_WALLET_PROPERTIES: {
+    case types.ON_BALANCE_REPORT: {
       state = { ...state }
-      state.walletProperties = payload.properties
-      break
-    }
-    case types.GET_CURRENT_REPORT:
-      chrome.braveRewards.getCurrentReport()
-      break
-    case types.ON_CURRENT_REPORT: {
-      state = { ...state }
-      state.report = payload.properties
+      state.balanceReport = payload.report
       break
     }
     case types.ON_NOTIFICATION_ADDED: {
@@ -213,12 +215,16 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
         state.currentNotification = current
       }
 
+      setBadgeText(state)
+
+      if (state.currentNotification === undefined) {
+        updateBadgeTextAllWindows(payload.windows, state)
+      }
+
       state = {
         ...state,
         notifications
       }
-
-      setBadgeText(state)
       break
     }
     case types.INCLUDE_IN_AUTO_CONTRIBUTION: {
@@ -232,20 +238,26 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
       state.pendingContributionTotal = payload.amount
       break
     }
-    case types.ON_ENABLED_MAIN: {
-      state = { ...state }
-      if (payload.enabledMain == null) {
-        break
-      }
-      state.enabledMain = payload.enabledMain
-      break
-    }
     case types.ON_ENABLED_AC: {
       state = { ...state }
       if (payload.enabled == null) {
         break
       }
       state.enabledAC = payload.enabled
+      break
+    }
+    case types.ON_SHOULD_SHOW_ONBOARDING: {
+      const completed = onboardingCompletedStore.load()
+      state = {
+        ...state,
+        showOnboarding: payload.showOnboarding && !completed
+      }
+      break
+    }
+    case types.SAVE_ONBOARDING_RESULT: {
+      state = { ...state, showOnboarding: false }
+      chrome.braveRewards.saveOnboardingResult(payload.result)
+      onboardingCompletedStore.save()
       break
     }
     case types.ON_PUBLISHER_LIST_NORMALIZED: {
@@ -259,7 +271,7 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
       for (const key in publishers) {
         let publisher = publishers[key]
         const updated = list.find((newPublisher: RewardsExtension.PublisherNormalized) =>
-          newPublisher.publisher_key === publisher.publisher_key)
+          newPublisher.publisherKey === publisher.publisherKey)
 
         if (updated) {
           publisher.status = updated.status
@@ -281,7 +293,7 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
         break
       }
 
-      const publisherKey: string = payload.properties.publisher_key
+      const publisherKey: string = payload.properties.publisherKey
       const excluded: boolean = payload.properties.excluded
 
       let publishers: Record<string, RewardsExtension.Publisher> = state.publishers
@@ -289,7 +301,7 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
       for (const key in publishers) {
         let publisher = publishers[key]
 
-        if (publisher.publisher_key === publisherKey) {
+        if (publisher.publisherKey === publisherKey) {
           publisher.excluded = !!excluded
         } else if (publisherKey === '-1') {
           publisher.excluded = false
@@ -356,7 +368,7 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
         let publishers: Record<string, RewardsExtension.Publisher> = state.publishers
         for (const key in publishers) {
           let publisher = publishers[key]
-          if (publisher.publisher_key === publisherKey) {
+          if (publisher.publisherKey === publisherKey) {
             publisher.status = payload.status
           }
         }
@@ -371,18 +383,17 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
       const list: RewardsExtension.Notification[] = payload.list
 
       if (!list) {
+        state = {
+          ...state,
+          notifications: {},
+          currentNotification: undefined
+        }
+        setBadgeText(state)
         break
       }
 
-      let notifications: Record<number, RewardsExtension.Notification> = state.notifications
+      let notifications = {}
       let id = ''
-
-      // Array check for previous version of state types
-      // (https://github.com/brave/brave-browser/issues/4344)
-      if (!notifications || Array.isArray(notifications)) {
-        notifications = {}
-      }
-
       list.forEach((notification: RewardsExtension.Notification) => {
         id = notification.id
         notifications[notification.id] = {
@@ -424,10 +435,15 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
       const publishers: Record<string, RewardsExtension.Publisher> = state.publishers
 
       tabs.forEach((tab) => {
-        const id = getWindowId(tab.windowId)
-        const publisher = publishers[id]
+        const tabId = tab.id
+        if (!tabId) {
+          return
+        }
 
-        if (!publisher || publisher.tabId !== tab.id) {
+        const tabKey = getTabKey(tabId)
+        const publisher = publishers[tabKey]
+
+        if (!publisher || publisher.tabId !== tabId) {
           return
         }
 
@@ -444,6 +460,58 @@ export const rewardsPanelReducer = (state: RewardsExtension.State | undefined, a
     case types.ON_EXTERNAL_WALLET: {
       state = { ...state }
       state.externalWallet = payload.wallet
+      break
+    }
+    case types.ON_REWARDS_PARAMETERS: {
+      state = {
+        ...state,
+        parameters: payload.parameters
+      }
+      break
+    }
+    case types.ON_ALL_NOTIFICATIONS_DELETED: {
+      state = {
+        ...state,
+        notifications: {},
+        currentNotification: undefined
+      }
+      setBadgeText(state)
+      break
+    }
+    case types.ON_COMPLETE_RESET: {
+      if (payload.success) {
+        return undefined
+      }
+      break
+    }
+    case types.INITIALIZED: {
+      state = {
+        ...state,
+        initializing: false
+      }
+      break
+    }
+    case types.ON_GET_PREFS: {
+      const { prefs } = action.payload
+      state = { ...state }
+      state.adsPerHour = Number(prefs.adsPerHour)
+      state.autoContributeAmount = Number(prefs.autoContributeAmount)
+      break
+    }
+    case types.UPDATE_PREFS: {
+      const { prefs } = action.payload
+      chrome.braveRewards.updatePrefs(prefs)
+      state = { ...state }
+      for (let [key, value] of Object.entries(prefs)) {
+        switch (key) {
+          case 'adsPerHour':
+            state.adsPerHour = Number(value)
+            break
+          case 'autoContributeAmount':
+            state.autoContributeAmount = Number(value)
+            break
+        }
+      }
       break
     }
   }

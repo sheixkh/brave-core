@@ -24,6 +24,8 @@ export const getShieldSettingsForTabData = (tabData?: chrome.tabs.Tab) => {
   return Promise.all([
     chrome.braveShields.getBraveShieldsEnabledAsync(tabData.url),
     chrome.braveShields.getAdControlTypeAsync(tabData.url),
+    chrome.braveShields.shouldDoCosmeticFilteringAsync(tabData.url),
+    chrome.braveShields.isFirstPartyCosmeticFilteringEnabledAsync(tabData.url),
     chrome.braveShields.getHTTPSEverywhereEnabledAsync(tabData.url),
     chrome.braveShields.getNoScriptControlTypeAsync(tabData.url),
     chrome.braveShields.getFingerprintingControlTypeAsync(tabData.url),
@@ -37,10 +39,12 @@ export const getShieldSettingsForTabData = (tabData?: chrome.tabs.Tab) => {
       braveShields: details[0] ? 'allow' : 'block',
       ads: details[1],
       trackers: details[1],
-      httpUpgradableResources: details[2] ? 'block' : 'allow',
-      javascript: details[3],
-      fingerprinting: details[4],
-      cookies: details[5]
+      cosmeticFiltering: details[2],
+      firstPartyCosmeticFiltering: details[3],
+      httpUpgradableResources: details[4] ? 'block' : 'allow',
+      javascript: details[5],
+      fingerprinting: details[6],
+      cookies: details[7]
     }
   }).catch(() => {
     return {
@@ -51,10 +55,33 @@ export const getShieldSettingsForTabData = (tabData?: chrome.tabs.Tab) => {
       braveShields: 'block',
       ads: 0,
       trackers: 0,
+      cosmeticFiltering: 0,
+      cosmeticFilteringFeatureFlag: 0,
       httpUpgradableResources: 0,
       javascript: 0,
       fingerprinting: 0
     }
+  })
+}
+
+/**
+ * Filters ipfs and ipns locations to their equivalent gateway
+ * @return a promise with the possibly modified tab data
+ */
+const filterTabData = (tabData?: chrome.tabs.Tab) => {
+  if (tabData === undefined || !tabData.url) {
+    return Promise.reject(new Error('No tab url specified'))
+  }
+  const url = new window.URL(tabData.url)
+  return new Promise(resolve => {
+    if ((url.protocol === 'ipfs:' || url.protocol === 'ipns:') && tabData.url) {
+      chrome.ipfs.resolveIPFSURI(tabData.url, (gatewayUrl: string) => {
+        tabData.url = gatewayUrl
+        resolve(tabData)
+      })
+      return
+    }
+    resolve(tabData)
   })
 }
 
@@ -72,6 +99,7 @@ export const getTabData = (tabId: number) =>
  */
 export const requestShieldPanelData = (tabId: number) =>
   getTabData(tabId)
+    .then(filterTabData)
     .then(getShieldSettingsForTabData)
     .then((details: ShieldDetails) => {
       actions.shieldsPanelDataUpdated(details)
@@ -106,6 +134,17 @@ export const setAllowAds = (origin: string, setting: string) =>
  */
 export const setAllowTrackers = (origin: string, setting: string) => {
   return chrome.braveShields.setAdControlTypeAsync(setting, origin)
+}
+
+/**
+ * Changes the cosmetic filtering at origin to be allowed or blocked.
+ * The tracking-protection service will come into effect if the tracker is marked as blocked.
+ * @param {string} origin the origin of the site to change the setting for
+ * @param {string} setting 'allow', 'block_third_party', or 'block'
+ * @return a promise which resolves with the setting is set
+ */
+export const setAllowCosmeticFiltering = (origin: string, setting: string) => {
+  return chrome.braveShields.setCosmeticFilteringControlTypeAsync(setting, origin)
 }
 
 /**
@@ -163,25 +202,42 @@ export const setAllowScriptOriginsOnce = (origins: Array<string>, tabId: number)
     })
   })
 
+/**
+ * Open a prompt that allows the user to submit a report telling Brave that the current website is broken by Shields.
+ * @param {number} tabId ID of the tab whose contents are being reported
+ */
+export const reportBrokenSite = (tabId: number) =>
+  chrome.braveShields.reportBrokenSite(tabId)
+
 export type GetViewPreferencesData = {
   showAdvancedView: boolean
+  statsBadgeVisible: boolean
 }
 
 const settingsKeys = {
-  showAdvancedView: { key: 'brave.shields.advanced_view_enabled', type: chrome.settingsPrivate.PrefType.BOOLEAN }
+  showAdvancedView: { key: 'brave.shields.advanced_view_enabled', type: chrome.settingsPrivate.PrefType.BOOLEAN },
+  statsBadgeVisible: { key: 'brave.shields.stats_badge_visible', type: chrome.settingsPrivate.PrefType.BOOLEAN }
 }
 export async function getViewPreferences (): Promise<GetViewPreferencesData> {
-  const showAdvancedViewPref = await SettingsPrivate.getPreference(settingsKeys.showAdvancedView.key)
-  if (showAdvancedViewPref.type !== settingsKeys.showAdvancedView.type) {
-    throw new Error(`Unexpected settings type received for "${settingsKeys.showAdvancedView.key}". Expected: ${settingsKeys.showAdvancedView.type}, Received: ${showAdvancedViewPref.type}`)
-  }
-  return {
-    showAdvancedView: showAdvancedViewPref.value
-  }
+  let newSettings = {} as GetViewPreferencesData
+  await Promise.all(
+    Object.keys(settingsKeys).map(async (name) => {
+      // Get setting by internal key
+      const pref = await SettingsPrivate.getPreference(settingsKeys[name].key)
+      // Validate setting type
+      if (pref.type !== settingsKeys[name].type) {
+        throw new Error(`Unexpected settings type received for "${settingsKeys[name].key}". Expected: ${settingsKeys[name].type}, Received: ${pref.type}`)
+      }
+      // Valid
+      newSettings[name] = pref.value
+    })
+  )
+  return newSettings
 }
 
 export type SetViewPreferencesData = {
   showAdvancedView?: boolean
+  statsBadgeVisible?: boolean
 }
 export async function setViewPreferences (preferences: SetViewPreferencesData): Promise<void> {
   const setOps = []
@@ -190,5 +246,15 @@ export async function setViewPreferences (preferences: SetViewPreferencesData): 
       SettingsPrivate.setPreference(settingsKeys.showAdvancedView.key, preferences.showAdvancedView)
     )
   }
+  if (preferences.statsBadgeVisible !== undefined) {
+    setOps.push(
+      SettingsPrivate.setPreference(settingsKeys.statsBadgeVisible.key, preferences.statsBadgeVisible)
+    )
+  }
   await Promise.all(setOps)
 }
+
+export const onShieldsPanelShown = () =>
+  new Promise<void>((resolve) => {
+    chrome.braveShields.onShieldsPanelShown()
+  })

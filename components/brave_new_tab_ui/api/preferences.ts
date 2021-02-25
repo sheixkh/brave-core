@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Brave Authors. All rights reserved.
+// Copyright (c) 2020 The Brave Authors. All rights reserved.
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this file,
 // you can obtain one at http://mozilla.org/MPL/2.0/.
@@ -10,17 +10,10 @@
 // especially string keys.
 //
 
-export type Preferences = {
-  showBackgroundImage: boolean
-  showStats: boolean
-  showClock: boolean
-  showTopSites: boolean
-}
+type PreferencesUpdatedHandler = (prefData: NewTab.Preferences) => void
 
-type PreferencesUpdatedHandler = (prefData: Preferences) => void
-
-export function getPreferences (): Promise<Preferences> {
-  return window.cr.sendWithPromise<Preferences>('getNewTabPagePreferences')
+export function getPreferences (): Promise<NewTab.Preferences> {
+  return window.cr.sendWithPromise<NewTab.Preferences>('getNewTabPagePreferences')
 }
 
 function sendSavePref (key: string, value: any) {
@@ -35,12 +28,56 @@ export function saveShowClock (value: boolean): void {
   sendSavePref('showClock', value)
 }
 
-export function saveShowTopSites (value: boolean): void {
-  sendSavePref('showTopSites', value)
+export function saveClockFormat (value: string): void {
+  sendSavePref('clockFormat', value)
 }
 
 export function saveShowStats (value: boolean): void {
   sendSavePref('showStats', value)
+}
+
+export function saveShowToday (value: boolean): void {
+  sendSavePref('showToday', value)
+}
+
+export function saveShowRewards (value: boolean): void {
+  sendSavePref('showRewards', value)
+}
+
+export function saveShowTogether (value: boolean): void {
+  sendSavePref('showTogether', value)
+}
+
+export function saveShowBinance (value: boolean): void {
+  sendSavePref('showBinance', value)
+}
+
+export function saveBrandedWallpaperOptIn (value: boolean): void {
+  sendSavePref('brandedWallpaperOptIn', value)
+}
+
+export function saveIsBrandedWallpaperNotificationDismissed (value: boolean): void {
+  sendSavePref('isBrandedWallpaperNotificationDismissed', value)
+}
+
+export function saveShowGemini (value: boolean): void {
+  sendSavePref('showGemini', value)
+}
+
+export function saveShowCryptoDotCom (value: boolean): void {
+  sendSavePref('showCryptoDotCom', value)
+}
+
+export function saveIsBraveTodayIntroDismissed (value: boolean): void {
+  sendSavePref('isBraveTodayIntroDismissed', value)
+}
+
+export function saveSetAllStackWidgets (value: boolean): void {
+  sendSavePref('showRewards', value)
+  sendSavePref('showTogether', value)
+  sendSavePref('showBinance', value)
+  sendSavePref('showGemini', value)
+  sendSavePref('showCryptoDotCom', value)
 }
 
 export function addChangeListener (listener: PreferencesUpdatedHandler): void {

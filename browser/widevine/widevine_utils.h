@@ -6,23 +6,33 @@
 #ifndef BRAVE_BROWSER_WIDEVINE_WIDEVINE_UTILS_H_
 #define BRAVE_BROWSER_WIDEVINE_WIDEVINE_UTILS_H_
 
-#include "third_party/widevine/cdm/buildflags.h"
+#include <string>
 
 namespace content {
 class WebContents;
+}  // namespace content
+
+namespace user_prefs {
+class PrefRegistrySyncable;
 }
 
-int GetWidevinePermissionRequestTextFrangmentResourceId();
-void RequestWidevinePermission(content::WebContents* web_contents);
+class PrefRegistrySimple;
+class PrefService;
+class Profile;
 
-#if BUILDFLAG(BUNDLE_WIDEVINE_CDM)
-void InstallBundleOrRestartBrowser();
-#endif
-
-#if BUILDFLAG(ENABLE_WIDEVINE_CDM_COMPONENT)
-void EnableWidevineCdmComponent(content::WebContents* web_contents);
-#endif
-
+void EnableWidevineCdmComponent();
+void DisableWidevineCdmComponent();
+void RegisterWidevineProfilePrefsForMigration(
+    user_prefs::PrefRegistrySyncable* registry);
+int GetWidevinePermissionRequestTextFrangmentResourceId(bool for_restart);
+void RequestWidevinePermission(content::WebContents* web_contents,
+                               bool for_restart);
+void RegisterWidevineLocalstatePrefs(PrefRegistrySimple* registry);
+void RegisterWidevineLocalstatePrefsForMigration(PrefRegistrySimple* registry);
 void DontAskWidevineInstall(content::WebContents* web_contents, bool dont_ask);
+bool IsWidevineOptedIn();
+void SetWidevineOptedIn(bool opted_in);
+void MigrateWidevinePrefs(Profile* profile);
+void MigrateObsoleteWidevineLocalStatePrefs(PrefService* local_state);
 
 #endif  // BRAVE_BROWSER_WIDEVINE_WIDEVINE_UTILS_H_

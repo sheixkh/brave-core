@@ -1,6 +1,6 @@
 {
   "appName": {
-    "message": "Brave-utvidgningen",
+    "message": "Brave-tillägget",
     "description": "The name of the the extension."
   },
   "shields": {
@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Du surfar på denna webbplats utan något integritets- och säkerhetsskydd.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Du besöker den här webbplatsen utan Braves sekretess- och säkerhetsskydd. Fungerar den inte korrekt med Shields?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Rapportera en trasig webbplats",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Punkter blockerade",
@@ -51,6 +55,22 @@
     "message": "Cross-site-spårare blockerade",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Trackers och annonser blockeras",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Spårare och annonser blockerade (aggressivt)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Spårare och annonser blockerade (standard)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Tillåt alla spårare och annonser",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Anslutningar uppgraderade till HTTPS",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -64,32 +84,36 @@
     "description": "Message for the scripts blocked row label"
   },
   "thirdPartyCookiesBlocked": {
-    "message": "Cross-site-cookies blockerade",
+    "message": "Kakor för flera webbplatser blockerade",
     "description": "Message for the option in the cookies select field to block all 3rd party cookies"
   },
   "allCookiesBlocked": {
-    "message": "Cookies blockerade",
+    "message": "Kakor blockerades",
     "description": "Message for the option in the cookies select field to block all cookies"
   },
   "allCookiesAllowed": {
-    "message": "Alla cookies tillåtna",
+    "message": "Alla kakor tillåts",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Cross-site-enhetsigenkänning blockerad",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Fingeravtryck blockerat",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Försök till enhetsigenkänning blockerade",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Fingeravtrycksläsning hindrad (standard)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Alla försök till enhetsigenkänning tillåtna",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Fingeravtrycksläsning hindrad (strikt, kan bryta sajter)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Tillåt att alla fingeravtryck tas",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Försök till enhetsigenkänning",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Försök att ta fingeravtryck",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Skript på den här webbplatse",
@@ -168,7 +192,7 @@
     "description": "Message for the simple view option"
   },
   "shieldsExplanation": {
-    "message": "Det finns ofta cookies och skript på webbplatser som försöker identifiera dig och din enhet (ofta inbäddade i annonser). De vill ta reda på vem du är och följer och spårar dig på internet och vad du gör på olika webbplatser. Med Brave blockerar du de funktionerna så att du kan surfa i fred.",
+    "message": "Det finns ofta kakor och skript på webbplatser som försöker identifiera dig och din enhet (ofta inbäddade i annonser). De vill ta reda på vem du är och följer och spårar dig på internet och vad du gör på olika webbplatser. Med Brave blockerar du de funktionerna så att du kan surfa i fred.",
     "description": "Message in read-only view explaining what Brave Shields do"
   },
   "blockedResoucesExplanation": {

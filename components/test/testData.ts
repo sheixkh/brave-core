@@ -4,9 +4,8 @@
 
 // Initial state
 import { defaultState as welcomeData } from '../../components/brave_welcome_ui/storage'
-import { defaultState as rewardsData } from '../../components/brave_rewards/resources/ui/storage'
+import { defaultState as rewardsData } from '../../components/brave_rewards/resources/page/storage'
 import { defaultState as adblockData } from '../../components/brave_adblock_ui/storage'
-import { defaultState as syncData } from '../../components/brave_sync/ui/storage'
 
 // Types
 import { Tab } from '../brave_extension/extension/brave_extension/types/state/shieldsPannelState'
@@ -37,26 +36,24 @@ export const rewardsInitialState: Rewards.ApplicationState = { rewardsData }
 
 export const adblockInitialState: AdBlock.ApplicationState = { adblockData }
 
-export const syncInitialState: Sync.ApplicationState = { syncData }
-
 export const newTabInitialState: NewTab.ApplicationState = {
   newTabData: {
     showBackgroundImage: false,
     showSettingsMenu: false,
     topSites: [],
-    ignoredTopSites: [],
-    pinnedTopSites: [],
+    excludedSites: [],
     gridSites: [],
     showEmptyPage: false,
     isIncognito: new ChromeEvent(),
     useAlternativePrivateSearchEngine: false,
+    torCircuitEstablished: false,
+    torInitProgress: '',
     isTor: false,
     isQwant: false,
-    bookmarks: {},
     stats: {
       adsBlockedStat: 0,
       javascriptBlockedStat: 0,
-      httpsUpgradesStat: 0,
+      bandwidthSavedStat: 0,
       fingerprintingBlockedStat: 0
     }
   }
@@ -100,7 +97,7 @@ export const tabs: Tabs = {
 export const activeTabData = tabs[2]
 
 export const blockedResource: BlockDetails = {
-  blockType: 'ads',
+  blockType: 'shieldsAds',
   tabId: 2,
   subresource: 'https://www.brave.com/test'
 }
@@ -122,6 +119,11 @@ let mockSettings: MockSettingsStore = {
     key: 'brave.shields.advanced_view_enabled',
     type: 'BOOLEAN',
     value: false
+  },
+  ['brave.shields.stats_badge_visible']: {
+    key: 'brave.shields.stats_badge_visible',
+    type: 'BOOLEAN',
+    value: true
   }
 }
 
@@ -217,8 +219,14 @@ export const getMockChrome = () => {
       getBraveShieldsEnabledAsync: function (url: string) {
         return Promise.resolve(false)
       },
+      shouldDoCosmeticFilteringAsync: function (url: string) {
+        return Promise.resolve(true)
+      },
       getAdControlTypeAsync: function (url: string) {
         return Promise.resolve('block')
+      },
+      isFirstPartyCosmeticFilteringEnabledAsync: function (url: string) {
+        return Promise.resolve(false)
       },
       getCookieControlTypeAsync: function (url: string) {
         return Promise.resolve('block')
@@ -236,6 +244,9 @@ export const getMockChrome = () => {
         return new Promise(() => [])
       },
       setAdControlTypeAsync: function (url: string, controlType: string) {
+        return new Promise(() => [])
+      },
+      setCosmeticFilteringControlTypeAsync: function (url: string, controlType: string) {
         return new Promise(() => [])
       },
       setCookieControlTypeAsync: function (url: string, controlType: string) {
@@ -332,19 +343,14 @@ export const window = () => {
 }
 
 export const initialState = deepFreeze({
-  cosmeticFilter: {
-    currentWindowId: -1,
-    tabs: {},
-    windows: {},
-    persistentData: { isFirstAccess: true }
-  },
   dappDetection: {},
   runtime: {},
   shieldsPanel: {
     currentWindowId: -1,
     tabs: {},
     windows: {},
-    persistentData: { isFirstAccess: true }
+    persistentData: { isFirstAccess: true },
+    settingsData: { showAdvancedView: false, statsBadgeVisible: true }
   }
 })
 

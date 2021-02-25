@@ -1,6 +1,6 @@
 {
   "appName": {
-    "message": "የBrave የቀጠለ ",
+    "message": "የ Brave የቀጠለ ",
     "description": "The name of the the extension."
   },
   "shields": {
@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "ይህን ገፅ ያለግላዊነት እና ደህንነት ጥበቃዎች እያሰሱ ነው",
-    "description": "Message telling the user that shields are disabled"
+    "message": "ይህን ገፅ ያለ Brave ግላዊነት እና ደህንነት ጥበቃዎች እያሰሱ ነው። ጋሻዎቹ ወደላይ ቢሆኑ በትክክል አይሰራም?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "የተሰበረ ገጽን ሪፖርት ያድርጉ",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "ንጥሎች ታግደዋል",
@@ -51,6 +55,22 @@
     "message": "ድረ ገጽ ተሻጋሪ ተከታታዮች ታግደዋል",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "ተከታታዮች እና ማስታወቂያዎች ታግደዋል",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "ተከታታዮች እና ማስታወቂያዎች ታግደዋል (ሃይል የሚጠቀም)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "ተከታታዮች እና ማስታወቂያዎች ታግደዋል (ስታንዳርድ)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "ሁሉንም ተከታታዮች እና ማስታወቂያዎች ፍቀድ",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "ግንኙነቶች ወደ HTTPS ተሻሽለዋል",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "ሁሉም ኩኪዎች ተፈቅደዋል ",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "ድረ ገጽ ተሻጋሪ የመሳሪያ ማወቂያ ታግዷል",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "የጣት አሻራ ታግዷል",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "የመሳሪያ ማወቂያ ሙከራዎች ታግደዋል",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "የጣት አሻራ ታግ (ል (መደበኛ)\n ",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "ሁሉም የመሳሪያ ማወቂያ ሙከራዎች ተፈቅደዋል።",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "የጣት አሻራ ታግ (ል (ጥብቅ ፣ ጣቢያዎችን ሊሰብር ይችላል)\n ",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "ሁሉም የጣት አሻራ መውሰድን ፍቀድ",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "የመሣሪያ ማወቂያ ሙከራዎች",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "የጣት አሻራ የመውሰድ ሙከራዎች",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "በዚህ ገፅ ላይ ያሉ ስክሪፕቶች",

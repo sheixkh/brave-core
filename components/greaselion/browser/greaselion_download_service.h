@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "base/files/file_path.h"
+#include "base/files/file_path_watcher.h"
 #include "base/memory/weak_ptr.h"
 #include "base/observer_list.h"
 #include "base/sequence_checker.h"
@@ -24,6 +25,10 @@
 
 class GreaselionServiceTest;
 
+namespace base {
+class Version;
+}
+
 using brave_component_updater::LocalDataFilesObserver;
 using brave_component_updater::LocalDataFilesService;
 
@@ -35,37 +40,56 @@ extern const char kGreaselionConfigFileVersion[];
 enum GreaselionPreconditionValue { kMustBeFalse, kMustBeTrue, kAny };
 
 struct GreaselionPreconditions {
-  GreaselionPreconditionValue rewards_enabled;
-  GreaselionPreconditionValue twitter_tips_enabled;
+  GreaselionPreconditionValue rewards_enabled = kAny;
+  GreaselionPreconditionValue twitter_tips_enabled = kAny;
+  GreaselionPreconditionValue reddit_tips_enabled = kAny;
+  GreaselionPreconditionValue github_tips_enabled = kAny;
+  GreaselionPreconditionValue auto_contribution_enabled = kAny;
+  GreaselionPreconditionValue ads_enabled = kAny;
+  GreaselionPreconditionValue supports_minimum_brave_version = kAny;
 };
 
 class GreaselionRule {
  public:
   explicit GreaselionRule(const std::string& name);
+  explicit GreaselionRule(const GreaselionRule& name);
+  GreaselionRule& operator=(const GreaselionRule& name);
+  ~GreaselionRule();
+
   void Parse(base::DictionaryValue* preconditions_value,
              base::ListValue* urls_value,
              base::ListValue* scripts_value,
-             const base::FilePath& root_dir);
-  ~GreaselionRule();
-
-  bool Matches(GreaselionFeatures state) const;
+             const std::string& run_at_value,
+             const std::string& minimum_brave_version_value,
+             const base::FilePath& messages_value,
+             const base::FilePath& resource_dir);
+  bool Matches(
+      GreaselionFeatures state, const base::Version& browser_version) const;
   std::string name() const { return name_; }
   std::vector<std::string> url_patterns() const { return url_patterns_; }
   std::vector<base::FilePath> scripts() const { return scripts_; }
+  std::string run_at() const {
+    return run_at_;
+  }
+  base::FilePath messages() const {
+    return messages_;
+  }
+  bool has_unknown_preconditions() const { return has_unknown_preconditions_; }
 
  private:
   scoped_refptr<base::SequencedTaskRunner> GetTaskRunner();
-  GreaselionPreconditionValue ParsePrecondition(base::DictionaryValue* root,
-                                                const char* key);
+  GreaselionPreconditionValue ParsePrecondition(const base::Value& value);
   bool PreconditionFulfilled(GreaselionPreconditionValue precondition,
                              bool value) const;
 
   std::string name_;
   std::vector<std::string> url_patterns_;
   std::vector<base::FilePath> scripts_;
+  std::string run_at_;
+  std::string minimum_brave_version_;
+  base::FilePath messages_;
   GreaselionPreconditions preconditions_;
-  base::WeakPtrFactory<GreaselionRule> weak_factory_;
-  DISALLOW_COPY_AND_ASSIGN(GreaselionRule);
+  bool has_unknown_preconditions_ = false;
 };
 
 // The Greaselion download service is in charge
@@ -99,11 +123,16 @@ class GreaselionDownloadService : public LocalDataFilesObserver {
   friend class ::GreaselionServiceTest;
 
   void OnDATFileDataReady(std::string contents);
+  void OnDevModeLocalFileChanged(bool error);
   void LoadOnTaskRunner();
+  void LoadDirectlyFromResourcePath();
 
   base::ObserverList<Observer> observers_;
   std::vector<std::unique_ptr<GreaselionRule>> rules_;
-  base::FilePath install_dir_;
+  base::FilePath resource_dir_;
+  bool is_dev_mode_ = false;
+  scoped_refptr<base::SequencedTaskRunner> dev_mode_task_runner_;
+  std::unique_ptr<base::FilePathWatcher> dev_mode_path_watcher_;
 
   SEQUENCE_CHECKER(sequence_checker_);
   base::WeakPtrFactory<GreaselionDownloadService> weak_factory_;

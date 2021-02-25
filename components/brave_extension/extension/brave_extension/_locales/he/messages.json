@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "אתם גולשים באתר זה ללא שום הגנות אבטחה ופרטיות.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "הנך גולש/ת באתר זה ללא הגנות הפרטיות והאבטחה של Brave. האם הן לא עובדות כמו שצריך כאשר Shields פועל?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "דווח/י על אתר לא תקין",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "פריטים שנחסמו",
@@ -51,6 +55,22 @@
     "message": "עוקבים מרובי-אתרים (cross-site) נחסמו",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "עוקבים ופרסומות חסומים",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "עוקבים ופרסומות חסומים (אגרסיבי)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "עוקבים ופרסומות חסומים (סטנדרטי)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "אפשר את כל העוקבים והפרסומות",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "החיבורים שודרגו ל-HTTPS",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "אפשר את כל קבצי העוגיות",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "זיהוי מכשיר מרובה-אתרים (cross-site) נחסם",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "טביעות אצבעות נחסמו",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "ניסיונות לזיהוי המכשיר נחסמו",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "טביעות אצבע חסומות (סטנדרטי)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "כל הניסיונות לזיהוי המכשיר הותרו",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "טביעות אצבע חסומות (מחמיר, עשוי לשבש פעולה תקינה של אתרים)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "אפשר כל לקיחת טביעות אצבע",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "נסיונות זיהוי התקן",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "ניסיונות טביעת אצבע",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "פקודות באתר זה",

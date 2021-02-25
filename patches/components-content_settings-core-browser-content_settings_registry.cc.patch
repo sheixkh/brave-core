@@ -1,12 +1,12 @@
 diff --git a/components/content_settings/core/browser/content_settings_registry.cc b/components/content_settings/core/browser/content_settings_registry.cc
-index dc67564cd90fb1964de545b933ac5104dbfbc785..d9ca4251e5e9606566dcd88ba5f76f1dca0759cd 100644
+index b871384241909b36c92aa2209336be3857557087..b7f03415e2611482c16f649fc18dfd7a05433d09 100644
 --- a/components/content_settings/core/browser/content_settings_registry.cc
 +++ b/components/content_settings/core/browser/content_settings_registry.cc
-@@ -491,6 +491,7 @@ void ContentSettingsRegistry::Init() {
+@@ -598,6 +598,7 @@ void ContentSettingsRegistry::Init() {
             ContentSettingsInfo::INHERIT_IF_LESS_PERMISSIVE,
             ContentSettingsInfo::PERSISTENT,
             ContentSettingsInfo::EXCEPTIONS_ON_SECURE_ORIGINS_ONLY);
-+  BraveInit();
++  BRAVE_INIT
  }
  
  void ContentSettingsRegistry::Register(

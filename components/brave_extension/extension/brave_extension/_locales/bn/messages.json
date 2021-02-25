@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "আপনি কোনো গোপনীয়তা এবং নিরাপত্তার সুরক্ষা ছাড়াই এই সাইটটি ব্রাউজ করছেন।",
-    "description": "Message telling the user that shields are disabled"
+    "message": "আপনি Brave-এর গোপনীয়তা এবং নিরাপত্তার সুরক্ষা ছাড়াই এই সাইটটি ব্রাউজ করছেন। এটি কি শিল্ড আপের সাথে ঠিকমত কাজ করে না?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "একটি ভাঙ্গা সাইটের প্রতিবেদন করুন",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "ব্লক করা আইটেমসমূহ",
@@ -51,6 +55,22 @@
     "message": "ক্রশ-সাইট ট্র্যাকারগুলি ব্লক করা হয়েছে",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "ট্র্যাকার ও বিজ্ঞাপনগুলি ব্লক করা হয়েছে",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "ট্র্যাকারগুলি এবং বিজ্ঞাপনগুলি অবরুদ্ধ করা হয়েছে (আক্রমণাত্মক)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "ট্র্যাকারগুলি এবং বিজ্ঞাপনগুলি অবরুদ্ধ করা হয়েছে (মানক)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "সমস্ত ট্র্যাকার এবং বিজ্ঞাপনকে অনুমোদন করুন",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "সংযোগগুলি HTTPS এ আপগ্রেড করা হয়েছে",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "সমস্ত কুকি অনুমোদন করা হয়েছে",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "ক্রশ-সাইট ডিভাইস শনাক্তকরণ ব্লক করা হয়েছে",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "আঙুলের ছাপ ব্লক করা হয়েছে",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "ডিভাইস শনাক্তকরণ প্রচেষ্টাগুলি ব্লক করা হয়েছে",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "ফ্রিঙ্গারপ্রিন্টিং ব্লক করা হয়েছে (আদর্শ)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "সমস্ত ডিভাইস শনাক্তকরণের প্রচেষ্টাগুলি অনুমোদিত করা হয়েছে",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "ফ্রিঙ্গারপ্রিন্টিং ব্লক করা হয়েছে  (কঠোর, সাইটগুলিকে ভাঙ্গতে পারে)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "সমস্ত ফিঙ্গারপ্রিন্টিং এর অনুমতি দিন ",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "ডিভাইস শনাক্তকরণ প্রচেষ্টাগুলি",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "আঙুলের ছাপ দেওয়ার প্রচেষ্টাগুলি",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "এই সাইটটিতে থাকা স্ক্রিপ্টগুলি",

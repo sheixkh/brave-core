@@ -10,12 +10,13 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
-#include "bat/ads/ads.h"
-
+#include "base/memory/weak_ptr.h"
 #include "brave/components/services/bat_ads/public/interfaces/bat_ads.mojom.h"
 #include "mojo/public/cpp/bindings/interface_request.h"
-#include "base/memory/weak_ptr.h"
+#include "bat/ads/ads.h"
+#include "bat/ads/statement_info.h"
 
 namespace ads {
 class Ads;
@@ -29,8 +30,12 @@ class BatAdsImpl :
     public mojom::BatAds,
     public base::SupportsWeakPtr<BatAdsImpl> {
  public:
-  explicit BatAdsImpl(mojom::BatAdsClientAssociatedPtrInfo client_info);
+  explicit BatAdsImpl(
+      mojo::PendingAssociatedRemote<mojom::BatAdsClient> client_info);
   ~BatAdsImpl() override;
+
+  BatAdsImpl(const BatAdsImpl&) = delete;
+  BatAdsImpl& operator=(const BatAdsImpl&) = delete;
 
   // Overridden from mojom::BatAds:
   void Initialize(
@@ -38,20 +43,15 @@ class BatAdsImpl :
   void Shutdown(
       ShutdownCallback callback) override;
 
-  void SetConfirmationsIsReady(
-      const bool is_ready) override;
-
   void ChangeLocale(
       const std::string& locale) override;
 
+  void OnAdsSubdivisionTargetingCodeHasChanged() override;
+
   void OnPageLoaded(
-      const std::string& url,
-      const std::string& html) override;
-
-  void ServeSampleAd() override;
-
-  void OnTimer(
-      const uint32_t timer_id) override;
+      const int32_t tab_id,
+      const std::vector<std::string>& redirect_chain,
+      const std::string& content) override;
 
   void OnUnIdle() override;
   void OnIdle() override;
@@ -68,30 +68,52 @@ class BatAdsImpl :
       const int32_t tab_id,
       const std::string& url,
       const bool is_active,
+      const bool is_browser_active,
       const bool is_incognito) override;
   void OnTabClosed(
       const int32_t tab_id) override;
 
-  void GetNotificationForId(
-      const std::string& id,
-      GetNotificationForIdCallback callback) override;
-  void OnNotificationEvent(
-      const std::string& id,
-      const int32_t type) override;
+  void GetAdNotification(
+      const std::string& uuid,
+      GetAdNotificationCallback callback) override;
+  void OnAdNotificationEvent(
+      const std::string& uuid,
+      const ads::AdNotificationEventType event_type) override;
+
+  void OnNewTabPageAdEvent(
+      const std::string& uuid,
+      const std::string& creative_instance_id,
+      const ads::NewTabPageAdEventType event_type) override;
+
+  void OnPromotedContentAdEvent(
+      const std::string& uuid,
+      const std::string& creative_instance_id,
+      const ads::PromotedContentAdEventType event_type) override;
 
   void RemoveAllHistory(
       RemoveAllHistoryCallback callback) override;
 
+  void OnWalletUpdated(
+      const std::string& payment_id,
+      const std::string& seed) override;
+
+  void ReconcileAdRewards() override;
+
   void GetAdsHistory(
+      const uint64_t from_timestamp,
+      const uint64_t to_timestamp,
       GetAdsHistoryCallback callback) override;
 
+  void GetStatement(
+      GetStatementCallback callback) override;
+
   void ToggleAdThumbUp(
-      const std::string& id,
+      const std::string& creative_instance_id,
       const std::string& creative_set_id,
       const int action,
       ToggleAdThumbUpCallback callback) override;
   void ToggleAdThumbDown(
-      const std::string& id,
+      const std::string& creative_instance_id,
       const std::string& creative_set_id,
       const int action,
       ToggleAdThumbUpCallback callback) override;
@@ -104,15 +126,18 @@ class BatAdsImpl :
       const int action,
       ToggleAdOptOutActionCallback callback) override;
   void ToggleSaveAd(
-      const std::string& id,
+      const std::string& creative_instance_id,
       const std::string& creative_set_id,
       const bool saved,
       ToggleSaveAdCallback callback) override;
   void ToggleFlagAd(
-      const std::string& id,
+      const std::string& creative_instance_id,
       const std::string& creative_set_id,
       const bool flagged,
       ToggleFlagAdCallback callback) override;
+
+  void OnUserModelUpdated(
+      const std::string& id) override;
 
  private:
   // Workaround to pass base::OnceCallback into std::bind
@@ -149,10 +174,13 @@ class BatAdsImpl :
       CallbackHolder<RemoveAllHistoryCallback>* holder,
       const int32_t result);
 
+  static void OnGetStatement(
+    CallbackHolder<GetStatementCallback>* holder,
+    const bool success,
+    const ads::StatementInfo& statement);
+
   std::unique_ptr<BatAdsClientMojoBridge> bat_ads_client_mojo_proxy_;
   std::unique_ptr<ads::Ads> ads_;
-
-  DISALLOW_COPY_AND_ASSIGN(BatAdsImpl);
 };
 
 }  // namespace bat_ads

@@ -1,38 +1,22 @@
 diff --git a/chrome/installer/mini_installer/BUILD.gn b/chrome/installer/mini_installer/BUILD.gn
-index 7a779fc3ce1a511e850c24f632752f37462abe6f..ac1aaa49b902d4dbb09df68f309e50fc407178d4 100644
+index 5f5cb1c752f28724ca0aceb1613a3d512356c565..8b73715176589e5708e0b5b8c7107a641c56d188 100644
 --- a/chrome/installer/mini_installer/BUILD.gn
 +++ b/chrome/installer/mini_installer/BUILD.gn
-@@ -12,6 +12,10 @@ import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
+@@ -13,6 +13,7 @@ import("//third_party/icu/config.gni")
+ import("//tools/v8_context_snapshot/v8_context_snapshot.gni")
  import("//ui/base/ui_features.gni")
  import("//v8/gni/v8.gni")
++import("//brave/build/config.gni")
  
-+if (brave_chromium_build) {
-+  import("//brave/build/config.gni")
-+}
-+
  declare_args() {
    # The Chrome archive is compressed in official builds to reduce the size of
-   # the installer. By default: non-official or component builds, a build mode
-@@ -181,6 +185,22 @@ template("generate_mini_installer") {
-       "//third_party/icu:icudata",
-       chrome_dll_target,
-     ]
-+    if (brave_chromium_build) {
-+      if (skip_signing) { args += [ "--skip_signing" ] }
-+      inputs -= [
-+        "$root_out_dir/chrome.exe",
-+      ]
-+      inputs += [
-+        "$root_out_dir/brave.exe",
-+        "$root_out_dir/brave_resources.pak",
-+        "$root_out_dir/brave_100_percent.pak",
-+        "$root_out_dir/brave_200_percent.pak",
-+      ]
-+      deps += [
-+        "//brave:packed_resources",
-+        "//brave/build/win:copy_exe",
-+      ]
-+    }
+@@ -172,6 +173,9 @@ python2_action("mini_installer_archive") {
+     "//mojo/core:shared_library",
+     "//third_party/icu:icudata",
+   ]
++  if (skip_signing) { args += [ "--skip_signing" ] }
++  if (build_delta_installer) { args += [ "--setup_exe_format=DIFF", "--diff_algorithm=COURGETTE", "--last_chrome_installer",rebase_path("$root_out_dir/$last_chrome_installer", root_build_dir) ] }
++  deps += [ "//brave:mini_installer_dependencies" ]
  
-     if (enable_hidpi) {
-       args += [ "--enable_hidpi=1" ]
+   if (enable_hidpi) {
+     args += [ "--enable_hidpi=1" ]

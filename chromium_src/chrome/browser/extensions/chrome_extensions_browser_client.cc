@@ -5,11 +5,10 @@
 
 #include "brave/browser/extensions/api/brave_extensions_api_client.h"
 #include "brave/browser/extensions/updater/brave_update_client_config.h"
-#include "chrome/browser/extensions/chrome_extensions_browser_client.h"
 #include "chrome/browser/extensions/updater/chrome_update_client_config.h"
 
-#define ChromeUpdateClientConfig BraveUpdateClientConfig
 #define ChromeExtensionsAPIClient BraveExtensionsAPIClient
-#include "../../../../../chrome/browser/extensions/chrome_extensions_browser_client.cc"  // NOLINT
-#undef ChromeUpdateClientConfig
+#define ChromeUpdateClientConfig BraveUpdateClientConfig
+#include "../../../../../chrome/browser/extensions/chrome_extensions_browser_client.cc"
 #undef ChromeExtensionsAPIClient
+#undef ChromeUpdateClientConfig

@@ -1,28 +1,41 @@
 source_set("themes") {
-  if (!is_android) {
-    sources = [
-      "brave_theme_service.cc",
-      "brave_theme_service.h",
-      "brave_theme_service_win.cc",
-      "brave_theme_service_win.h",
-      "brave_theme_utils.cc",
-      "brave_theme_utils.h",
-      "brave_theme_utils_internal.cc",
-      "brave_theme_utils_internal.h",
-      "brave_theme_utils_mac.mm",
+  sources = [ "brave_dark_mode_utils.h" ]
+
+  deps = [
+    "//base",
+    "//brave/common:pref_names",
+    "//brave/common:switches",
+  ]
+
+  if (is_android) {
+    sources += [ "brave_dark_mode_utils_android.cc" ]
+  } else {
+    sources += [
+      "brave_dark_mode_utils_internal.cc",
+      "brave_dark_mode_utils_internal.h",
       "theme_properties.cc",
       "theme_properties.h",
     ]
 
-    deps = [
-      "//base",
-      "//brave/app:brave_generated_resources_grit",
-      "//brave/common",
-      "//chrome/common",
-      "//components/prefs",
-      "//components/pref_registry",
-      "//components/version_info",
-      "//skia",
+    if (is_linux) {
+      sources += [ "brave_dark_mode_utils_linux.cc" ]
+    }
+
+    if (is_mac) {
+      sources += [ "brave_dark_mode_utils_mac.mm" ]
+    }
+
+    if (is_win) {
+      sources += [ "brave_dark_mode_utils_win.cc" ]
+    }
+
+    deps += [
+      "//brave/components/sidebar/buildflags",
+      "//chrome/browser:theme_properties",
+      "//skia:skia",
+      "//ui/gfx:color_utils",
+      "//ui/native_theme:native_theme",
+      "//ui/native_theme:native_theme_browser",
     ]
   }
 }

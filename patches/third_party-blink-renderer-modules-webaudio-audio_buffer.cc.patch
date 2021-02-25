@@ -1,30 +1,24 @@
 diff --git a/third_party/blink/renderer/modules/webaudio/audio_buffer.cc b/third_party/blink/renderer/modules/webaudio/audio_buffer.cc
-index fd85f8425ff542d5c466c4b8168bca5da45eaebe..8e69639d01e367e7494250fca5600d319a16a438 100644
+index 4356676b777f4695138e849d2905d286c6a106a3..c45a3b0030124bad1de34107a7a5e578a2736002 100644
 --- a/third_party/blink/renderer/modules/webaudio/audio_buffer.cc
 +++ b/third_party/blink/renderer/modules/webaudio/audio_buffer.cc
-@@ -29,6 +29,7 @@
- #include "third_party/blink/renderer/modules/webaudio/audio_buffer.h"
- 
- #include <memory>
-+#include "brave/renderer/brave_content_settings_observer_helper.h"
- #include "third_party/blink/renderer/modules/webaudio/audio_buffer_options.h"
- #include "third_party/blink/renderer/modules/webaudio/base_audio_context.h"
- #include "third_party/blink/renderer/platform/audio/audio_bus.h"
-@@ -207,8 +208,13 @@ AudioBuffer::AudioBuffer(AudioBus* bus)
+@@ -189,6 +189,7 @@ AudioBuffer::AudioBuffer(AudioBus* bus)
  }
  
  NotShared<DOMFloat32Array> AudioBuffer::getChannelData(
 +    ScriptState* script_state,
      unsigned channel_index,
      ExceptionState& exception_state) {
-+  LocalDOMWindow* window = LocalDOMWindow::From(script_state);
-+  if (window && !AllowFingerprinting(window->GetFrame())) {
-+    return NotShared<DOMFloat32Array>(nullptr);
-+  }
    if (channel_index >= channels_.size()) {
-     exception_state.ThrowDOMException(
-         DOMExceptionCode::kIndexSizeError,
-@@ -228,16 +234,22 @@ NotShared<DOMFloat32Array> AudioBuffer::getChannelData(unsigned channel_index) {
+@@ -200,6 +201,7 @@ NotShared<DOMFloat32Array> AudioBuffer::getChannelData(
+     return NotShared<DOMFloat32Array>(nullptr);
+   }
+ 
++  BRAVE_AUDIOBUFFER_GETCHANNELDATA
+   return getChannelData(channel_index);
+ }
+ 
+@@ -210,13 +212,15 @@ NotShared<DOMFloat32Array> AudioBuffer::getChannelData(unsigned channel_index) {
    return NotShared<DOMFloat32Array>(channels_[channel_index].Get());
  }
  
@@ -41,12 +35,13 @@ index fd85f8425ff542d5c466c4b8168bca5da45eaebe..8e69639d01e367e7494250fca5600d31
 +void AudioBuffer::copyFromChannel(ScriptState* script_state,
 +                                  NotShared<DOMFloat32Array> destination,
                                    int32_t channel_number,
-                                   uint32_t start_in_channel,
+                                   size_t buffer_offset,
                                    ExceptionState& exception_state) {
-+  LocalDOMWindow* window = LocalDOMWindow::From(script_state);
-+  if (window && !AllowFingerprinting(window->GetFrame())) {
-+    return;
-+  }
-   if (channel_number < 0 ||
-       static_cast<uint32_t>(channel_number) >= channels_.size()) {
-     exception_state.ThrowDOMException(
+@@ -255,6 +259,7 @@ void AudioBuffer::copyFromChannel(NotShared<DOMFloat32Array> destination,
+   DCHECK_LE(buffer_offset + count, data_length);
+ 
+   memmove(dst, src + buffer_offset, count * sizeof(*src));
++  BRAVE_AUDIOBUFFER_COPYFROMCHANNEL
+ }
+ 
+ void AudioBuffer::copyToChannel(NotShared<DOMFloat32Array> source,

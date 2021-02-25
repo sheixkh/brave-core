@@ -8,19 +8,20 @@ import { render } from 'react-dom'
 import { Provider } from 'react-redux'
 import Theme from 'brave-ui/theme/brave-default'
 import DarkTheme from 'brave-ui/theme/brave-dark'
+import '../common/defaultTrustedTypesPolicy'
 import BraveCoreThemeProvider from '../common/BraveCoreThemeProvider'
-import wireAPIEventsToStore from './apiEventsToStore'
+import { wireApiEventsToStore } from './apiEventsToStore'
+import * as topSitesAPI from './api/topSites'
+import { init } from './actions/new_tab_actions'
 
 // Components
 import App from './containers/app'
 
 // Utils
 import store from './store'
-import 'emptykit.css'
 
-// Fonts
-import '../fonts/poppins.css'
-import '../fonts/muli.css'
+// Let things handle 'init'
+store.dispatch(init())
 
 function initialize () {
   console.timeStamp('loaded')
@@ -49,7 +50,14 @@ function initialize () {
 console.timeStamp('JS start')
 
 // Get store data going
-wireAPIEventsToStore()
+wireApiEventsToStore()
 
 // Perform DOM-dependent initialization when ready
 document.addEventListener('DOMContentLoaded', initialize)
+
+// Update topsite tiles when NTP gets visible.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') {
+    topSitesAPI.updateMostVisitedInfo()
+  }
+})

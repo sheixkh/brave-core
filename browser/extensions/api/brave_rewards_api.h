@@ -6,34 +6,82 @@
 #ifndef BRAVE_BROWSER_EXTENSIONS_API_BRAVE_REWARDS_API_H_
 #define BRAVE_BROWSER_EXTENSIONS_API_BRAVE_REWARDS_API_H_
 
+#include <map>
 #include <memory>
 #include <string>
 
 #include "base/memory/weak_ptr.h"
-#include "brave/components/brave_rewards/browser/balance.h"
-#include "brave/components/brave_rewards/browser/content_site.h"
-#include "brave/components/brave_rewards/browser/external_wallet.h"
-#include "brave/components/brave_rewards/browser/publisher_banner.h"
+#include "brave/vendor/bat-native-ledger/include/bat/ledger/mojom_structs.h"
 #include "extensions/browser/extension_function.h"
 
 namespace extensions {
 namespace api {
 
-class BraveRewardsCreateWalletFunction : public UIThreadExtensionFunction {
+class BraveRewardsOpenBrowserActionUIFunction :
+    public ExtensionFunction {
  public:
-  BraveRewardsCreateWalletFunction();
-  DECLARE_EXTENSION_FUNCTION("braveRewards.createWallet", UNKNOWN)
+  DECLARE_EXTENSION_FUNCTION("braveRewards.openBrowserActionUI", UNKNOWN)
 
  protected:
-  ~BraveRewardsCreateWalletFunction() override;
+  ~BraveRewardsOpenBrowserActionUIFunction() override;
 
   ResponseAction Run() override;
- private:
-  base::WeakPtrFactory<BraveRewardsCreateWalletFunction> weak_factory_;
-  void OnCreateWallet(int32_t result);
 };
 
-class BraveRewardsTipSiteFunction : public UIThreadExtensionFunction {
+class BraveRewardsUpdateMediaDurationFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.updateMediaDuration", UNKNOWN)
+
+ protected:
+  ~BraveRewardsUpdateMediaDurationFunction() override;
+
+  ResponseAction Run() override;
+};
+
+class BraveRewardsGetPublisherInfoFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.getPublisherInfo", UNKNOWN)
+
+ protected:
+  ~BraveRewardsGetPublisherInfoFunction() override;
+
+  ResponseAction Run() override;
+
+ private:
+  void OnGetPublisherInfo(
+      const ledger::type::Result result,
+      ledger::type::PublisherInfoPtr info);
+};
+
+class BraveRewardsGetPublisherPanelInfoFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.getPublisherPanelInfo", UNKNOWN)
+
+ protected:
+  ~BraveRewardsGetPublisherPanelInfoFunction() override;
+
+  ResponseAction Run() override;
+
+ private:
+  void OnGetPublisherPanelInfo(
+      const ledger::type::Result result,
+      ledger::type::PublisherInfoPtr info);
+};
+
+class BraveRewardsSavePublisherInfoFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.savePublisherInfo", UNKNOWN)
+
+ protected:
+  ~BraveRewardsSavePublisherInfoFunction() override;
+
+  ResponseAction Run() override;
+
+ private:
+  void OnSavePublisherInfo(const ledger::type::Result result);
+};
+
+class BraveRewardsTipSiteFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.tipSite", UNKNOWN)
 
@@ -43,55 +91,30 @@ class BraveRewardsTipSiteFunction : public UIThreadExtensionFunction {
   ResponseAction Run() override;
 };
 
-class BraveRewardsTipTwitterUserFunction
-    : public UIThreadExtensionFunction {
+class BraveRewardsTipUserFunction : public ExtensionFunction {
  public:
-  BraveRewardsTipTwitterUserFunction();
-  DECLARE_EXTENSION_FUNCTION("braveRewards.tipTwitterUser", UNKNOWN)
+  BraveRewardsTipUserFunction();
+  DECLARE_EXTENSION_FUNCTION("braveRewards.tipUser", UNKNOWN)
 
  protected:
-  ~BraveRewardsTipTwitterUserFunction() override;
+  ~BraveRewardsTipUserFunction() override;
 
   ResponseAction Run() override;
 
  private:
-  base::WeakPtrFactory<BraveRewardsTipTwitterUserFunction> weak_factory_;
-  void OnTwitterPublisherInfoSaved(
-      std::unique_ptr<brave_rewards::ContentSite> publisher_info);
+  void OnTipUserStartProcess(
+      const std::string& publisher_key,
+      ledger::type::Result result);
+  void OnTipUserGetPublisherInfo(
+      const ledger::type::Result result,
+      ledger::type::PublisherInfoPtr info);
+  void OnTipUserSavePublisherInfo(const ledger::type::Result result);
+  void ShowTipDialog();
+
+  base::WeakPtrFactory<BraveRewardsTipUserFunction> weak_factory_;
 };
 
-class BraveRewardsTipGitHubUserFunction
-    : public UIThreadExtensionFunction {
- public:
-  BraveRewardsTipGitHubUserFunction();
-  DECLARE_EXTENSION_FUNCTION("braveRewards.tipGitHubUser", UNKNOWN)
-
- protected:
-  ~BraveRewardsTipGitHubUserFunction() override;
-
-  ResponseAction Run() override;
- private:
-  base::WeakPtrFactory<BraveRewardsTipGitHubUserFunction> weak_factory_;
-  void OnGitHubPublisherInfoSaved(
-      std::unique_ptr<brave_rewards::ContentSite> publisher_info);
-};
-
-class BraveRewardsTipRedditUserFunction : public UIThreadExtensionFunction {
- public:
-  BraveRewardsTipRedditUserFunction();
-  DECLARE_EXTENSION_FUNCTION("braveRewards.tipRedditUser", UNKNOWN)
-
- protected:
-  ~BraveRewardsTipRedditUserFunction() override;
-
-  ResponseAction Run() override;
- private:
-  base::WeakPtrFactory<BraveRewardsTipRedditUserFunction> weak_factory_;
-  void OnRedditPublisherInfoSaved(
-      std::unique_ptr<brave_rewards::ContentSite> publisher_info);
-};
-
-class BraveRewardsGetPublisherDataFunction : public UIThreadExtensionFunction {
+class BraveRewardsGetPublisherDataFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.getPublisherData", UNKNOWN)
 
@@ -101,29 +124,35 @@ class BraveRewardsGetPublisherDataFunction : public UIThreadExtensionFunction {
   ResponseAction Run() override;
 };
 
-class BraveRewardsGetWalletPropertiesFunction
-    : public UIThreadExtensionFunction {
+class BraveRewardsGetRewardsParametersFunction : public ExtensionFunction {
  public:
-  DECLARE_EXTENSION_FUNCTION("braveRewards.getWalletProperties", UNKNOWN)
+  DECLARE_EXTENSION_FUNCTION("braveRewards.getRewardsParameters", UNKNOWN)
 
  protected:
-  ~BraveRewardsGetWalletPropertiesFunction() override;
+  ~BraveRewardsGetRewardsParametersFunction() override;
 
   ResponseAction Run() override;
+
+ private:
+  void OnGet(ledger::type::RewardsParametersPtr parameters);
 };
 
-class BraveRewardsGetCurrentReportFunction : public UIThreadExtensionFunction {
+class BraveRewardsGetBalanceReportFunction : public ExtensionFunction {
  public:
-  DECLARE_EXTENSION_FUNCTION("braveRewards.getCurrentReport", UNKNOWN)
+  DECLARE_EXTENSION_FUNCTION("braveRewards.getBalanceReport", UNKNOWN)
 
  protected:
-  ~BraveRewardsGetCurrentReportFunction() override;
+  ~BraveRewardsGetBalanceReportFunction() override;
 
   ResponseAction Run() override;
+
+ private:
+  void OnBalanceReport(
+      const ledger::type::Result result,
+      ledger::type::BalanceReportInfoPtr report);
 };
 
-class BraveRewardsIncludeInAutoContributionFunction :
-  public UIThreadExtensionFunction {
+class BraveRewardsIncludeInAutoContributionFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.includeInAutoContribution", UNKNOWN)
 
@@ -133,38 +162,52 @@ class BraveRewardsIncludeInAutoContributionFunction :
   ResponseAction Run() override;
 };
 
-class BraveRewardsGetGrantsFunction : public UIThreadExtensionFunction {
+class BraveRewardsFetchPromotionsFunction : public ExtensionFunction {
  public:
-  DECLARE_EXTENSION_FUNCTION("braveRewards.getGrants", UNKNOWN)
+  DECLARE_EXTENSION_FUNCTION("braveRewards.fetchPromotions", UNKNOWN)
 
  protected:
-  ~BraveRewardsGetGrantsFunction() override;
+  ~BraveRewardsFetchPromotionsFunction() override;
 
   ResponseAction Run() override;
 };
 
-class BraveRewardsGetGrantCaptchaFunction : public UIThreadExtensionFunction {
+class BraveRewardsClaimPromotionFunction : public ExtensionFunction {
  public:
-  DECLARE_EXTENSION_FUNCTION("braveRewards.getGrantCaptcha", UNKNOWN)
+  DECLARE_EXTENSION_FUNCTION("braveRewards.claimPromotion", UNKNOWN)
 
  protected:
-  ~BraveRewardsGetGrantCaptchaFunction() override;
+  ~BraveRewardsClaimPromotionFunction() override;
 
   ResponseAction Run() override;
+
+ private:
+  void OnClaimPromotion(
+      const std::string& promotion_id,
+      const ledger::type::Result result,
+      const std::string& captcha_image,
+      const std::string& hint,
+      const std::string& captcha_id);
 };
 
-class BraveRewardsSolveGrantCaptchaFunction : public UIThreadExtensionFunction {
+class BraveRewardsAttestPromotionFunction : public ExtensionFunction {
  public:
-  DECLARE_EXTENSION_FUNCTION("braveRewards.solveGrantCaptcha", UNKNOWN)
+  DECLARE_EXTENSION_FUNCTION("braveRewards.attestPromotion", UNKNOWN)
 
  protected:
-  ~BraveRewardsSolveGrantCaptchaFunction() override;
+  ~BraveRewardsAttestPromotionFunction() override;
 
   ResponseAction Run() override;
+
+ private:
+  void OnAttestPromotion(
+      const std::string& promotion_id,
+      const ledger::type::Result result,
+      ledger::type::PromotionPtr promotion);
 };
 
 class BraveRewardsGetPendingContributionsTotalFunction
-    : public UIThreadExtensionFunction {
+    : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION(
       "braveRewards.getPendingContributionsTotal", UNKNOWN)
@@ -178,21 +221,7 @@ class BraveRewardsGetPendingContributionsTotalFunction
   void OnGetPendingTotal(double amount);
 };
 
-class BraveRewardsGetRewardsMainEnabledFunction
-    : public UIThreadExtensionFunction {
- public:
-  DECLARE_EXTENSION_FUNCTION("braveRewards.getRewardsMainEnabled", UNKNOWN)
-
- protected:
-  ~BraveRewardsGetRewardsMainEnabledFunction() override;
-
-  ResponseAction Run() override;
-
- private:
-  void OnGetRewardsMainEnabled(bool enabled);
-};
-
-class BraveRewardsSaveAdsSettingFunction : public UIThreadExtensionFunction {
+class BraveRewardsSaveAdsSettingFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.saveAdsSetting", UNKNOWN)
 
@@ -202,7 +231,17 @@ class BraveRewardsSaveAdsSettingFunction : public UIThreadExtensionFunction {
   ResponseAction Run() override;
 };
 
-class BraveRewardsGetACEnabledFunction : public UIThreadExtensionFunction {
+class BraveRewardsSetAutoContributeEnabledFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.setAutoContributeEnabled", UNKNOWN)
+
+ protected:
+  ~BraveRewardsSetAutoContributeEnabledFunction() override;
+
+  ResponseAction Run() override;
+};
+
+class BraveRewardsGetACEnabledFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.getACEnabled", UNKNOWN)
 
@@ -215,18 +254,7 @@ class BraveRewardsGetACEnabledFunction : public UIThreadExtensionFunction {
   void OnGetACEnabled(bool enabled);
 };
 
-class BraveRewardsSaveSettingFunction : public UIThreadExtensionFunction {
- public:
-  DECLARE_EXTENSION_FUNCTION("braveRewards.saveSetting", UNKNOWN)
-
- protected:
-  ~BraveRewardsSaveSettingFunction() override;
-
-  ResponseAction Run() override;
-};
-
-class BraveRewardsSaveRecurringTipFunction :
-  public UIThreadExtensionFunction {
+class BraveRewardsSaveRecurringTipFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.saveRecurringTip", UNKNOWN)
 
@@ -240,7 +268,7 @@ class BraveRewardsSaveRecurringTipFunction :
 };
 
 class BraveRewardsRemoveRecurringTipFunction :
-  public UIThreadExtensionFunction {
+  public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.removeRecurringTip", UNKNOWN)
 
@@ -250,8 +278,7 @@ class BraveRewardsRemoveRecurringTipFunction :
   ResponseAction Run() override;
 };
 
-class BraveRewardsGetRecurringTipsFunction :
-  public UIThreadExtensionFunction {
+class BraveRewardsGetRecurringTipsFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.getRecurringTips", UNKNOWN)
 
@@ -261,12 +288,10 @@ class BraveRewardsGetRecurringTipsFunction :
   ResponseAction Run() override;
 
  private:
-    void OnGetRecurringTips(
-        std::unique_ptr<brave_rewards::ContentSiteList> list);
+    void OnGetRecurringTips(ledger::type::PublisherInfoList list);
 };
 
-class BraveRewardsGetPublisherBannerFunction :
-public UIThreadExtensionFunction {
+class BraveRewardsGetPublisherBannerFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION(
       "braveRewards.getPublisherBanner", UNKNOWN)
@@ -277,11 +302,10 @@ public UIThreadExtensionFunction {
   ResponseAction Run() override;
 
  private:
-  void OnPublisherBanner(
-      std::unique_ptr<::brave_rewards::PublisherBanner> banner);
+  void OnPublisherBanner(ledger::type::PublisherBannerPtr banner);
 };
 
-class BraveRewardsRefreshPublisherFunction : public UIThreadExtensionFunction {
+class BraveRewardsRefreshPublisherFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.refreshPublisher", UNKNOWN)
 
@@ -291,11 +315,12 @@ class BraveRewardsRefreshPublisherFunction : public UIThreadExtensionFunction {
   ResponseAction Run() override;
 
  private:
-  void OnRefreshPublisher(uint32_t status, const std::string& publisher_key);
+  void OnRefreshPublisher(
+      const ledger::type::PublisherStatus status,
+      const std::string& publisher_key);
 };
 
-class BraveRewardsGetAllNotificationsFunction :
-    public UIThreadExtensionFunction {
+class BraveRewardsGetAllNotificationsFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.getAllNotifications", UNKNOWN)
 
@@ -305,13 +330,15 @@ class BraveRewardsGetAllNotificationsFunction :
   ResponseAction Run() override;
 };
 
-class BraveRewardsGetInlineTipSettingFunction :
-    public UIThreadExtensionFunction {
+class BraveRewardsGetInlineTippingPlatformEnabledFunction :
+    public ExtensionFunction {
  public:
-  DECLARE_EXTENSION_FUNCTION("braveRewards.getInlineTipSetting", UNKNOWN)
+  DECLARE_EXTENSION_FUNCTION(
+      "braveRewards.getInlineTippingPlatformEnabled",
+      UNKNOWN)
 
  protected:
-  ~BraveRewardsGetInlineTipSettingFunction() override;
+  ~BraveRewardsGetInlineTippingPlatformEnabledFunction() override;
 
   ResponseAction Run() override;
 
@@ -319,8 +346,7 @@ class BraveRewardsGetInlineTipSettingFunction :
   void OnInlineTipSetting(bool value);
 };
 
-class BraveRewardsFetchBalanceFunction :
-    public UIThreadExtensionFunction {
+class BraveRewardsFetchBalanceFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.fetchBalance", UNKNOWN)
 
@@ -330,12 +356,12 @@ class BraveRewardsFetchBalanceFunction :
   ResponseAction Run() override;
 
  private:
-  void OnBalance(int32_t result,
-                 std::unique_ptr<::brave_rewards::Balance> balance);
+  void OnBalance(
+      const ledger::type::Result result,
+      ledger::type::BalancePtr balance);
 };
 
-class BraveRewardsGetExternalWalletFunction :
-    public UIThreadExtensionFunction {
+class BraveRewardsGetExternalWalletFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.getExternalWallet", UNKNOWN)
 
@@ -345,18 +371,135 @@ class BraveRewardsGetExternalWalletFunction :
   ResponseAction Run() override;
 
  private:
-  void OnExternalWalet(
-      int32_t result,
-      std::unique_ptr<::brave_rewards::ExternalWallet> wallet);
+  void OnGetUpholdWallet(
+      const ledger::type::Result result,
+      ledger::type::UpholdWalletPtr wallet);
 };
 
-class BraveRewardsDisconnectWalletFunction :
-    public UIThreadExtensionFunction {
+class BraveRewardsDisconnectWalletFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveRewards.disconnectWallet", UNKNOWN)
 
  protected:
   ~BraveRewardsDisconnectWalletFunction() override;
+
+  ResponseAction Run() override;
+};
+
+class BraveRewardsOnlyAnonWalletFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.onlyAnonWallet", UNKNOWN)
+
+ protected:
+  ~BraveRewardsOnlyAnonWalletFunction() override;
+
+  ResponseAction Run() override;
+};
+
+class BraveRewardsGetAdsEnabledFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.getAdsEnabled", UNKNOWN)
+
+ protected:
+  ~BraveRewardsGetAdsEnabledFunction() override;
+
+  ResponseAction Run() override;
+};
+
+class BraveRewardsGetAdsEstimatedEarningsFunction
+    : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.getAdsEstimatedEarnings", UNKNOWN)
+
+ protected:
+  ~BraveRewardsGetAdsEstimatedEarningsFunction() override;
+
+  ResponseAction Run() override;
+
+ private:
+  void OnAdsEstimatedEarnings(
+      const bool success,
+      const double estimated_pending_rewards,
+      const uint64_t next_payment_date,
+      const uint64_t ads_received_this_month,
+      const double earnings_this_month,
+      const double earnings_last_month);
+};
+
+class BraveRewardsGetAdsSupportedFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.getAdsSupported", UNKNOWN)
+
+ protected:
+  ~BraveRewardsGetAdsSupportedFunction() override;
+
+  ResponseAction Run() override;
+};
+
+class BraveRewardsGetAnonWalletStatusFunction
+    : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.getAnonWalletStatus", UNKNOWN)
+
+ protected:
+  ~BraveRewardsGetAnonWalletStatusFunction() override;
+
+  ResponseAction Run() override;
+
+ private:
+  void OnGetAnonWalletStatus(const ledger::type::Result result);
+};
+
+class BraveRewardsIsInitializedFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.isInitialized", UNKNOWN)
+
+ protected:
+  ~BraveRewardsIsInitializedFunction() override;
+
+  ResponseAction Run() override;
+};
+
+class BraveRewardsShouldShowOnboardingFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.shouldShowOnboarding", UNKNOWN)
+
+ protected:
+  ~BraveRewardsShouldShowOnboardingFunction() override;
+
+  ResponseAction Run() override;
+};
+
+class BraveRewardsSaveOnboardingResultFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.saveOnboardingResult", UNKNOWN)
+
+ protected:
+  ~BraveRewardsSaveOnboardingResultFunction() override;
+
+  ResponseAction Run() override;
+};
+
+class BraveRewardsGetPrefsFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.getPrefs", UNKNOWN)
+
+ protected:
+  ~BraveRewardsGetPrefsFunction() override;
+
+  ResponseAction Run() override;
+
+ private:
+  void GetAutoContributePropertiesCallback(
+      ledger::type::AutoContributePropertiesPtr properties);
+};
+
+class BraveRewardsUpdatePrefsFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveRewards.updatePrefs", UNKNOWN)
+
+ protected:
+  ~BraveRewardsUpdatePrefsFunction() override;
 
   ResponseAction Run() override;
 };

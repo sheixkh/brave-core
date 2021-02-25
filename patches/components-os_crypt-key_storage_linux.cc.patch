@@ -1,8 +1,8 @@
 diff --git a/components/os_crypt/key_storage_linux.cc b/components/os_crypt/key_storage_linux.cc
-index 9e6f0f27535fdf52a23b5a734c108196ae0b728c..e504eb223b66c0608b7d22411859bd69de091328 100644
+index 33fed0fa438776e3da4de6a3589745ad8b8304e9..3f6181a6f67ae2afeca67a16ce2680efd130edf9 100644
 --- a/components/os_crypt/key_storage_linux.cc
 +++ b/components/os_crypt/key_storage_linux.cc
-@@ -29,8 +29,8 @@
+@@ -30,8 +30,8 @@
  const char KeyStorageLinux::kFolderName[] = "Chrome Keys";
  const char KeyStorageLinux::kKey[] = "Chrome Safe Storage";
  #else
@@ -12,4 +12,4 @@ index 9e6f0f27535fdf52a23b5a734c108196ae0b728c..e504eb223b66c0608b7d22411859bd69
 +const char KeyStorageLinux::kKey[] = "Brave Safe Storage";
  #endif
  
- // static
+ namespace {

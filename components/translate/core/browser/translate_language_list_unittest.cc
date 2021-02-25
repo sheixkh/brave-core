@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "base/run_loop.h"
-#include "base/test/bind_test_util.h"
-#include "base/test/scoped_task_environment.h"
+#include "base/test/bind.h"
+#include "base/test/task_environment.h"
 #include "brave/browser/translate/buildflags/buildflags.h"
 #include "components/translate/core/browser/translate_download_manager.h"
 #include "services/network/public/cpp/weak_wrapper_shared_url_loader_factory.h"
@@ -21,7 +21,7 @@ namespace translate {
 
 #if !BUILDFLAG(ENABLE_BRAVE_TRANSLATE_GO)
 TEST(TranslateLanguageListTest, GetSupportedLanguagesNoFetch) {
-  base::test::ScopedTaskEnvironment scoped_task_environment;
+  base::test::TaskEnvironment task_environment;
   network::TestURLLoaderFactory test_url_loader_factory;
   scoped_refptr<network::SharedURLLoaderFactory> test_shared_loader_factory =
       base::MakeRefCounted<network::WeakWrapperSharedURLLoaderFactory>(

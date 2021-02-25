@@ -10,48 +10,58 @@
 
 #include "bat/ads/ads.h"
 #include "brave/components/services/bat_ads/bat_ads_impl.h"
-#include "mojo/public/cpp/bindings/strong_associated_binding.h"
 
 namespace bat_ads {
 
 BatAdsServiceImpl::BatAdsServiceImpl(
-    std::unique_ptr<service_manager::ServiceContextRef> service_ref)
-    : service_ref_(std::move(service_ref)),
+    mojo::PendingReceiver<mojom::BatAdsService> receiver)
+    : receiver_(this, std::move(receiver)),
       is_initialized_(false) {}
 
 BatAdsServiceImpl::~BatAdsServiceImpl() {}
 
 void BatAdsServiceImpl::Create(
-    mojom::BatAdsClientAssociatedPtrInfo client_info,
-    mojom::BatAdsAssociatedRequest bat_ads,
+    mojo::PendingAssociatedRemote<mojom::BatAdsClient> client_info,
+    mojo::PendingAssociatedReceiver<mojom::BatAds> bat_ads,
     CreateCallback callback) {
-  mojo::MakeStrongAssociatedBinding(
-      std::make_unique<BatAdsImpl>(std::move(client_info)), std::move(bat_ads));
+
+  associated_receivers_.Add(
+      std::make_unique<BatAdsImpl>(std::move(client_info)),
+      std::move(bat_ads));
   is_initialized_ = true;
   std::move(callback).Run();
 }
 
-void BatAdsServiceImpl::SetProduction(
-    const bool is_production,
-    SetProductionCallback callback) {
-  DCHECK(!is_initialized_ || ads::_is_production == is_production);
-  ads::_is_production = is_production;
+void BatAdsServiceImpl::SetEnvironment(
+    const ads::Environment environment,
+    SetEnvironmentCallback callback) {
+  DCHECK(!is_initialized_);
+  ads::g_environment = environment;
   std::move(callback).Run();
 }
 
-void BatAdsServiceImpl::SetTesting(
-    const bool is_testing,
-    SetTestingCallback callback) {
-  DCHECK(!is_initialized_ || ads::_is_testing == is_testing);
-  ads::_is_testing = is_testing;
+void BatAdsServiceImpl::SetSysInfo(
+    ads::SysInfoPtr sys_info,
+    SetSysInfoCallback callback) {
+  DCHECK(!is_initialized_);
+  ads::g_sys_info.is_uncertain_future = sys_info->is_uncertain_future;
+  std::move(callback).Run();
+}
+
+void BatAdsServiceImpl::SetBuildChannel(
+    ads::BuildChannelPtr build_channel,
+    SetBuildChannelCallback callback) {
+  DCHECK(!is_initialized_);
+  ads::g_build_channel.is_release = build_channel->is_release;
+  ads::g_build_channel.name = build_channel->name;
   std::move(callback).Run();
 }
 
 void BatAdsServiceImpl::SetDebug(
     const bool is_debug,
     SetDebugCallback callback) {
-  DCHECK(!is_initialized_ || ads::_is_debug == is_debug);
-  ads::_is_debug = is_debug;
+  DCHECK(!is_initialized_);
+  ads::g_is_debug = is_debug;
   std::move(callback).Run();
 }
 

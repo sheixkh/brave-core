@@ -16,23 +16,21 @@
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/values.h"
-#include "brave/utility/importer/brave_external_process_importer_bridge.h"
 #include "build/build_config.h"
+#include "brave/common/importer/scoped_copy_file.h"
+#include "brave/utility/importer/brave_external_process_importer_bridge.h"
 #include "chrome/common/importer/imported_bookmark_entry.h"
 #include "chrome/common/importer/importer_bridge.h"
+#include "chrome/common/importer/importer_data_types.h"
 #include "chrome/common/importer/importer_url_row.h"
 #include "chrome/utility/importer/favicon_reencode.h"
-#include "components/autofill/core/common/password_form.h"
 #include "components/os_crypt/os_crypt.h"
-#include "components/cookie_config/cookie_store_util.h"
-#include "net/extras/sqlite/cookie_crypto_delegate.h"
 #include "components/password_manager/core/browser/login_database.h"
+#include "components/password_manager/core/browser/password_form.h"
 #include "components/password_manager/core/common/password_manager_pref_names.h"
 #include "components/prefs/json_pref_store.h"
 #include "components/prefs/pref_filter.h"
-#include "net/cookies/canonical_cookie.h"
-#include "net/cookies/cookie_constants.h"
-#include "net/extras/sqlite/sqlite_persistent_cookie_store.h"
+#include "components/webdata/common/webdata_constants.h"
 #include "sql/database.h"
 #include "sql/statement.h"
 #include "ui/base/page_transition_types.h"
@@ -44,7 +42,139 @@
 #include "ui/base/l10n/l10n_util.h"
 #endif  // defined(OS_LINUX)
 
+#if defined(OS_WIN)
+#include "base/base64.h"
+#include "base/win/wincrypt_shim.h"
+#endif
+
 using base::Time;
+
+namespace {
+
+// Most of below code is copied from os_crypt_win.cc
+#if defined(OS_WIN)
+// Contains base64 random key encrypted with DPAPI.
+const char kOsCryptEncryptedKeyPrefName[] = "os_crypt.encrypted_key";
+
+// Key prefix for a key encrypted with DPAPI.
+const char kDPAPIKeyPrefix[] = "DPAPI";
+
+bool DecryptStringWithDPAPI(const std::string& ciphertext,
+                            std::string* plaintext) {
+  DATA_BLOB input;
+  input.pbData =
+      const_cast<BYTE*>(reinterpret_cast<const BYTE*>(ciphertext.data()));
+  input.cbData = static_cast<DWORD>(ciphertext.length());
+
+  DATA_BLOB output;
+  BOOL result = CryptUnprotectData(&input, nullptr, nullptr, nullptr, nullptr,
+                                   0, &output);
+  if (!result) {
+    PLOG(ERROR) << "Failed to decrypt";
+    return false;
+  }
+
+  plaintext->assign(reinterpret_cast<char*>(output.pbData), output.cbData);
+  LocalFree(output.pbData);
+  return true;
+}
+
+// Return false if encryption key setting is failed.
+// Fetch chrome's raw encryption key and use it to get chrome's password data.
+bool SetEncryptionKeyForPasswordImporting(
+    const base::FilePath& local_state_path) {
+  std::string local_state_content;
+  base::ReadFileToString(local_state_path, &local_state_content);
+  base::Optional<base::Value> local_state =
+      base::JSONReader::Read(local_state_content);
+  if (auto* base64_encrypted_key =
+          local_state->FindStringPath(kOsCryptEncryptedKeyPrefName)) {
+    std::string encrypted_key_with_header;
+
+    base::Base64Decode(*base64_encrypted_key, &encrypted_key_with_header);
+
+    if (!base::StartsWith(encrypted_key_with_header, kDPAPIKeyPrefix,
+                          base::CompareCase::SENSITIVE)) {
+      return false;
+    }
+    std::string encrypted_key =
+        encrypted_key_with_header.substr(sizeof(kDPAPIKeyPrefix) - 1);
+    std::string key;
+    // This DPAPI decryption can fail if the user's password has been reset
+    // by an Administrator.
+    if (DecryptStringWithDPAPI(encrypted_key, &key)) {
+      OSCrypt::SetRawEncryptionKey(key);
+      return true;
+    }
+  }
+
+  return false;
+}
+#endif
+
+bool SetEncryptionKey(const base::FilePath& source_path) {
+#if defined(OS_LINUX)
+  // Set up crypt config.
+  std::unique_ptr<os_crypt::Config> config(new os_crypt::Config());
+  config->product_name = l10n_util::GetStringUTF8(IDS_PRODUCT_NAME);
+  config->should_use_preference = false;
+  config->user_data_path = source_path;
+  OSCrypt::SetConfig(std::move(config));
+  return true;
+#endif
+
+#if defined(OS_WIN)
+  base::FilePath local_state_path = source_path.DirName().Append(
+      base::FilePath::StringType(FILE_PATH_LITERAL("Local State")));
+  if (!base::PathExists(local_state_path))
+    return false;
+  if (!SetEncryptionKeyForPasswordImporting(local_state_path))
+    return false;
+  return true;
+#endif
+
+  return true;
+}
+
+base::string16 DecryptedCardFromColumn(const sql::Statement& s,
+                                       int column_index) {
+  base::string16 credit_card_number;
+  int encrypted_number_len = s.ColumnByteLength(column_index);
+  if (encrypted_number_len) {
+    std::string encrypted_number;
+    encrypted_number.resize(encrypted_number_len);
+    memcpy(&encrypted_number[0], s.ColumnBlob(column_index),
+           encrypted_number_len);
+    OSCrypt::DecryptString16(encrypted_number, &credit_card_number);
+  }
+  return credit_card_number;
+}
+
+bool PasswordFormToImportedPasswordForm(
+    const password_manager::PasswordForm* form,
+    importer::ImportedPasswordForm* imported_form) {
+  if (form->scheme != password_manager::PasswordForm::Scheme::kHtml &&
+      form->scheme != password_manager::PasswordForm::Scheme::kBasic)
+    return false;
+
+  if (form->scheme == password_manager::PasswordForm::Scheme::kHtml) {
+    imported_form->scheme = importer::ImportedPasswordForm::Scheme::kHtml;
+  } else {
+    imported_form->scheme = importer::ImportedPasswordForm::Scheme::kBasic;
+  }
+
+  imported_form->signon_realm = form->signon_realm;
+  imported_form->url = form->url;
+  imported_form->action = form->action;
+  imported_form->username_element = form->username_element;
+  imported_form->username_value = form->username_value;
+  imported_form->password_element = form->password_element;
+  imported_form->password_value = form->password_value;
+  imported_form->blocked_by_user = form->blocked_by_user;
+  return true;
+}
+
+}  // namespace
 
 ChromeImporter::ChromeImporter() {
 }
@@ -73,31 +203,36 @@ void ChromeImporter::StartImport(const importer::SourceProfile& source_profile,
     bridge_->NotifyItemEnded(importer::FAVORITES);
   }
 
-  if ((items & importer::PASSWORDS) && !cancelled()) {
+  const bool set_encryption_key = SetEncryptionKey(source_path_);
+  if ((items & importer::PASSWORDS) && !cancelled() && set_encryption_key) {
     bridge_->NotifyItemStarted(importer::PASSWORDS);
-    ImportPasswords(base::FilePath(FILE_PATH_LITERAL("Preferences")));
+    ImportPasswords();
     bridge_->NotifyItemEnded(importer::PASSWORDS);
   }
 
-  if ((items & importer::COOKIES) && !cancelled()) {
-    bridge_->NotifyItemStarted(importer::COOKIES);
-    ImportCookies();
-    bridge_->NotifyItemEnded(importer::COOKIES);
+  if ((items & importer::PAYMENTS) && !cancelled() && set_encryption_key) {
+    bridge_->NotifyItemStarted(importer::PAYMENTS);
+    ImportPayments();
+    bridge_->NotifyItemEnded(importer::PAYMENTS);
   }
 
   bridge_->NotifyEnded();
 }
 
 void ChromeImporter::ImportHistory() {
-  base::FilePath history_path =
-    source_path_.Append(
+  base::FilePath history_path = source_path_.Append(
       base::FilePath::StringType(FILE_PATH_LITERAL("History")));
   if (!base::PathExists(history_path))
     return;
 
-  sql::Database db;
-  if (!db.Open(history_path))
+  ScopedCopyFile copy_history_file(history_path);
+  if (!copy_history_file.copy_success())
     return;
+
+  sql::Database db;
+  if (!db.Open(copy_history_file.copied_file_path())) {
+    return;
+  }
 
   const char query[] =
     "SELECT u.url, u.title, v.visit_time, u.typed_count, u.visit_count "
@@ -108,11 +243,11 @@ void ChromeImporter::ImportHistory() {
                                               // KEYWORD_GENERATED
 
   sql::Statement s(db.GetUniqueStatement(query));
-  s.BindInt(0, ui::PAGE_TRANSITION_CHAIN_END);
-  s.BindInt(1, ui::PAGE_TRANSITION_CORE_MASK);
-  s.BindInt(2, ui::PAGE_TRANSITION_AUTO_SUBFRAME);
-  s.BindInt(3, ui::PAGE_TRANSITION_MANUAL_SUBFRAME);
-  s.BindInt(4, ui::PAGE_TRANSITION_KEYWORD_GENERATED);
+  s.BindInt64(0, ui::PAGE_TRANSITION_CHAIN_END);
+  s.BindInt64(1, ui::PAGE_TRANSITION_CORE_MASK);
+  s.BindInt64(2, ui::PAGE_TRANSITION_AUTO_SUBFRAME);
+  s.BindInt64(3, ui::PAGE_TRANSITION_MANUAL_SUBFRAME);
+  s.BindInt64(4, ui::PAGE_TRANSITION_KEYWORD_GENERATED);
 
   std::vector<ImporterURLRow> rows;
   while (s.Step() && !cancelled()) {
@@ -138,7 +273,12 @@ void ChromeImporter::ImportBookmarks() {
   base::FilePath bookmarks_path =
     source_path_.Append(
       base::FilePath::StringType(FILE_PATH_LITERAL("Bookmarks")));
-  base::ReadFileToString(bookmarks_path, &bookmarks_content);
+  ScopedCopyFile copy_bookmark_file(bookmarks_path);
+  if (!copy_bookmark_file.copy_success())
+    return;
+
+  base::ReadFileToString(copy_bookmark_file.copied_file_path(),
+                         &bookmarks_content);
   base::Optional<base::Value> bookmarks_json =
     base::JSONReader::Read(bookmarks_content);
   const base::DictionaryValue* bookmark_dict;
@@ -182,8 +322,12 @@ void ChromeImporter::ImportBookmarks() {
   if (!base::PathExists(favicons_path))
     return;
 
+  ScopedCopyFile copy_favicon_file(favicons_path);
+  if (!copy_favicon_file.copy_success())
+    return;
+
   sql::Database db;
-  if (!db.Open(favicons_path))
+  if (!db.Open(copy_favicon_file.copied_file_path()))
     return;
 
   FaviconMap favicon_map;
@@ -302,94 +446,77 @@ double ChromeImporter::chromeTimeToDouble(int64_t time) {
   return ((time * 10 - 0x19DB1DED53E8000) / 10000) / 1000;
 }
 
-void ChromeImporter::ImportPasswords(const base::FilePath& prefs_filename) {
-#if defined(OS_LINUX)
-  // Set up crypt config.
-  std::unique_ptr<os_crypt::Config> config(new os_crypt::Config());
-  config->product_name = l10n_util::GetStringUTF8(IDS_PRODUCT_NAME);
-  config->should_use_preference = false;
-  config->user_data_path = source_path_;
-  OSCrypt::SetConfig(std::move(config));
-#endif
+void ChromeImporter::ImportPasswords() {
   base::FilePath passwords_path = source_path_.Append(
       base::FilePath::StringType(FILE_PATH_LITERAL("Login Data")));
 
-  password_manager::LoginDatabase database(passwords_path);
+  if (!base::PathExists(passwords_path))
+    return;
+
+  ScopedCopyFile copy_password_file(passwords_path);
+  if (!copy_password_file.copy_success())
+    return;
+
+  password_manager::LoginDatabase database(
+      copy_password_file.copied_file_path(),
+      password_manager::IsAccountStore(false));
   if (!database.Init()) {
     LOG(ERROR) << "LoginDatabase Init() failed";
     return;
   }
 
-  std::vector<std::unique_ptr<autofill::PasswordForm>> forms;
+  std::vector<std::unique_ptr<password_manager::PasswordForm>> forms;
   bool success = database.GetAutofillableLogins(&forms);
   if (success) {
     for (size_t i = 0; i < forms.size(); ++i) {
-      bridge_->SetPasswordForm(*forms[i].get());
+      importer::ImportedPasswordForm form;
+      if (PasswordFormToImportedPasswordForm(forms[i].get(), &form))
+        bridge_->SetPasswordForm(form);
     }
   }
-  std::vector<std::unique_ptr<autofill::PasswordForm>> blacklist;
-  success = database.GetBlacklistLogins(&blacklist);
+  std::vector<std::unique_ptr<password_manager::PasswordForm>> blocklist;
+  success = database.GetBlocklistLogins(&blocklist);
   if (success) {
-    for (size_t i = 0; i < blacklist.size(); ++i) {
-      bridge_->SetPasswordForm(*blacklist[i].get());
+    for (size_t i = 0; i < blocklist.size(); ++i) {
+      importer::ImportedPasswordForm form;
+      if (PasswordFormToImportedPasswordForm(blocklist[i].get(), &form))
+        bridge_->SetPasswordForm(form);
     }
   }
 }
 
-void ChromeImporter::ImportCookies() {
-  base::FilePath cookies_path =
-    source_path_.Append(
-      base::FilePath::StringType(FILE_PATH_LITERAL("Cookies")));
-  if (!base::PathExists(cookies_path))
+void ChromeImporter::ImportPayments() {
+  const base::FilePath payments_path = source_path_.Append(kWebDataFilename);
+
+  if (!base::PathExists(payments_path))
+    return;
+
+  ScopedCopyFile copy_payments_file(payments_path);
+  if (!copy_payments_file.copy_success())
     return;
 
   sql::Database db;
-  if (!db.Open(cookies_path))
+  if (!db.Open(copy_payments_file.copied_file_path())) {
     return;
-
-  const char query[] =
-    "SELECT creation_utc, host_key, name, value, encrypted_value, path, "
-    "expires_utc, is_secure, is_httponly, firstpartyonly, last_access_utc, "
-    "has_expires, is_persistent, priority FROM cookies";
-
-  sql::Statement s(db.GetUniqueStatement(query));
-
-  net::CookieCryptoDelegate* delegate =
-    cookie_config::GetCookieCryptoDelegate();
-#if defined(OS_LINUX)
-  OSCrypt::SetConfig(std::make_unique<os_crypt::Config>());
-#endif
-
-  std::vector<net::CanonicalCookie> cookies;
-  while (s.Step() && !cancelled()) {
-    std::string encrypted_value = s.ColumnString(4);
-    std::string value;
-    if (!encrypted_value.empty() && delegate) {
-      if (!delegate->DecryptString(encrypted_value, &value)) {
-        continue;
-      }
-    } else {
-      value = s.ColumnString(3);
-    }
-
-    auto cookie = net::CanonicalCookie(
-        s.ColumnString(2),                           // name
-        value,                                       // value
-        s.ColumnString(1),                           // domain
-        s.ColumnString(5),                           // path
-        Time::FromInternalValue(s.ColumnInt64(0)),   // creation_utc
-        Time::FromInternalValue(s.ColumnInt64(6)),   // expires_utc
-        Time::FromInternalValue(s.ColumnInt64(10)),  // last_access_utc
-        s.ColumnBool(7),                             // secure
-        s.ColumnBool(8),                             // http_only
-        static_cast<net::CookieSameSite>(s.ColumnInt(9)),    // samesite
-        static_cast<net::CookiePriority>(s.ColumnInt(13)));  // priority
-    if (cookie.IsCanonical()) {
-      cookies.push_back(cookie);
-    }
   }
 
-  if (!cookies.empty() && !cancelled()) {
-    bridge_->SetCookies(cookies);
+  const char query[] =
+      "SELECT name_on_card, expiration_month, expiration_year, "
+      "card_number_encrypted, origin "
+      "FROM credit_cards;";
+  sql::Statement s(db.GetUniqueStatement(query));
+  auto* brave_bridge =
+      static_cast<BraveExternalProcessImporterBridge*>(bridge_.get());
+  while (s.Step()) {
+    const base::string16 card_number = DecryptedCardFromColumn(s, 3);
+    // Empty means decryption is failed. Or chrome's data is invalid.
+    // Skip it.
+    if (card_number.empty())
+      continue;
+    brave_bridge->SetCreditCard(s.ColumnString16(0),
+                                s.ColumnString16(1),
+                                s.ColumnString16(2),
+                                card_number,
+                                s.ColumnString(4));
   }
 }

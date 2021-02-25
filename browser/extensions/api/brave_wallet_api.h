@@ -16,58 +16,113 @@ namespace extensions {
 namespace api {
 
 class BraveWalletPromptToEnableWalletFunction :
-    public UIThreadExtensionFunction {
+    public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveWallet.promptToEnableWallet", UNKNOWN)
 
  protected:
   ~BraveWalletPromptToEnableWalletFunction() override {}
-
   ResponseAction Run() override;
 };
 
-class BraveWalletIsEnabledFunction : public UIThreadExtensionFunction {
+class BraveWalletReadyFunction :
+    public ExtensionFunction {
  public:
-  DECLARE_EXTENSION_FUNCTION("braveWallet.isEnabled", UNKNOWN)
+  DECLARE_EXTENSION_FUNCTION("braveWallet.ready", UNKNOWN)
 
  protected:
-  ~BraveWalletIsEnabledFunction() override {}
-
+  ~BraveWalletReadyFunction() override {}
   ResponseAction Run() override;
 };
 
-class BraveWalletGetWalletSeedFunction : public UIThreadExtensionFunction {
+class BraveWalletShouldCheckForDappsFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveWallet.shouldCheckForDapps", UNKNOWN)
+
+ protected:
+  ~BraveWalletShouldCheckForDappsFunction() override {}
+  ResponseAction Run() override;
+};
+
+class BraveWalletLoadUIFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveWallet.loadUI", UNKNOWN)
+  void OnLoaded();
+
+ protected:
+  ~BraveWalletLoadUIFunction() override {}
+  ResponseAction Run() override;
+};
+
+class BraveWalletShouldPromptForSetupFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveWallet.shouldPromptForSetup", UNKNOWN)
+
+ protected:
+  ~BraveWalletShouldPromptForSetupFunction() override {}
+  ResponseAction Run() override;
+};
+
+class BraveWalletGetWalletSeedFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveWallet.getWalletSeed", UNKNOWN)
 
-  static std::string GetEthereumRemoteClientSeedFromRootSeed(
-      const std::string& seed);
-  static bool SealSeed(const std::string& seed, const std::string& key,
-      const std::string& nonce, std::string* cipher_seed);
-  static bool OpenSeed(const std::string& cipher_seed,
-      const std::string& key, const std::string& nonce, std::string* seed);
-  static void SaveToPrefs(Profile *, const std::string& cipher_seed,
-      const std::string& nonce);
-  static bool LoadFromPrefs(Profile *, std::string* cipher_seed,
-      std::string* nonce);
-  static std::string GetRandomNonce();
-  static std::string GetRandomSeed();
-  static const size_t kNonceByteLength;
-  static const size_t kSeedByteLength;
-
  protected:
   ~BraveWalletGetWalletSeedFunction() override {}
-
   ResponseAction Run() override;
 };
 
-class BraveWalletGetProjectIDFunction : public UIThreadExtensionFunction {
+class BraveWalletGetBitGoSeedFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveWallet.getBitGoSeed", UNKNOWN)
+
+ protected:
+  ~BraveWalletGetBitGoSeedFunction() override {}
+  ResponseAction Run() override;
+};
+
+class BraveWalletGetProjectIDFunction : public ExtensionFunction {
  public:
   DECLARE_EXTENSION_FUNCTION("braveWallet.getProjectID", UNKNOWN)
 
  protected:
   ~BraveWalletGetProjectIDFunction() override {}
+  ResponseAction Run() override;
+};
 
+class BraveWalletGetBraveKeyFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveWallet.getBraveKey", UNKNOWN)
+
+ protected:
+  ~BraveWalletGetBraveKeyFunction() override {}
+  ResponseAction Run() override;
+};
+
+class BraveWalletResetWalletFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveWallet.resetWallet", UNKNOWN)
+
+ protected:
+  ~BraveWalletResetWalletFunction() override {}
+  ResponseAction Run() override;
+};
+
+class BraveWalletGetWeb3ProviderFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveWallet.getWeb3Provider", UNKNOWN)
+
+ protected:
+  ~BraveWalletGetWeb3ProviderFunction() override {}
+  ResponseAction Run() override;
+};
+
+class BraveWalletGetWeb3ProviderListFunction : public ExtensionFunction {
+ public:
+  DECLARE_EXTENSION_FUNCTION("braveWallet.getWeb3ProviderList", UNKNOWN)
+
+ protected:
+  ~BraveWalletGetWeb3ProviderListFunction() override {}
   ResponseAction Run() override;
 };
 

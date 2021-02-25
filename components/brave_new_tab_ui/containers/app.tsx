@@ -4,7 +4,7 @@
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
 import * as React from 'react'
-import { bindActionCreators, Dispatch } from 'redux'
+import { Dispatch } from 'redux'
 import { connect } from 'react-redux'
 
 // Components
@@ -12,45 +12,67 @@ import NewPrivateTabPage from './privateTab'
 import NewTabPage from './newTab'
 
 // Utils
-import * as newTabActions from '../actions/new_tab_actions'
 import * as PreferencesAPI from '../api/preferences'
+import { getActionsForDispatch } from '../api/getActions'
+
+// Types
+import { NewTabActions } from '../constants/new_tab_types'
+import { ApplicationState } from '../reducers'
+import { BraveTodayState } from '../reducers/today'
 
 interface Props {
-  actions: any
+  actions: NewTabActions
   newTabData: NewTab.State
+  gridSitesData: NewTab.GridSitesState
+  braveTodayData: BraveTodayState
 }
 
-class DefaultPage extends React.Component<Props, {}> {
-  render () {
-    const { newTabData, actions } = this.props
+function dismissBraveTodayIntroCard () {
+  PreferencesAPI.saveIsBraveTodayIntroDismissed(true)
+}
 
-    // don't render if user prefers an empty page
-    if (this.props.newTabData.showEmptyPage && !this.props.newTabData.isIncognito) {
-      return <div />
-    }
+function DefaultPage (props: Props) {
+  const { newTabData, braveTodayData, gridSitesData, actions } = props
 
-    return this.props.newTabData.isIncognito
-      ? <NewPrivateTabPage newTabData={newTabData} actions={actions} />
-      : (
-        <NewTabPage
-          newTabData={newTabData}
-          actions={actions}
-          saveShowBackgroundImage={PreferencesAPI.saveShowBackgroundImage}
-          saveShowClock={PreferencesAPI.saveShowClock}
-          saveShowStats={PreferencesAPI.saveShowStats}
-          saveShowTopSites={PreferencesAPI.saveShowTopSites}
-        />
-      )
+  // don't render if user prefers an empty page
+  if (props.newTabData.showEmptyPage && !props.newTabData.isIncognito) {
+    return <div />
+  }
+
+  return props.newTabData.isIncognito
+    ? <NewPrivateTabPage newTabData={newTabData} actions={actions} />
+    : (
+      <NewTabPage
+        newTabData={newTabData}
+        todayData={braveTodayData}
+        gridSitesData={gridSitesData}
+        actions={actions}
+        saveShowBackgroundImage={PreferencesAPI.saveShowBackgroundImage}
+        saveShowStats={PreferencesAPI.saveShowStats}
+        saveShowToday={PreferencesAPI.saveShowToday}
+        saveShowRewards={PreferencesAPI.saveShowRewards}
+        saveShowTogether={PreferencesAPI.saveShowTogether}
+        saveShowBinance={PreferencesAPI.saveShowBinance}
+        saveShowGemini={PreferencesAPI.saveShowGemini}
+        saveShowCryptoDotCom={PreferencesAPI.saveShowCryptoDotCom}
+        saveBrandedWallpaperOptIn={PreferencesAPI.saveBrandedWallpaperOptIn}
+        onReadBraveTodayIntroCard={dismissBraveTodayIntroCard}
+        saveSetAllStackWidgets={PreferencesAPI.saveSetAllStackWidgets}
+      />
+    )
+}
+
+const mapStateToProps = (state: ApplicationState): Partial<Props> => ({
+  newTabData: state.newTabData,
+  gridSitesData: state.gridSitesData,
+  braveTodayData: state.today
+})
+
+const mapDispatchToProps = (dispatch: Dispatch): Partial<Props> => {
+  return {
+    actions: getActionsForDispatch(dispatch)
   }
 }
-
-const mapStateToProps = (state: NewTab.ApplicationState) => ({
-  newTabData: state.newTabData
-})
-
-const mapDispatchToProps = (dispatch: Dispatch) => ({
-  actions: bindActionCreators(newTabActions, dispatch)
-})
 
 export default connect(
   mapStateToProps,

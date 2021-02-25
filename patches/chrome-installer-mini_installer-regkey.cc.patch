@@ -1,13 +1,13 @@
 diff --git a/chrome/installer/mini_installer/regkey.cc b/chrome/installer/mini_installer/regkey.cc
-index c8fd6c0a01c90acddf221f0a03b7d82ec88872c2..3041a6661a8ba400d6501bce08591a31d1abf861 100644
+index ab0f8ab7acc306556add738c97f31a70bc2724d1..afdcc4b54d560a258400a5c3aea963ed954b7570 100644
 --- a/chrome/installer/mini_installer/regkey.cc
 +++ b/chrome/installer/mini_installer/regkey.cc
 @@ -89,7 +89,7 @@ LONG OpenClientsKey(HKEY root_key,
    StackString<MAX_PATH> clients_key;
    if (!clients_key.assign(kClientsKeyBase))
      return ERROR_BUFFER_OVERFLOW;
--#if defined(GOOGLE_CHROME_BUILD)
-+#if defined(GOOGLE_CHROME_BUILD) || (defined(BRAVE_CHROMIUM_BUILD) && defined(OFFICIAL_BUILD))
+-#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
++#if BUILDFLAG(GOOGLE_CHROME_BRANDING) || defined(OFFICIAL_BUILD)
    if (!clients_key.append(app_guid))
      return ERROR_BUFFER_OVERFLOW;
  #endif
@@ -15,8 +15,8 @@ index c8fd6c0a01c90acddf221f0a03b7d82ec88872c2..3041a6661a8ba400d6501bce08591a31
    StackString<MAX_PATH> client_state_key;
    if (!client_state_key.assign(kClientStateKeyBase))
      return ERROR_BUFFER_OVERFLOW;
--#if defined(GOOGLE_CHROME_BUILD)
-+#if defined(GOOGLE_CHROME_BUILD) || (defined(BRAVE_CHROMIUM_BUILD) && defined(OFFICIAL_BUILD))
+-#if BUILDFLAG(GOOGLE_CHROME_BRANDING)
++#if BUILDFLAG(GOOGLE_CHROME_BRANDING) || defined(OFFICIAL_BUILD)
    if (!client_state_key.append(app_guid))
      return ERROR_BUFFER_OVERFLOW;
  #endif

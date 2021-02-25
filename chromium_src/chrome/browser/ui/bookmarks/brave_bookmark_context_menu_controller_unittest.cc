@@ -22,8 +22,7 @@
 #include "components/bookmarks/common/bookmark_pref_names.h"
 #include "components/bookmarks/test/bookmark_test_helpers.h"
 #include "components/sync_preferences/testing_pref_service_syncable.h"
-#include "content/public/test/test_browser_thread.h"
-#include "content/public/test/test_browser_thread_bundle.h"
+#include "content/public/test/browser_task_environment.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 using bookmarks::BookmarkModel;
@@ -36,14 +35,21 @@ class BraveBookmarkContextMenuControllerTest : public testing::Test {
 
   void SetUp() override {
     TestingProfile::Builder builder;
+    builder.AddTestingFactory(BookmarkModelFactory::GetInstance(),
+                              BookmarkModelFactory::GetDefaultFactory());
     profile_ = builder.Build();
-    profile_->CreateBookmarkModel(true);
     model_ = BookmarkModelFactory::GetForBrowserContext(profile_.get());
     bookmarks::test::WaitForBookmarkModelToLoad(model_);
   }
 
+  static base::RepeatingCallback<content::PageNavigator*()>
+  NullNavigatorGetter() {
+    return base::BindRepeating(
+        []() -> content::PageNavigator* { return nullptr; });
+  }
+
  protected:
-  content::TestBrowserThreadBundle thread_bundle_;
+  content::BrowserTaskEnvironment task_environment_;
   std::unique_ptr<TestingProfile> profile_;
   BookmarkModel* model_;
 };
@@ -51,7 +57,7 @@ class BraveBookmarkContextMenuControllerTest : public testing::Test {
 TEST_F(BraveBookmarkContextMenuControllerTest,
        DontShowAppsShortcutContextMenuInBookmarksBar) {
   BookmarkContextMenuController controller(
-      NULL, NULL, NULL, profile_.get(), NULL,
+      NULL, NULL, NULL, profile_.get(), NullNavigatorGetter(),
       BOOKMARK_LAUNCH_LOCATION_CONTEXT_MENU, model_->bookmark_bar_node(),
       std::vector<const BookmarkNode*>());
 

@@ -14,9 +14,14 @@ class BraveBrowserMainParts : public ChromeBrowserMainParts {
   using ChromeBrowserMainParts::ChromeBrowserMainParts;
   ~BraveBrowserMainParts() override = default;
 
+  void PostBrowserStart() override;
   void PreShutdown() override;
+  void PreProfileInit() override;
+  void PostProfileInit() override;
 
  private:
+  friend class ChromeBrowserMainExtraPartsTor;
+
   DISALLOW_COPY_AND_ASSIGN(BraveBrowserMainParts);
 };
 

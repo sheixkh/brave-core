@@ -9,10 +9,10 @@
 
 #define FPL FILE_PATH_LITERAL
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
 #define CHROMIUM_PRODUCT_STRING BRAVE_PRODUCT_STRING
 #define PRODUCT_STRING BRAVE_PRODUCT_STRING
-#endif  // defined(OS_MACOSX)
+#endif  // defined(OS_MAC)
 
 namespace chrome {
 
@@ -44,7 +44,7 @@ const base::FilePath::CharType kHelperProcessExecutableNameChromium[] =
     FPL("brave.exe");
 const base::FilePath::CharType kHelperProcessExecutableName[] =
     FPL("brave.exe");
-#elif defined(OS_MACOSX)
+#elif defined(OS_MAC)
 const base::FilePath::CharType kBrowserProcessExecutableNameChromium[] =
     FPL(CHROMIUM_PRODUCT_STRING);
 const base::FilePath::CharType kBrowserProcessExecutableName[] =
@@ -81,7 +81,7 @@ const base::FilePath::CharType kHelperProcessExecutablePathChromium[] =
     FPL("brave.exe");
 const base::FilePath::CharType kHelperProcessExecutablePath[] =
     FPL("brave.exe");
-#elif defined(OS_MACOSX)
+#elif defined(OS_MAC)
 const base::FilePath::CharType kBrowserProcessExecutablePathChromium[] =
     FPL(CHROMIUM_PRODUCT_STRING ".app/Contents/MacOS/" CHROMIUM_PRODUCT_STRING);
 const base::FilePath::CharType kBrowserProcessExecutablePath[] =
@@ -107,21 +107,23 @@ const base::FilePath::CharType kHelperProcessExecutablePathChromium[] =
 const base::FilePath::CharType kHelperProcessExecutablePath[] = FPL("brave");
 #endif  // OS_*
 
-#if defined(OS_MACOSX)
+#if defined(OS_MAC)
 const base::FilePath::CharType kFrameworkName[] =
     FPL(PRODUCT_STRING " Framework.framework");
 const base::FilePath::CharType kFrameworkExecutableName[] =
     FPL(PRODUCT_STRING " Framework");
-#endif  // OS_MACOSX
+#endif  // OS_MAC
 
 #if defined(OS_WIN)
 const base::FilePath::CharType kBrowserResourcesDll[] = FPL("chrome.dll");
+const base::FilePath::CharType kElfDll[] = FPL("chrome_elf.dll");
 const base::FilePath::CharType kStatusTrayWindowClass[] =
     FPL("Chrome_StatusTrayWindow");
 #endif  // defined(OS_WIN)
 
-const char    kInitialProfile[] = "Default";
-const char    kMultiProfileDirPrefix[] = "Profile ";
+const char kInitialProfile[] = "Default";
+const char kMultiProfileDirPrefix[] = "Profile ";
+const char kEphemeralGuestProfileDirPrefix[] = "Guest ";
 const base::FilePath::CharType kGuestProfileDir[] = FPL("Guest Profile");
 const base::FilePath::CharType kSystemProfileDir[] = FPL("System Profile");
 
@@ -142,6 +144,8 @@ const base::FilePath::CharType kFeatureEngagementTrackerStorageDirname[] =
     FPL("Feature Engagement Tracker");
 const base::FilePath::CharType kFirstRunSentinel[] = FPL("First Run");
 const base::FilePath::CharType kGCMStoreDirname[] = FPL("GCM Store");
+const base::FilePath::CharType kHeavyAdInterventionOptOutDBFilename[] =
+    FPL("heavy_ad_intervention_opt_out.db");
 const base::FilePath::CharType kLocalStateFilename[] = FPL("Local State");
 const base::FilePath::CharType kMediaCacheDirname[] = FPL("Media Cache");
 const base::FilePath::CharType kNetworkPersistentStateFilename[] =
@@ -156,11 +160,12 @@ const base::FilePath::CharType kOfflinePagePrefetchStoreDirname[] =
     FPL("Offline Pages/prefech_store");
 const base::FilePath::CharType kOfflinePageRequestQueueDirname[] =
     FPL("Offline Pages/request_queue");
-const base::FilePath::CharType kPageLoadCappingOptOutDBFilename[] =
-    FPL("page_load_capping_opt_out.db");
 const base::FilePath::CharType kPreferencesFilename[] = FPL("Preferences");
 const base::FilePath::CharType kPreviewsOptOutDBFilename[] =
     FPL("previews_opt_out.db");
+const base::FilePath::CharType kQueryTileStorageDirname[] = FPL("Query Tiles");
+const base::FilePath::CharType kVideoTutorialsStorageDirname[] =
+    FPL("Video Tutorials");
 const base::FilePath::CharType kReadmeFilename[] = FPL("README");
 const base::FilePath::CharType kSecurePreferencesFilename[] =
     FPL("Secure Preferences");
@@ -173,20 +178,14 @@ const base::FilePath::CharType kSingletonSocketFilename[] =
 const base::FilePath::CharType kSupervisedUserSettingsFilename[] =
     FPL("Managed Mode Settings");
 const base::FilePath::CharType kThemePackFilename[] = FPL("Cached Theme.pak");
+const base::FilePath::CharType kTrustTokenFilename[] = FPL("Trust Tokens");
 const base::FilePath::CharType kWebAppDirname[] = FPL("Web Applications");
+// Only use if the ENABLE_REPORTING build flag is true
+const base::FilePath::CharType kReportingAndNelStoreFilename[] =
+    FPL("Reporting and NEL");
 
 #if defined(OS_WIN)
 const base::FilePath::CharType kJumpListIconDirname[] = FPL("JumpListIcons");
-#endif
-
-// File name of the Pepper Flash plugin on different platforms.
-const base::FilePath::CharType kPepperFlashPluginFilename[] =
-#if defined(OS_MACOSX)
-    FPL("PepperFlashPlayer.plugin");
-#elif defined(OS_WIN)
-    FPL("pepflashplayer.dll");
-#else  // OS_LINUX, etc.
-    FPL("libpepflashplayer.so");
 #endif
 
 // directory names
@@ -196,9 +195,11 @@ const wchar_t kUserDataDirname[] = L"User Data";
 
 const float kMaxShareOfExtensionProcesses = 0.30f;
 
-#if defined(OS_LINUX)
-const int kLowestRendererOomScore = 300;
-const int kHighestRendererOomScore = 1000;
+#if defined(OS_CHROMEOS)
+const char kProfileDirPrefix[] = "u-";
+const char kLegacyProfileDir[] = "user";
+const char kTestUserProfileDir[] = "test-user";
+const char kLockScreenAppProfile[] = "LockScreenAppsProfile";
 #endif
 
 // This GUID is associated with any 'don't ask me again' settings that the

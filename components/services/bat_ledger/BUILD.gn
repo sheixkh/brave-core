@@ -1,27 +1,24 @@
 static_library("lib") {
   visibility = [
     "//brave/utility:*",
-    "//brave/test:*"
+    "//brave/test:*",
   ]
 
   sources = [
-    "bat_ledger_app.cc",
-    "bat_ledger_app.h",
-    "bat_ledger_client_mojo_proxy.cc",
-    "bat_ledger_client_mojo_proxy.h",
-    "bat_ledger_service_impl.cc",
-    "bat_ledger_service_impl.h",
+    "bat_ledger_client_mojo_bridge.cc",
+    "bat_ledger_client_mojo_bridge.h",
     "bat_ledger_impl.cc",
     "bat_ledger_impl.h",
+    "bat_ledger_service_impl.cc",
+    "bat_ledger_service_impl.h",
   ]
 
   public_deps = [
+    "//brave/vendor/bat-native-ledger",
     "public/interfaces",
   ]
 
   deps = [
-    "//base",
-    "//brave/vendor/bat-native-ledger",
-    "//services/service_manager/public/cpp",
+    "//mojo/public/cpp/system",
   ]
 }

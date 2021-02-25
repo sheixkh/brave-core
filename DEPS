@@ -1,56 +1,85 @@
 use_relative_paths = True
 
 deps = {
-  "vendor/adblock_rust_ffi": "https://github.com/brave/adblock-rust-ffi.git@2360813922ceed63e3798737a268858c11e24d80",
-  "vendor/autoplay-whitelist": "https://github.com/brave/autoplay-whitelist.git@ea527a4d36051daedb34421e129c98eda06cb5d3",
-  "vendor/extension-whitelist": "https://github.com/brave/extension-whitelist.git@7843f62e26a23c51336330e220e9d7992680aae9",
+  "vendor/adblock_rust_ffi": "https://github.com/brave/adblock-rust-ffi.git@3d6aa901b4442ad6bbeb108b5ae5b980e9756a71",
+  "vendor/extension-whitelist": "https://github.com/brave/extension-whitelist.git@b4d059c73042cacf3a5e9156d4b1698e7bc18678",
   "vendor/hashset-cpp": "https://github.com/brave/hashset-cpp.git@6eab0271d014ff09bd9f38abe1e0c117e13e9aa9",
-  "vendor/bloom-filter-cpp": "https://github.com/brave/bloom-filter-cpp.git@9be5c63b14e094156e00c8b28f205e7794f0b92c",
   "vendor/requests": "https://github.com/kennethreitz/requests@e4d59bedfd3c7f4f254f4f5d036587bcd8152458",
   "vendor/boto": "https://github.com/boto/boto@f7574aa6cc2c819430c1f05e9a1a1a666ef8169b",
   "vendor/python-patch": "https://github.com/brave/python-patch@d8880110be6554686bc08261766538c2926d4e82",
-  "vendor/omaha":  "https://github.com/brave/omaha.git@de118d8511e4754a673d44a9f1e92d80442069e7",
-  "vendor/sparkle": "https://github.com/brave/Sparkle.git@c0759cce415d7c0feae45005c8a013b1898711f0",
+  "vendor/omaha":  "https://github.com/brave/omaha.git@cd2499ce23b2f8c532e1c504adf41d3e946780d2",
+  "vendor/sparkle": "https://github.com/brave/Sparkle.git@07933da3e178265d0f0ba86e02bbde38e701a04d",
   "vendor/bat-native-rapidjson": "https://github.com/brave-intl/bat-native-rapidjson.git@86aafe2ef89835ae71c9ed7c2527e3bb3000930e",
   "vendor/bip39wally-core-native": "https://github.com/brave-intl/bip39wally-core-native.git@13bb40a215248cfbdd87d0a6b425c8397402e9e6",
   "vendor/bat-native-anonize": "https://github.com/brave-intl/bat-native-anonize.git@e3742ba3e8942eea9e4755d91532491871bd3116",
-  "vendor/bat-native-tweetnacl": "https://github.com/brave-intl/bat-native-tweetnacl.git@1b4362968c8f22720bfb75af6f506d4ecc0f3116",
-  "components/brave_sync/extension/brave-sync": "https://github.com/brave/sync.git@16a888f180d3ce38fbec9aa1a5215e8f11692601",
-  "components/brave_sync/extension/brave-crypto": "https://github.com/brave/crypto@0231e65ba211b152d742278319c545a83cb13fc0",
-  "vendor/bat-native-usermodel": "https://github.com/brave-intl/bat-native-usermodel.git@a82acda22d8cb255d86ee28734efb8ad886e9a49",
-  "vendor/challenge_bypass_ristretto_ffi": "https://github.com/brave-intl/challenge-bypass-ristretto-ffi.git@f88d942ddfaf61a4a6703355a77c4ef71bc95c35",
+  "vendor/bat-native-tweetnacl": "https://github.com/brave-intl/bat-native-tweetnacl.git@800f9d40b7409239ff192e0be634764e747c7a75",
+  "vendor/bat-native-usermodel": "https://github.com/brave-intl/bat-native-usermodel.git@02b8c81c94072c67fe00108feb90786e088d4d26",
+  "vendor/challenge_bypass_ristretto_ffi": "https://github.com/brave-intl/challenge-bypass-ristretto-ffi.git@f2eff7aca4ea04564e3647b93eb72f33ebdbf683",
+  "vendor/gn-project-generators": "https://github.com/brave/gn-project-generators.git@b76e14b162aa0ce40f11920ec94bfc12da29e5d0",
 }
 
 hooks = [
   {
     'name': 'bootstrap',
     'pattern': '.',
-    'action': ['python', 'src/brave/script/bootstrap.py'],
+    'action': ['python', 'script/bootstrap.py'],
   },
   {
     # Download rust deps if necessary for Android
     'name': 'download_rust_deps',
     'pattern': '.',
     'condition': 'checkout_android',
-    'action': ['python', 'src/brave/script/download_rust_deps.py', '--platform', 'android'],
+    'action': ['vpython3', 'script/download_rust_deps.py', '--platform', 'android'],
   },
   {
-    # Download rust deps if necessary for macOS, Windows and Linux
+    # Download rust deps if necessary for iOS
     'name': 'download_rust_deps',
     'pattern': '.',
-    'condition': 'not checkout_android',
-    'action': ['python', 'src/brave/script/download_rust_deps.py'],
+    'condition': 'checkout_ios',
+    'action': ['vpython3', 'script/download_rust_deps.py', '--platform', 'ios'],
   },
   {
-    # Build brave-sync
-    'name': 'build_brave_sync',
+    # Download rust deps if necessary for Linux, macOS, Windows
+    'name': 'download_rust_deps',
     'pattern': '.',
-    'action': ['python', 'src/brave/script/build-simple-js-bundle.py', '--repo_dir_path', 'src/brave/components/brave_sync/extension/brave-sync'],
+    'condition': 'not checkout_android and not checkout_ios',
+    'action': ['vpython3', 'script/download_rust_deps.py'],
   },
   {
-    # Build brave-crypto
-    'name': 'build_brave_crypto',
+    'name': 'generate_licenses',
     'pattern': '.',
-    'action': ['python', 'src/brave/script/build-simple-js-bundle.py', '--repo_dir_path', 'src/brave/components/brave_sync/extension/brave-crypto'],
-  }
+    'action': ['python', 'script/generate_licenses.py'],
+  },
 ]
+
+include_rules = [
+  # Everybody can use some things.
+  "+brave_base",
+  "+crypto",
+  "+net",
+  "+sql",
+  "+ui/base",
+
+  "-chrome",
+  "-brave/app",
+  "-brave/browser",
+  "-brave/common",
+  "-brave/renderer",
+  "-brave/services",
+  "-ios",
+]
+
+# Temporary workaround for massive nummber of incorrect test includes
+specific_include_rules = {
+  ".*test.*(\.cc|\.mm|\.h)": [
+    "+bat",
+    "+brave",
+    "+chrome",
+    "+components",
+    "+content",
+    "+extensions",
+    "+mojo",
+    "+services",
+    "+third_party",
+  ],
+}

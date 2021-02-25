@@ -7,18 +7,20 @@
 #define BRAVE_COMPONENTS_BRAVE_SHIELDS_BROWSER_ADBLOCK_STUB_RESPONSE_H_
 
 #include <string>
+#include "base/optional.h"
+#include "services/network/public/mojom/url_response_head.mojom-forward.h"
 
 namespace network {
-struct ResourceResponseHead;
 struct ResourceRequest;
-}
+}  // namespace network
 
 namespace brave_shields {
 
 // Intercepts certain requests and blocks them by silently returning 200 OK
 // and not allowing them to hit the network.
-void MakeStubResponse(const network::ResourceRequest& request,
-                      network::ResourceResponseHead* response,
+void MakeStubResponse(const base::Optional<std::string>& data_url,
+                      const network::ResourceRequest& request,
+                      network::mojom::URLResponseHeadPtr* response,
                       std::string* data);
 
 }  // namespace brave_shields

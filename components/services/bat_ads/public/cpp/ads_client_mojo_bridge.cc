@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 The Brave Authors. All rights reserved.
+/* Copyright (c) 2020 The Brave Authors. All rights reserved.
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -10,90 +10,53 @@
 #include <memory>
 #include <utility>
 
+#include "bat/ads/ads.h"
 #include "base/bind.h"
 #include "base/callback.h"
 #include "base/containers/flat_map.h"
-#include "bat/ads/ads.h"
+#include "base/logging.h"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
-using std::placeholders::_3;
 
 namespace bat_ads {
 
-namespace {
-
-ads::URLRequestMethod ToAdsURLRequestMethod(int32_t method) {
-  return (ads::URLRequestMethod)method;
+AdsClientMojoBridge::AdsClientMojoBridge(
+    ads::AdsClient* ads_client)
+    : ads_client_(ads_client) {
+  DCHECK(ads_client_);
 }
 
-base::flat_map<std::string, std::string> ToFlatMap(
-    const std::map<std::string, std::string>& map) {
-  base::flat_map<std::string, std::string> flat_map;
-  for (const auto it : map) {
-    flat_map[it.first] = it.second;
-  }
-  return flat_map;
-}
+AdsClientMojoBridge::~AdsClientMojoBridge() = default;
 
-int32_t ToMojomResult(ads::Result result) {
-  return (int32_t)result;
-}
-
-}  // namespace
-
-AdsClientMojoBridge::AdsClientMojoBridge(ads::AdsClient* ads_client)
-    : ads_client_(ads_client) {}
-
-AdsClientMojoBridge::~AdsClientMojoBridge() {}
-
-bool AdsClientMojoBridge::IsEnabled(bool* is_enabled) {
-  *is_enabled = ads_client_->IsEnabled();
+bool AdsClientMojoBridge::IsForeground(
+    bool* out_is_foreground) {
+  DCHECK(out_is_foreground);
+  *out_is_foreground = ads_client_->IsForeground();
   return true;
 }
 
-void AdsClientMojoBridge::IsEnabled(IsEnabledCallback callback) {
-  std::move(callback).Run(ads_client_->IsEnabled());
-}
-
-bool AdsClientMojoBridge::IsForeground(bool* is_foreground) {
-  *is_foreground = ads_client_->IsForeground();
-  return true;
-}
-
-void AdsClientMojoBridge::IsForeground(IsForegroundCallback callback) {
+void AdsClientMojoBridge::IsForeground(
+    IsForegroundCallback callback) {
   std::move(callback).Run(ads_client_->IsForeground());
 }
 
-bool AdsClientMojoBridge::GetLocale(std::string* out_locale) {
-  *out_locale = ads_client_->GetLocale();
+bool AdsClientMojoBridge::CanShowBackgroundNotifications(
+    bool* out_can_show) {
+  DCHECK(out_can_show);
+  *out_can_show = ads_client_->CanShowBackgroundNotifications();
   return true;
 }
 
-void AdsClientMojoBridge::GetLocale(GetLocaleCallback callback) {
-  std::move(callback).Run(ads_client_->GetLocale());
+void AdsClientMojoBridge::CanShowBackgroundNotifications(
+    CanShowBackgroundNotificationsCallback callback) {
+  std::move(callback).Run(ads_client_->CanShowBackgroundNotifications());
 }
 
-bool AdsClientMojoBridge::GetAdsPerHour(uint64_t* out_ads_per_hour) {
-  *out_ads_per_hour = ads_client_->GetAdsPerHour();
-  return true;
-}
-
-void AdsClientMojoBridge::GetAdsPerHour(GetAdsPerHourCallback callback) {
-  std::move(callback).Run(ads_client_->GetAdsPerHour());
-}
-
-bool AdsClientMojoBridge::GetAdsPerDay(uint64_t* out_ads_per_day) {
-  *out_ads_per_day = ads_client_->GetAdsPerDay();
-  return true;
-}
-
-void AdsClientMojoBridge::GetAdsPerDay(GetAdsPerDayCallback callback) {
-  std::move(callback).Run(ads_client_->GetAdsPerDay());
-}
-
-bool AdsClientMojoBridge::IsNetworkConnectionAvailable(bool* out_available) {
-  *out_available = ads_client_->IsNetworkConnectionAvailable();
+bool AdsClientMojoBridge::IsNetworkConnectionAvailable(
+    bool* out_is_available) {
+  DCHECK(out_is_available);
+  *out_is_available = ads_client_->IsNetworkConnectionAvailable();
   return true;
 }
 
@@ -102,7 +65,9 @@ void AdsClientMojoBridge::IsNetworkConnectionAvailable(
   std::move(callback).Run(ads_client_->IsNetworkConnectionAvailable());
 }
 
-bool AdsClientMojoBridge::ShouldShowNotifications(bool* out_should_show) {
+bool AdsClientMojoBridge::ShouldShowNotifications(
+    bool* out_should_show) {
+  DCHECK(out_should_show);
   *out_should_show = ads_client_->ShouldShowNotifications();
   return true;
 }
@@ -112,78 +77,76 @@ void AdsClientMojoBridge::ShouldShowNotifications(
   std::move(callback).Run(ads_client_->ShouldShowNotifications());
 }
 
-bool AdsClientMojoBridge::SetTimer(uint64_t time_offset,
-                                   uint32_t* out_timer_id) {
-  *out_timer_id = ads_client_->SetTimer(time_offset);
+bool AdsClientMojoBridge::LoadResourceForId(
+    const std::string& id,
+    std::string* out_value) {
+  DCHECK(out_value);
+  *out_value = ads_client_->LoadResourceForId(id);
   return true;
 }
 
-void AdsClientMojoBridge::SetTimer(uint64_t time_offset,
-                                   SetTimerCallback callback) {
-  std::move(callback).Run(ads_client_->SetTimer(time_offset));
+void AdsClientMojoBridge::LoadResourceForId(
+    const std::string& id,
+    LoadResourceForIdCallback callback) {
+  std::move(callback).Run(ads_client_->LoadResourceForId(id));
 }
 
-bool AdsClientMojoBridge::LoadJsonSchema(const std::string& name,
-                                         std::string* out_json) {
-  *out_json = ads_client_->LoadJsonSchema(name);
-  return true;
-}
-
-void AdsClientMojoBridge::LoadJsonSchema(const std::string& name,
-                                      LoadJsonSchemaCallback callback) {
-  std::move(callback).Run(ads_client_->LoadJsonSchema(name));
-}
-
-bool AdsClientMojoBridge::GetUserModelLanguages(
-    std::vector<std::string>* out_languages) {
-  *out_languages = ads_client_->GetUserModelLanguages();
-  return true;
-}
-
-void AdsClientMojoBridge::GetUserModelLanguages(
-    GetUserModelLanguagesCallback callback) {
-  std::move(callback).Run(ads_client_->GetUserModelLanguages());
-}
-
-void AdsClientMojoBridge::SetIdleThreshold(int32_t threshold) {
-  ads_client_->SetIdleThreshold(threshold);
-}
-
-void AdsClientMojoBridge::KillTimer(uint32_t timer_id) {
-  ads_client_->KillTimer(timer_id);
-}
-
-bool AdsClientMojoBridge::GetClientInfo(const std::string& client_info,
-                                     std::string* out_client_info) {
-  ads::ClientInfo info;
-  info.FromJson(client_info);
-  ads_client_->GetClientInfo(&info);
-  *out_client_info = info.ToJson();
-  return true;
-}
-
-void AdsClientMojoBridge::GetClientInfo(const std::string& client_info,
-                                     GetClientInfoCallback callback) {
-  ads::ClientInfo info;
-  info.FromJson(client_info);
-  ads_client_->GetClientInfo(&info);
-  std::move(callback).Run(info.ToJson());
-}
-
-void AdsClientMojoBridge::EventLog(const std::string& json) {
-  ads_client_->EventLog(json);
+void AdsClientMojoBridge::Log(
+    const std::string& file,
+    const int32_t line,
+    const int32_t verbose_level,
+    const std::string& message) {
+  ads_client_->Log(file.c_str(), line, verbose_level, message);
 }
 
 // static
-void AdsClientMojoBridge::OnLoad(CallbackHolder<LoadCallback>* holder,
-                              ads::Result result,
-                              const std::string& value) {
-  if (holder->is_valid())
-    std::move(holder->get()).Run(ToMojomResult(result), std::move(value));
+void AdsClientMojoBridge::OnLoadUserModelForId(
+    CallbackHolder<LoadCallback>* holder,
+    const ads::Result result,
+    const std::string& value) {
+  DCHECK(holder);
+
+  if (holder->is_valid()) {
+    std::move(holder->get()).Run((int32_t)result, std::move(value));
+  }
+
   delete holder;
 }
 
-void AdsClientMojoBridge::Load(const std::string& name, LoadCallback callback) {
+void AdsClientMojoBridge::LoadUserModelForId(
+    const std::string& id,
+    LoadCallback callback) {
+  // this gets deleted in OnLoad
+  auto* holder =
+      new CallbackHolder<LoadCallback>(AsWeakPtr(), std::move(callback));
+  ads_client_->LoadUserModelForId(
+      id, std::bind(AdsClientMojoBridge::OnLoadUserModelForId, holder, _1, _2));
+}
+
+void AdsClientMojoBridge::RecordP2AEvent(
+    const std::string& name,
+    const ads::P2AEventType type,
+    const std::string& out_value) {
+  ads_client_->RecordP2AEvent(name, type, out_value);
+}
+
+// static
+void AdsClientMojoBridge::OnLoad(
+    CallbackHolder<LoadCallback>* holder,
+    const ads::Result result,
+    const std::string& value) {
+  DCHECK(holder);
+
+  if (holder->is_valid()) {
+    std::move(holder->get()).Run((int32_t)result, std::move(value));
+  }
+
+  delete holder;
+}
+
+void AdsClientMojoBridge::Load(
+    const std::string& name,
+    LoadCallback callback) {
   // this gets deleted in OnLoad
   auto* holder =
       new CallbackHolder<LoadCallback>(AsWeakPtr(), std::move(callback));
@@ -192,16 +155,22 @@ void AdsClientMojoBridge::Load(const std::string& name, LoadCallback callback) {
 }
 
 // static
-void AdsClientMojoBridge::OnSave(CallbackHolder<SaveCallback>* holder,
-                              ads::Result result) {
-  if (holder->is_valid())
-    std::move(holder->get()).Run(ToMojomResult(result));
+void AdsClientMojoBridge::OnSave(
+    CallbackHolder<SaveCallback>* holder,
+    const ads::Result result) {
+  DCHECK(holder);
+
+  if (holder->is_valid()) {
+    std::move(holder->get()).Run((int32_t)result);
+  }
+
   delete holder;
 }
 
-void AdsClientMojoBridge::Save(const std::string& name,
-                               const std::string& value,
-                               SaveCallback callback) {
+void AdsClientMojoBridge::Save(
+    const std::string& name,
+    const std::string& value,
+    SaveCallback callback) {
   // this gets deleted in OnSave
   auto* holder =
       new CallbackHolder<SaveCallback>(AsWeakPtr(), std::move(callback));
@@ -210,175 +179,143 @@ void AdsClientMojoBridge::Save(const std::string& name,
 }
 
 // static
-void AdsClientMojoBridge::OnReset(CallbackHolder<ResetCallback>* holder,
-                              ads::Result result) {
-  if (holder->is_valid())
-    std::move(holder->get()).Run(ToMojomResult(result));
-  delete holder;
-}
-
-void AdsClientMojoBridge::Reset(const std::string& name,
-                                ResetCallback callback) {
-  // this gets deleted in OnSave
-  auto* holder =
-      new CallbackHolder<ResetCallback>(AsWeakPtr(), std::move(callback));
-  ads_client_->Reset(name, std::bind(AdsClientMojoBridge::OnReset, holder, _1));
-}
-
-// static
-void AdsClientMojoBridge::OnLoadUserModelForLanguage(
-    CallbackHolder<LoadUserModelForLanguageCallback>* holder,
-    ads::Result result,
-    const std::string& value) {
-  if (holder->is_valid())
-    std::move(holder->get()).Run(ToMojomResult(result), std::move(value));
-  delete holder;
-}
-
-void AdsClientMojoBridge::LoadUserModelForLanguage(
-    const std::string& language,
-    LoadUserModelForLanguageCallback callback) {
-  // this gets deleted in OnLoadUserModelForLanguage
-  auto* holder = new CallbackHolder<LoadUserModelForLanguageCallback>(
-      AsWeakPtr(), std::move(callback));
-  ads_client_->LoadUserModelForLanguage(language,
-      std::bind(AdsClientMojoBridge::OnLoadUserModelForLanguage, holder, _1,
-          _2));
-}
-
-// static
 void AdsClientMojoBridge::OnURLRequest(
-    CallbackHolder<URLRequestCallback>* holder,
-    const int status_code,
-    const std::string& content,
-    const std::map<std::string, std::string>& headers) {
+    CallbackHolder<UrlRequestCallback>* holder,
+    const ads::UrlResponse& url_response) {
+  DCHECK(holder);
+
   if (holder->is_valid()) {
-    std::move(holder->get()).Run(status_code, content, ToFlatMap(headers));
+    std::move(holder->get()).Run(ads::UrlResponse::New(url_response));
   }
+
   delete holder;
 }
 
-void AdsClientMojoBridge::URLRequest(const std::string& url,
-                                  const std::vector<std::string>& headers,
-                                  const std::string& content,
-                                  const std::string& content_type,
-                                  int32_t method,
-                                  URLRequestCallback callback) {
+void AdsClientMojoBridge::UrlRequest(
+    ads::UrlRequestPtr url_request,
+    UrlRequestCallback callback) {
   // this gets deleted in OnURLRequest
   auto* holder =
-      new CallbackHolder<URLRequestCallback>(AsWeakPtr(), std::move(callback));
-  ads_client_->URLRequest(url,
-                          headers,
-                          content,
-                          content_type,
-                          ToAdsURLRequestMethod(method),
-                          std::bind(AdsClientMojoBridge::OnURLRequest,
-                              holder, _1, _2, _3));
+      new CallbackHolder<UrlRequestCallback>(AsWeakPtr(), std::move(callback));
+  ads_client_->UrlRequest(std::move(url_request),
+      std::bind(AdsClientMojoBridge::OnURLRequest, holder, _1));
 }
 
 // static
-void AdsClientMojoBridge::OnLoadSampleBundle(
-    CallbackHolder<LoadSampleBundleCallback>* holder,
-    ads::Result result,
-    const std::string& value) {
-  if (holder->is_valid())
-    std::move(holder->get()).Run(ToMojomResult(result), std::move(value));
-  delete holder;
-}
-
-void AdsClientMojoBridge::LoadSampleBundle(
-    LoadSampleBundleCallback callback) {
-  // this gets deleted in OnLoadSampleBundle
-  auto* holder = new CallbackHolder<LoadSampleBundleCallback>(
-      AsWeakPtr(), std::move(callback));
-  ads_client_->LoadSampleBundle(
-      std::bind(AdsClientMojoBridge::OnLoadSampleBundle, holder, _1, _2));
-}
-
 void AdsClientMojoBridge::ShowNotification(
-    const std::string& notification_info) {
-  auto info = std::make_unique<ads::NotificationInfo>();
-  if (info->FromJson(notification_info) == ads::Result::SUCCESS)
-    ads_client_->ShowNotification(std::move(info));
-}
-
-void AdsClientMojoBridge::CloseNotification(const std::string& id) {
-  ads_client_->CloseNotification(id);
-}
-
-void AdsClientMojoBridge::SetCatalogIssuers(
-    const std::string& issuers_info) {
-  auto info = std::make_unique<ads::IssuersInfo>();
-  if (info->FromJson(issuers_info) == ads::Result::SUCCESS) {
-    ads_client_->SetCatalogIssuers(std::move(info));
+    const std::string& json) {
+  ads::AdNotificationInfo ad_notification;
+  if (ad_notification.FromJson(json) != ads::Result::SUCCESS) {
+    return;
   }
+
+  ads_client_->ShowNotification(ad_notification);
 }
 
-void AdsClientMojoBridge::ConfirmAd(const std::string& notification_info) {
-  auto info = std::make_unique<ads::NotificationInfo>();
-  if (info->FromJson(notification_info) == ads::Result::SUCCESS)
-    ads_client_->ConfirmAd(std::move(info));
-}
-
-void AdsClientMojoBridge::ConfirmAction(const std::string& uuid,
-    const std::string& creative_set_id,
-    const std::string& type) {
-  ads_client_->ConfirmAction(uuid, creative_set_id,
-                             ads::ConfirmationType(type));
+void AdsClientMojoBridge::CloseNotification(
+    const std::string& uuid) {
+  ads_client_->CloseNotification(uuid);
 }
 
 // static
-void AdsClientMojoBridge::OnSaveBundleState(
-    CallbackHolder<SaveBundleStateCallback>* holder,
-    ads::Result result) {
-  if (holder->is_valid())
-    std::move(holder->get()).Run(ToMojomResult(result));
-  delete holder;
-}
-
-void AdsClientMojoBridge::SaveBundleState(const std::string& bundle_state_json,
-                       SaveBundleStateCallback callback) {
-  // this gets deleted in OnSaveBundleState
-  auto* holder = new CallbackHolder<SaveBundleStateCallback>(
-      AsWeakPtr(), std::move(callback));
-  auto bundle_state = std::make_unique<ads::BundleState>();
-
-  auto schema = ads_client_->LoadJsonSchema(ads::_bundle_schema_resource_name);
-
-  if (bundle_state->FromJson(bundle_state_json, schema) ==
-      ads::Result::SUCCESS) {
-    ads_client_->SaveBundleState(std::move(bundle_state),
-        std::bind(AdsClientMojoBridge::OnSaveBundleState, holder, _1));
-  } else {
-    std::move(holder->get()).Run(ToMojomResult(ads::Result::FAILED));
-  }
-}
-
-// static
-void AdsClientMojoBridge::OnGetAds(
-    CallbackHolder<GetAdsCallback>* holder,
-    ads::Result result,
-    const std::string& category,
-    const std::vector<ads::AdInfo>& ad_info) {
+void AdsClientMojoBridge::OnRunDBTransaction(
+    CallbackHolder<RunDBTransactionCallback>* holder,
+    ads::DBCommandResponsePtr response) {
+  DCHECK(holder);
   if (holder->is_valid()) {
-    std::vector<std::string> ad_info_json;
-    for (const auto it : ad_info) {
-      ad_info_json.push_back(it.ToJson());
-    }
-    std::move(holder->get()).Run(ToMojomResult(result), category, ad_info_json);
+    std::move(holder->get()).Run(std::move(response));
   }
   delete holder;
 }
 
-void AdsClientMojoBridge::GetAds(
-    const std::string& category,
-    GetAdsCallback callback) {
-  // this gets deleted in OnSaveBundleState
-  auto* holder = new CallbackHolder<GetAdsCallback>(
-      AsWeakPtr(), std::move(callback));
+void AdsClientMojoBridge::RunDBTransaction(
+    ads::DBTransactionPtr transaction,
+    RunDBTransactionCallback callback) {
+  auto* holder = new CallbackHolder<RunDBTransactionCallback>(AsWeakPtr(),
+      std::move(callback));
+  ads_client_->RunDBTransaction(std::move(transaction),
+      std::bind(AdsClientMojoBridge::OnRunDBTransaction, holder, _1));
+}
 
-  ads_client_->GetAds(category, std::bind(AdsClientMojoBridge::OnGetAds,
-      holder, _1, _2, _3));
+void AdsClientMojoBridge::OnAdRewardsChanged() {
+  ads_client_->OnAdRewardsChanged();
+}
+
+void AdsClientMojoBridge::GetBooleanPref(
+    const std::string& path,
+    GetBooleanPrefCallback callback) {
+  std::move(callback).Run(ads_client_->GetBooleanPref(path));
+}
+
+void AdsClientMojoBridge::SetBooleanPref(
+    const std::string& path,
+    const bool value) {
+  ads_client_->SetBooleanPref(path, value);
+}
+
+void AdsClientMojoBridge::GetIntegerPref(
+    const std::string& path,
+    GetIntegerPrefCallback callback) {
+  std::move(callback).Run(ads_client_->GetIntegerPref(path));
+}
+
+void AdsClientMojoBridge::SetIntegerPref(
+    const std::string& path,
+    const int value) {
+  ads_client_->SetIntegerPref(path, value);
+}
+
+void AdsClientMojoBridge::GetDoublePref(
+    const std::string& path,
+    GetDoublePrefCallback callback) {
+  std::move(callback).Run(ads_client_->GetDoublePref(path));
+}
+
+void AdsClientMojoBridge::SetDoublePref(
+    const std::string& path,
+    const double value) {
+  ads_client_->SetDoublePref(path, value);
+}
+
+void AdsClientMojoBridge::GetStringPref(
+    const std::string& path,
+    GetStringPrefCallback callback) {
+  std::move(callback).Run(ads_client_->GetStringPref(path));
+}
+
+void AdsClientMojoBridge::SetStringPref(
+    const std::string& path,
+    const std::string& value) {
+  ads_client_->SetStringPref(path, value);
+}
+
+void AdsClientMojoBridge::GetInt64Pref(
+    const std::string& path,
+    GetInt64PrefCallback callback) {
+  std::move(callback).Run(ads_client_->GetInt64Pref(path));
+}
+
+void AdsClientMojoBridge::SetInt64Pref(
+    const std::string& path,
+    const int64_t value) {
+  ads_client_->SetInt64Pref(path, value);
+}
+
+void AdsClientMojoBridge::GetUint64Pref(
+    const std::string& path,
+    GetUint64PrefCallback callback) {
+  std::move(callback).Run(ads_client_->GetUint64Pref(path));
+}
+
+void AdsClientMojoBridge::SetUint64Pref(
+    const std::string& path,
+    const uint64_t value) {
+  ads_client_->SetUint64Pref(path, value);
+}
+
+void AdsClientMojoBridge::ClearPref(
+    const std::string& path) {
+  ads_client_->ClearPref(path);
 }
 
 }  // namespace bat_ads

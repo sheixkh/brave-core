@@ -1,8 +1,8 @@
 diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.idl b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.idl
-index d2b906ebb71892714f469162642c5fce9e50d2ff..143dea6609d9d4446c1e3f1fa1566f0f85922505 100644
+index 70629eeabd1f390223cd0a122ee8164e1b6f249a..f3b12d2f739709a41fe10811cc89d019130a01ea 100644
 --- a/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.idl
 +++ b/third_party/blink/renderer/modules/canvas/canvas2d/canvas_rendering_context_2d.idl
-@@ -103,9 +103,13 @@ interface CanvasRenderingContext2D {
+@@ -106,9 +106,13 @@ interface CanvasRenderingContext2D {
      [RuntimeEnabled=Canvas2dScrollPathIntoView] void scrollPathIntoView(optional Path2D path);
      void clip(optional CanvasFillRule winding);
      void clip(Path2D path, optional CanvasFillRule winding);
@@ -16,7 +16,7 @@ index d2b906ebb71892714f469162642c5fce9e50d2ff..143dea6609d9d4446c1e3f1fa1566f0f
      boolean isPointInStroke(Path2D path, unrestricted double x, unrestricted double y);
  
      // text (see also the CanvasDrawingStyles interface)
-@@ -126,7 +130,7 @@ interface CanvasRenderingContext2D {
+@@ -129,7 +133,7 @@ interface CanvasRenderingContext2D {
      // pixel manipulation
      [RaisesException] ImageData createImageData(ImageData imagedata);
      [RaisesException] ImageData createImageData([EnforceRange] long sw, [EnforceRange] long sh);
@@ -24,12 +24,4 @@ index d2b906ebb71892714f469162642c5fce9e50d2ff..143dea6609d9d4446c1e3f1fa1566f0f
 +    [CallWith=ScriptState, RaisesException] ImageData getImageData([EnforceRange] long sx, [EnforceRange] long sy, [EnforceRange] long sw, [EnforceRange] long sh);
      [RaisesException] void putImageData(ImageData imagedata, [EnforceRange] long dx, [EnforceRange] long dy);
      [RaisesException] void putImageData(ImageData imagedata, [EnforceRange] long dx, [EnforceRange] long dy, [EnforceRange] long dirtyX, [EnforceRange] long dirtyY, [EnforceRange] long dirtyWidth, [EnforceRange] long dirtyHeight);
- 
-@@ -149,6 +153,7 @@ interface CanvasRenderingContext2D {
- 
-     // dashed lines
-     void setLineDash(sequence<unrestricted double> dash);
-+    [CallWith=ScriptState]
-     sequence<unrestricted double> getLineDash();
-     attribute unrestricted double lineDashOffset;
  

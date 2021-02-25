@@ -59,8 +59,8 @@
       android:orientation="vertical"
       android:layout_marginTop="8dp"
       android:background="@drawable/modern_toolbar_background_grey_end_segment"
-      android:layout_height="40dp" >
-      <!-- sergz: Should be gone by default-->
+      android:layout_height="40dp"
+      android:visibility="gone" >
 
       <ImageButton android:id="@+id/brave_rewards_button"
           style="@style/ToolbarButton"
@@ -70,10 +70,22 @@
           android:layout_gravity="center"
           android:contentDescription="@string/accessibility_toolbar_btn_brave_rewards" />
 
-      <TextView
-          android:id="@+id/br_notifications_count"
+      <ImageView 
+        android:id="@+id/br_rewards_onboarding_icon"
           android:layout_width="wrap_content"
           android:layout_height="wrap_content"
+          android:layout_marginTop="7dp"
+          android:layout_marginEnd="6dp"
+          android:layout_gravity="end"
+          android:gravity="center"
+          android:visibility="gone"
+          android:contentDescription="@null"
+          app:srcCompat="@drawable/ic_help_filled"/>
+
+      <TextView
+          android:id="@+id/br_notifications_count"
+          android:layout_width="14dp"
+          android:layout_height="14dp"
           android:text=""
           android:layout_marginTop="7dp"
           android:layout_marginEnd="6dp"
@@ -82,7 +94,7 @@
           android:visibility="gone"
           android:textColor="#ffffff"
           android:background="@drawable/brave_rewards_circle"
-          android:textSize="12sp" />
+          android:textSize="9sp" />
 
       <org.chromium.chrome.browser.BraveBadge
           android:id="@+id/brave_rewards_badge_small"

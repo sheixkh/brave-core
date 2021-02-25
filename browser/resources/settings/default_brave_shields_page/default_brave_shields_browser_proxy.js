@@ -2,17 +2,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// clang-format off
+// #import {addSingletonGetter, sendWithPromise} from 'chrome://resources/js/cr.m.js';
+// clang-format on
+
 cr.define('settings', function() {
   /** @interface */
-  class DefaultBraveShieldsBrowserProxy {
+  /* #export */ class DefaultBraveShieldsBrowserProxy {
     /**
-     * @return {!Promise<string>}
+     * @return {!Promise<boolean>}
      */
-    getAdControlType() {}
+    isAdControlEnabled() {}
     /**
      * @param {string} value name.
      */
     setAdControlType(value) {}
+
+    /**
+     * @return {!Promise<boolean>}
+     */
+    isFirstPartyCosmeticFilteringEnabled() {}
+    /**
+     * @param {string} value name.
+     */
+    setCosmeticFilteringControlType(value) {}
 
     /**
      * @return {!Promise<string>}
@@ -46,15 +59,25 @@ cr.define('settings', function() {
   /**
    * @implements {settings.DefaultBraveShieldsBrowserProxy}
    */
-  class DefaultBraveShieldsBrowserProxyImpl {
+  /* #export */ class DefaultBraveShieldsBrowserProxyImpl {
     /** @override */
-    getAdControlType() {
-      return cr.sendWithPromise('getAdControlType');
+    isAdControlEnabled() {
+      return cr.sendWithPromise('isAdControlEnabled');
     }
 
     /** @override */
     setAdControlType(value) {
       chrome.send('setAdControlType', [value]);
+    }
+
+    /** @override */
+    isFirstPartyCosmeticFilteringEnabled() {
+      return cr.sendWithPromise('isFirstPartyCosmeticFilteringEnabled');
+    }
+
+    /** @override */
+    setCosmeticFilteringControlType(value) {
+      chrome.send('setCosmeticFilteringControlType', [value]);
     }
 
     /** @override */
@@ -90,6 +113,7 @@ cr.define('settings', function() {
 
   cr.addSingletonGetter(DefaultBraveShieldsBrowserProxyImpl);
 
+  // #cr_define_end
   return {
     DefaultBraveShieldsBrowserProxy,
     DefaultBraveShieldsBrowserProxyImpl

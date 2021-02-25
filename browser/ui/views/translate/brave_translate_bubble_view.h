@@ -29,10 +29,12 @@ class BraveTranslateBubbleView : public TranslateBubbleView {
 
   // views::BubbleDialogDelegateView methods.
   void Init() override;
-  void ButtonPressed(views::Button* sender, const ui::Event& event) override;
 
   // views::View methods.
   bool AcceleratorPressed(const ui::Accelerator& accelerator) override;
+
+  // LocationBarBubbleDelegateView methods.
+  bool ShouldShowWindowTitle() const override;
 
  protected:
   virtual void InstallGoogleTranslate();
@@ -40,6 +42,8 @@ class BraveTranslateBubbleView : public TranslateBubbleView {
  private:
   friend class BraveTranslateBubbleViewTest;
   views::View* BraveCreateViewBeforeTranslate();
+  void DisableOfferTranslatePref();
+  void ButtonPressed(ButtonID button_id);
 
   DISALLOW_COPY_AND_ASSIGN(BraveTranslateBubbleView);
 };

@@ -7,14 +7,19 @@ source_set("browser") {
     "greaselion_service.h",
     "greaselion_service_impl.cc",
     "greaselion_service_impl.h",
+    "switches.cc",
+    "switches.h",
   ]
 
   deps = [
     "//base",
+    "//brave/browser:version_info",
     "//brave/components/brave_component_updater/browser",
+    "//chrome/browser/extensions:extensions",
+    "//components/version_info",
     "//content/public/browser",
     "//content/public/common",
-    "//chrome/common",
+    "//extensions/browser",
     "//url",
   ]
 

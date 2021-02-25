@@ -6,16 +6,19 @@
 #ifndef BRAVELEDGER_UPHOLD_UPHOLD_USER_H_
 #define BRAVELEDGER_UPHOLD_UPHOLD_USER_H_
 
-#include <map>
+#include <memory>
 #include <string>
 
 #include "bat/ledger/ledger.h"
 
-namespace bat_ledger {
+namespace ledger {
 class LedgerImpl;
+
+namespace endpoint {
+class UpholdServer;
 }
 
-namespace braveledger_uphold {
+namespace uphold {
 
 enum UserStatus {
   EMPTY = 0,
@@ -36,29 +39,28 @@ struct User {
   ~User();
 };
 
-using GetUserCallback = std::function<void(const ledger::Result, const User)>;
+using GetUserCallback = std::function<void(const type::Result, const User&)>;
 
 class UpholdUser {
  public:
-  explicit UpholdUser(bat_ledger::LedgerImpl* ledger);
+  explicit UpholdUser(LedgerImpl* ledger);
 
   ~UpholdUser();
 
-  void Get(
-      ledger::ExternalWalletPtr wallet,
-      GetUserCallback callback);
+  void Get(GetUserCallback callback);
 
  private:
   void OnGet(
-      GetUserCallback callback,
-      int response_status_code,
-      const std::string& response,
-      const std::map<std::string, std::string>& headers);
+      const type::Result result,
+      const User& user,
+      GetUserCallback callback);
 
   UserStatus GetStatus(const std::string& status);
 
-  bat_ledger::LedgerImpl* ledger_;  // NOT OWNED
+  LedgerImpl* ledger_;  // NOT OWNED
+  std::unique_ptr<endpoint::UpholdServer> uphold_server_;
 };
 
-}  // namespace braveledger_uphold
+}  // namespace uphold
+}  // namespace ledger
 #endif  // BRAVELEDGER_UPHOLD_UPHOLD_USER_H_

@@ -5,19 +5,21 @@
 
 #include "brave/browser/brave_content_browser_client.h"
 
-#include "brave/components/brave_wallet/browser/buildflags/buildflags.h"
+#include "brave/components/brave_wallet/buildflags/buildflags.h"
 #include "extensions/buildflags/buildflags.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 #if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "brave/common/extensions/extension_constants.h"
 #include "extensions/browser/extension_registry.h"
+#include "extensions/common/constants.h"
 #include "extensions/common/extension.h"
 #include "extensions/common/extension_builder.h"
 #endif
 
 #if BUILDFLAG(BRAVE_WALLET_ENABLED)
+#include "brave/components/brave_wallet/brave_wallet_constants.h"
 #include "chrome/test/base/chrome_render_view_host_test_harness.h"
+#include "content/public/common/content_client.h"
 
 namespace extensions {
 
@@ -78,14 +80,14 @@ TEST_F(BraveWalleBrowserClientUnitTest,
 using BraveContentBrowserClientTest = testing::Test;
 
 TEST_F(BraveContentBrowserClientTest, ResolvesSync) {
-  GURL url("chrome://sync-internals/");
-  ASSERT_TRUE(BraveContentBrowserClient::HandleURLOverrideRewrite(
-        &url, nullptr));
-  ASSERT_STREQ(url.spec().c_str(), "chrome://sync/");
+  GURL url("chrome://sync/");
+  ASSERT_TRUE(
+    BraveContentBrowserClient::HandleURLOverrideRewrite(&url, nullptr));
+  ASSERT_STREQ(url.spec().c_str(), "chrome://settings/braveSync");
 
   GURL url2("chrome://sync/");
-  ASSERT_TRUE(BraveContentBrowserClient::HandleURLOverrideRewrite(
-        &url2, nullptr));
+  ASSERT_TRUE(
+    BraveContentBrowserClient::HandleURLOverrideRewrite(&url2, nullptr));
 }
 
 TEST_F(BraveContentBrowserClientTest, ResolvesWelcomePage) {

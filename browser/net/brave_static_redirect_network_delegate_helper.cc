@@ -5,15 +5,37 @@
 
 #include "brave/browser/net/brave_static_redirect_network_delegate_helper.h"
 
+#include <algorithm>
 #include <memory>
+#include <string>
 #include <vector>
 
+#include "base/strings/string_piece_forward.h"
 #include "brave/browser/translate/buildflags/buildflags.h"
 #include "brave/common/network_constants.h"
 #include "brave/common/translate_network_constants.h"
 #include "extensions/common/url_pattern.h"
+#include "net/base/net_errors.h"
 
 namespace brave {
+
+const char kSafeBrowsingTestingEndpoint[] = "test.safebrowsing.com";
+
+namespace {
+
+bool g_safebrowsing_api_endpoint_for_testing_ = false;
+
+base::StringPiece GetSafeBrowsingEndpoint() {
+  if (g_safebrowsing_api_endpoint_for_testing_)
+    return kSafeBrowsingTestingEndpoint;
+  return SAFEBROWSING_ENDPOINT;
+}
+
+}  // namespace
+
+void SetSafeBrowsingEndpointForTesting(bool testing) {
+  g_safebrowsing_api_endpoint_for_testing_ = testing;
+}
 
 int OnBeforeURLRequest_StaticRedirectWork(
     const ResponseCallback& next_callback,
@@ -35,7 +57,12 @@ int OnBeforeURLRequest_StaticRedirectWorkForGURL(
   static URLPattern safeBrowsing_pattern(URLPattern::SCHEME_HTTPS,
                                          kSafeBrowsingPrefix);
   static URLPattern safebrowsingfilecheck_pattern(URLPattern::SCHEME_HTTPS,
-                                         kSafeBrowsingFileCheckPrefix);
+                                                  kSafeBrowsingFileCheckPrefix);
+  static URLPattern safebrowsingcrxlist_pattern(URLPattern::SCHEME_HTTPS,
+                                                kSafeBrowsingCrxListPrefix);
+
+  // To-Do (@jumde) - Update the naming for the variables below
+  // https://github.com/brave/brave-browser/issues/10314
   static URLPattern crlSet_pattern1(
       URLPattern::SCHEME_HTTP | URLPattern::SCHEME_HTTPS, kCRLSetPrefix1);
   static URLPattern crlSet_pattern2(
@@ -46,6 +73,21 @@ int OnBeforeURLRequest_StaticRedirectWorkForGURL(
       URLPattern::SCHEME_HTTP | URLPattern::SCHEME_HTTPS, kCRLSetPrefix4);
   static URLPattern crxDownload_pattern(
       URLPattern::SCHEME_HTTP | URLPattern::SCHEME_HTTPS, kCRXDownloadPrefix);
+  static URLPattern autofill_pattern(
+      URLPattern::SCHEME_HTTPS, kAutofillPrefix);
+  static URLPattern gvt1_pattern(
+      URLPattern::SCHEME_HTTP | URLPattern::SCHEME_HTTPS, "*://*.gvt1.com/*");
+  static URLPattern googleDl_pattern(
+      URLPattern::SCHEME_HTTP | URLPattern::SCHEME_HTTPS,
+      "*://dl.google.com/*");
+
+  static URLPattern widevine_gvt1_pattern(
+      URLPattern::SCHEME_HTTP | URLPattern::SCHEME_HTTPS,
+      kWidevineGvt1Prefix);
+  static URLPattern widevine_google_dl_pattern(
+      URLPattern::SCHEME_HTTP | URLPattern::SCHEME_HTTPS,
+      kWidevineGoogleDlPrefix);
+
 #if BUILDFLAG(ENABLE_BRAVE_TRANSLATE_GO)
   static URLPattern translate_pattern(URLPattern::SCHEME_HTTPS,
       kTranslateElementJSPattern);
@@ -57,14 +99,24 @@ int OnBeforeURLRequest_StaticRedirectWorkForGURL(
     return net::OK;
   }
 
-  if (safeBrowsing_pattern.MatchesHost(request_url)) {
-    replacements.SetHostStr(SAFEBROWSING_ENDPOINT);
+  auto safebrowsing_endpoint = GetSafeBrowsingEndpoint();
+  if (!safebrowsing_endpoint.empty() &&
+      safeBrowsing_pattern.MatchesHost(request_url)) {
+    replacements.SetHostStr(safebrowsing_endpoint);
     *new_url = request_url.ReplaceComponents(replacements);
     return net::OK;
   }
 
-  if (safebrowsingfilecheck_pattern.MatchesHost(request_url)) {
-    replacements.SetHostStr(kBraveSafeBrowsingFileCheckProxy);
+  if (!safebrowsing_endpoint.empty() &&
+      safebrowsingfilecheck_pattern.MatchesHost(request_url)) {
+    replacements.SetHostStr(kBraveSafeBrowsingSslProxy);
+    *new_url = request_url.ReplaceComponents(replacements);
+    return net::OK;
+  }
+
+  if (!safebrowsing_endpoint.empty() &&
+      safebrowsingcrxlist_pattern.MatchesHost(request_url)) {
+    replacements.SetHostStr(kBraveSafeBrowsing2Proxy);
     *new_url = request_url.ReplaceComponents(replacements);
     return net::OK;
   }
@@ -72,6 +124,13 @@ int OnBeforeURLRequest_StaticRedirectWorkForGURL(
   if (crxDownload_pattern.MatchesURL(request_url)) {
     replacements.SetSchemeStr("https");
     replacements.SetHostStr("crxdownload.brave.com");
+    *new_url = request_url.ReplaceComponents(replacements);
+    return net::OK;
+  }
+
+  if (autofill_pattern.MatchesURL(request_url)) {
+    replacements.SetSchemeStr("https");
+    replacements.SetHostStr(kBraveStaticProxy);
     *new_url = request_url.ReplaceComponents(replacements);
     return net::OK;
   }
@@ -103,6 +162,23 @@ int OnBeforeURLRequest_StaticRedirectWorkForGURL(
     *new_url = request_url.ReplaceComponents(replacements);
     return net::OK;
   }
+
+  if (gvt1_pattern.MatchesURL(request_url) &&
+      !widevine_gvt1_pattern.MatchesURL(request_url)) {
+    replacements.SetSchemeStr("https");
+    replacements.SetHostStr(kBraveRedirectorProxy);
+    *new_url = request_url.ReplaceComponents(replacements);
+    return net::OK;
+  }
+
+  if (googleDl_pattern.MatchesURL(request_url) &&
+      !widevine_google_dl_pattern.MatchesURL(request_url)) {
+    replacements.SetSchemeStr("https");
+    replacements.SetHostStr(kBraveRedirectorProxy);
+    *new_url = request_url.ReplaceComponents(replacements);
+    return net::OK;
+  }
+
 #if BUILDFLAG(ENABLE_BRAVE_TRANSLATE_GO)
   if (translate_pattern.MatchesURL(request_url)) {
     replacements.SetQueryStr(request_url.query_piece());
@@ -116,80 +192,6 @@ int OnBeforeURLRequest_StaticRedirectWorkForGURL(
     *new_url = GURL(kBraveTranslateLanguageEndpoint);
     return net::OK;
   }
-#endif
-
-#if !defined(NDEBUG)
-  GURL gurl = request_url;
-  static std::vector<URLPattern> allowed_patterns({
-      // Brave updates
-      URLPattern(URLPattern::SCHEME_HTTPS, "https://go-updater.brave.com/*"),
-      // Brave promo referrals, production and staging (laptop-updates
-      // proxies to promo-services)
-      // TODO(@emerick): In the future, we may want to specify the value of the
-      // BRAVE_REFERRALS_SERVER environment variable rather than
-      // hardcoding the server name here
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://laptop-updates.brave.com/*"),
-      // CRX file download
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://brave-core-ext.s3.brave.com/release/*"),
-      // Safe Browsing and other files
-      URLPattern(URLPattern::SCHEME_HTTPS, "https://static.brave.com/*"),
-      // We do allow redirects to the Google update server for extensions we
-      // don't support
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://update.googleapis.com/service/update2/json"),
-
-      // Rewards URLs
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://ledger.mercury.basicattentiontoken.org/*"),
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://balance.mercury.basicattentiontoken.org/*"),
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://publishers.basicattentiontoken.org/*"),
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://publishers-distro.basicattentiontoken.org/*"),
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://ledger-staging.mercury.basicattentiontoken.org/*"),
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://balance-staging.mercury.basicattentiontoken.org/*"),
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://publishers-staging.basicattentiontoken.org/*"),
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://publishers-staging-distro.basicattentiontoken.org/*"),
-
-      // Safe browsing
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://safebrowsing.brave.com/v4/*"),
-      URLPattern(URLPattern::SCHEME_HTTPS,
-          "https://ssl.gstatic.com/safebrowsing/*"),
-
-      URLPattern(URLPattern::SCHEME_HTTPS, "https://crlsets.brave.com/*"),
-      URLPattern(URLPattern::SCHEME_HTTPS, "https://crxdownload.brave.com/*"),
-
-      // Brave's translation relay server
-      URLPattern(URLPattern::SCHEME_HTTPS, kBraveTranslateServerPrefix),
-  });
-
-  // Check to make sure the URL being requested matches at least one of the
-  // allowed patterns
-  bool is_url_allowed =
-      std::any_of(allowed_patterns.begin(), allowed_patterns.end(),
-                  [&gurl](URLPattern pattern) {
-                    if (pattern.MatchesURL(gurl)) {
-                      return true;
-                    }
-                    return false;
-                  });
-  if (!is_url_allowed) {
-    LOG(ERROR) << "URL not allowed from system network delegate: " << gurl;
-  }
-  // TODO(@bbondy): Before we can turn this into DCHECK we have to find a way to
-  // allow these, I think they are for Chrome Cast
-  // http://192.168.0.13:8008/ssdp/device-desc.xml
-  // http://192.168.0.27:60000/upnp/dev/e16bf493-ed87-5798-ffff-ffffeb4f1c34/desc
-  // And also I don't know where they're from, but there's always 3 requests
-  // similar to this: http://vijscbncpv/
 #endif
 
   return net::OK;

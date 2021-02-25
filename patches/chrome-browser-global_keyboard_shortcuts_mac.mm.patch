@@ -1,12 +1,12 @@
 diff --git a/chrome/browser/global_keyboard_shortcuts_mac.mm b/chrome/browser/global_keyboard_shortcuts_mac.mm
-index 733785418f6e0fd4090f2c5b82517d01982ab8a5..7b8a57bc712fe2ff3c82ad35f8261cc5451afea0 100644
+index 8b57a30961fa9c2dc12fd8812c3d51f643ce9179..54d4446460fa6db285c63c0824b6fb4605f2e1d4 100644
 --- a/chrome/browser/global_keyboard_shortcuts_mac.mm
 +++ b/chrome/browser/global_keyboard_shortcuts_mac.mm
-@@ -166,6 +166,7 @@ const std::vector<KeyboardShortcutData>& GetShortcutsNotPresentInMainMenu() {
-     {true, false, false, true,  kVK_ANSI_L,             IDC_SHOW_DOWNLOADS},
-     {true,  true,  false, false, kVK_ANSI_C,            IDC_DEV_TOOLS_INSPECT},
-     {true,  false,  false, true, kVK_ANSI_C,            IDC_DEV_TOOLS_INSPECT},
-+    {true,  false,  false, true, kVK_ANSI_N,            IDC_NEW_OFFTHERECORD_WINDOW_TOR},
+@@ -170,6 +170,7 @@ const std::vector<KeyboardShortcutData>& GetShortcutsNotPresentInMainMenu() {
+ 
+     {true,  false, false, true,  kVK_DownArrow,         IDC_FOCUS_NEXT_PANE},
+     {true,  false, false, true,  kVK_UpArrow,           IDC_FOCUS_PREVIOUS_PANE},
++    {true,  false, false, true,  kVK_ANSI_N,            IDC_NEW_OFFTHERECORD_WINDOW_TOR},
    });
-   // clang-format on
-   return *keys;
+   if (base::FeatureList::IsEnabled(features::kTabSearch)) {
+     keys->push_back({true,  true,  false, false, kVK_ANSI_A, IDC_TAB_SEARCH});

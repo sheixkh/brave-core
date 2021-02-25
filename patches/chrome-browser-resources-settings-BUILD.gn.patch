@@ -1,12 +1,20 @@
 diff --git a/chrome/browser/resources/settings/BUILD.gn b/chrome/browser/resources/settings/BUILD.gn
-index 90c81d104577e075749584511f53770fe31c9105..f7aa87e98d6c65e35529543721ba02b78ea73d6c 100644
+index 130164102f62d897802dfec76eab9bafdb363b80..c3a233865fb55453983ad48fbd747b51f02bc040 100644
 --- a/chrome/browser/resources/settings/BUILD.gn
 +++ b/chrome/browser/resources/settings/BUILD.gn
-@@ -31,6 +31,7 @@ if (optimize_webui) {
+@@ -46,6 +46,7 @@ if (optimize_webui) {
+       "chrome://resources/mojo/mojo/public/js/bindings.js",
+       "chrome://resources/mojo/skia/public/mojom/skcolor.mojom-webui.js",
+     ]
++    deps += brave_deps_chrome_browser_resources_settings_build
+   }
+ }
  
-     deps = [
-       ":unpak",
-+      "//brave/browser/resources/settings:unpak",
+@@ -93,6 +94,7 @@ generate_grd("build_grd") {
+       "$target_gen_dir/$preprocess_gen_manifest",
      ]
    }
++  deps += [ "//brave/browser/resources/settings:resources" ]
+ }
  
+ preprocess_if_expr("preprocess") {

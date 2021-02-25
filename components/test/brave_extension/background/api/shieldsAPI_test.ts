@@ -40,6 +40,8 @@ describe('Shields API', () => {
           braveShields: 'block',
           ads: 'block',
           trackers: 'block',
+          cosmeticFiltering: true,
+          firstPartyCosmeticFiltering: false,
           httpUpgradableResources: 'block',
           javascript: 'block',
           fingerprinting: 'block',
@@ -96,6 +98,8 @@ describe('Shields API', () => {
       const details: ShieldDetails = {
         ads: 'block',
         trackers: 'block',
+        cosmeticFiltering: true,
+        firstPartyCosmeticFiltering: false,
         httpUpgradableResources: 'block',
         origin: 'https://www.brave.com',
         hostname: 'www.brave.com',

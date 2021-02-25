@@ -1,0 +1,13 @@
+diff --git a/chrome/browser/profiles/profile_shortcut_manager_win.cc b/chrome/browser/profiles/profile_shortcut_manager_win.cc
+index 57f7d7d9762300757c1a38d5d5a19baae13e7fd5..bc369298325e3fbf9eee41ac2fad0205adf542ae 100644
+--- a/chrome/browser/profiles/profile_shortcut_manager_win.cc
++++ b/chrome/browser/profiles/profile_shortcut_manager_win.cc
+@@ -744,7 +744,7 @@ bool ProfileShortcutManager::IsFeatureEnabled() {
+ // static
+ std::unique_ptr<ProfileShortcutManager> ProfileShortcutManager::Create(
+     ProfileManager* manager) {
+-  return std::make_unique<ProfileShortcutManagerWin>(manager);
++  return std::make_unique<BraveProfileShortcutManagerWin>(manager);
+ }
+ 
+ ProfileShortcutManagerWin::ProfileShortcutManagerWin(ProfileManager* manager)

@@ -4,11 +4,11 @@
     "description": "Title in welcome screen for the panel"
   },
   "welcomeButtonTextOne": {
-    "message": "Begin Nu met Verdienen!",
+    "message": "Begin nu met verdienen!",
     "description": "CTA on welcome screen in the panel, existing users"
   },
   "welcomeButtonTextTwo": {
-    "message": "Word lid van Rewards",
+    "message": "Meld je aan bij Rewards",
     "description": "CTA on welcome screen in the panel, new users"
   },
   "welcomeDescOne": {
@@ -16,8 +16,12 @@
     "description": "Entry text for welcome screen in the panel, existing user"
   },
   "welcomeDescTwo": {
-    "message": "Je kunt nu een beloning krijgen voor het bekijken van advertenties die je privacy respecteren.",
+    "message": "Je kunt nu tokens verdienen door het bekijken van advertenties die je privacy respecteren.",
     "description": "Entry text for welcome screen in the panel, new user"
+  },
+  "welcomeDescPoints": {
+    "message": "U kunt nu punten verdienen voor het bekijken van advertenties die de privacy respecteren.",
+    "description": "Entry text for welcome screen in the panel, points"
   },
   "welcomeFooterTextOne": {
     "message": "Bekijk wat we verbeterd hebben",
@@ -36,12 +40,28 @@
     "description": "Main header title for welcome screen in the panel, new user"
   },
   "yourWallet": {
-    "message": "Je wallet",
+    "message": "Jouw wallet",
     "description": "Title of wallet section where we display data about wallet"
   },
   "grants": {
-    "message": "Beurzen",
+    "message": "Donaties",
     "description": "Title for grant section in wallet summary"
+  },
+  "details": {
+    "message": "Details",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "Je saldo",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "BAT-punten",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "kan worden gebruikt in Brave Rewards om je favoriete makers van inhoud te helpen. BAT-punten kunnen niet worden ingewisseld voor BAT.",
+    "description": "Text for BAT Point helper message"
   },
   "on": {
     "message": "op",
@@ -56,11 +76,11 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "Tip deze site maandelijks",
+    "message": "Maandelijkse bijdrage",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
-    "message": "Deelname aan Auto-Contribute",
+    "message": "Deelname aan Auto-Contributie",
     "description": "Label for checkbox that allows user to exclude publishers from auto contribute"
   },
   "donateNow": {
@@ -68,7 +88,7 @@
     "description": "CTA for sending tip form site banner"
   },
   "enableTips": {
-    "message": "Sta fooi toe",
+    "message": "Sta fooien toe",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
   },
   "for": {
@@ -76,7 +96,7 @@
     "description": "The whole string is 'Enable tips on YouTube for like.'"
   },
   "rewardsSummary": {
-    "message": "Overzicht van Beloningen",
+    "message": "Overzicht van de Beloningen",
     "description": "Section title in wallet panel, which contains monthly rewards summary"
   },
   "monthApr": {
@@ -128,12 +148,22 @@
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "Tokentoewijzingen",
-    "description": "Title for grant notification"
+    "message": "$currency$ Beurzen",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
     "message": "Geclaimde giften",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "Puntentoekenningen geclaimd",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "Inkomsten uit Advertenties",
@@ -148,12 +178,12 @@
     "description": "Title for one time tips section in wallet summary"
   },
   "expiresOn": {
-    "message": "loopt af op",
+    "message": "vervalt op",
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "Maandelijkse tips",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "Maandelijkse bijdragen",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
     "message": "Uit",
@@ -164,12 +194,8 @@
     "description": "Used in notification to dismiss notification"
   },
   "braveAdsLaunchMsg": {
-    "message": "U kunt nu verdienen door advertenties te bekijken.",
+    "message": "Nu kunt je verdienen aan het bekijken van advertenties.",
     "description": "Message for ads launch notification"
-  },
-  "braveAdsLaunchTitle": {
-    "message": "Brave Ads is gearriveerd!",
-    "description": "Message used in notification to let users know Ads is available"
   },
   "braveAdsTitle": {
     "message": "Brave Advertenties",
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "Je hebt $amount$ aan BAT bijgedragen.",
+    "message": "U heeft $amount$ $currency$ bijgedragen",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -214,7 +244,7 @@
     "description": "Title for insufficient funds notification"
   },
   "braveRewardsCreatingText": {
-    "message": "Digitale Portemonnee aanmaken",
+    "message": "Wallet aanmaken",
     "description": "Used in a button displaying wallet creation process"
   },
   "contributeNotificationError": {
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "Je geplande maandelijkse bijdrage voor Auto-Contribute en maandelijkse tips kon wegens onvoldoende saldo niet worden geïnd. We zullen het over 30 dagen opnieuw proberen.",
+    "message": "Je geplande maandelijkse betaling voor Auto-Contribute en maandelijkse bijdragen kan niet worden verwerkt dankzij een te laag saldo. We proberen het opnieuw over 30 dagen. ",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -261,10 +291,6 @@
     "message": "Vervaldatum gift",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "Sorry, het lijkt erop dat deze gift al is geclaimd.",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
     "message": "OK",
     "description": "Button text for clearing the error."
@@ -276,18 +302,6 @@
   "grantGeneralErrorTitle": {
     "message": "Oeps, er is iets misgegaan. Probeer het later opnieuw.",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "OK",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "Sorry, het lijkt erop dat deze gift al is verlopen.",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "Deze gift is niet meer beschikbaar.",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "Status vernieuwen",
@@ -302,15 +316,15 @@
     "description": "Notice about unverified publisher."
   },
   "unVerifiedTextMore": {
-    "message": "Meer informatie.",
+    "message": "Meer Leren",
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "Je hebt BAT {{reservedAmount}} toegewezen aan makers die zich nog niet hebben aangemeld voor het ontvangen van bijdragen. Je browser zal blijven proberen bij te dragen tot ze verifiëren of tot er 90 dagen zijn verstreken.",
+    "message": "Je hebt {{reservedAmount}} {{currency}} toegewezen aan makers die zich nog niet hebben aangemeld voor het ontvangen van bijdragen. Je browser blijft proberen je bijdragen te versturen tot ze verifiëren of tot er 90 dagen zijn verstreken.",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
-    "message": "Meer informatie.",
+    "message": "Meer Leren",
     "description": "Text for the link that explains more about reserved amount"
   },
   "disabledPanelOff": {
@@ -334,7 +348,7 @@
     "description": "Failure title for wallet creation"
   },
   "walletFailedButton": {
-    "message": "Opnieuw",
+    "message": "Probeer opnieuw",
     "description": "Button for re-try after wallet creation failed"
   },
   "addFunds": {
@@ -378,16 +392,16 @@
     "description": "Terms of Service"
   },
   "welcomeBack": {
-    "message": "Welkom terug!",
+    "message": "Welkom Terug!",
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "Uw maandelijkse fooien zijn verwerkt!",
-    "description": "Message for monthly tips processed notification"
+    "message": "Je maandelijkse bijdragen zijn verwerkt!",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "Bijdragen en fooien",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "Door te klikken op 'Beloningen voor lid worden' geeft u aan dat u het volgende hebt gelezen en ermee akkoord gaat:",
@@ -397,8 +411,12 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
+  },
   "turnOnAds": {
-    "message": "Schakel advertenties in",
+    "message": "Advertenties inschakelen",
     "description": "Prompt to turn on Ads via notification"
   },
   "adsEarnings": {
@@ -444,7 +462,7 @@
     "description": "Notification text that tells user his wallet is under funded for pending contribution to complete"
   },
   "pendingContributionTitle": {
-    "message": "Openstaande bijdrage",
+    "message": "In afwachting van bijdrage",
     "description": "Notification title for pending contribution type"
   },
   "grantFinishTitleUGP": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "Je gift komt eraan.",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "Uw $currency$ beurs is onderweg.",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "Gratis gift",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "Gratis puntentoekenning",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Brave Ads-beloningen!",
+    "message": "Je hebt een Ads Reward verdiend!",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "Uw beloningstoelage van Brave Ads is onderweg.",
+    "message": "Je Reward is onderweg naar je Brave Rewards-wallet.",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "Uw Brave Ads Token-toelage",
+    "message": "Je Rewards-bedrag",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "Deze geverifieerde maker moet zijn of haar account nog verifiëren (KYC) om fooien uit uw geverifieerde wallet te ontvangen. Fooien blijven in uw wallet totdat ze zijn geverifieerd.",
+    "message": "Deze Brave geverifieerde maker heeft zijn account nog niet geconfigureerd om bijdragen te ontvangen van Brave-gebruikers. Alle fooien die u verzendt, blijven in uw portefeuille totdat ze dit proces hebben voltooid.",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "Rond walletverificatie af",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "Instellen...",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "tokens",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "Punt",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "Token",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "punten",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "Tokentoewijzingen",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "Puntenbeurzen",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "Hallo, $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "Annuleren",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "Aantal veranderen",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "Aanmelden",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "Door uw portemonnee te verifiëren, kunt u uw geld efficiënter beheren.",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "U moet minimaal 25 BAT hebben om een Uphold-account aan te maken. Probeer het alstublieft later nogmaals. Als u reeds een geverifieerd Uphold-account heeft, ga dan door naar het inloggen. ",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "Verbonden",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "In afwachting",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "Let op: Uw transacties zullen zichtbaar zijn voor Uphold zodra u toestemming geeft, ze zullen bijvoorbeeld de ontvanger en het bedrag van uw tips zien.",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "Tokens verdienen en ze weer terugschenken",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "Verdien tokens door privacy-respecterende advertenties te bekijken en steun automatisch uw favoriete sites en makers van inhoud.",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "Starten met het gebruik van Brave Rewards",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "Een beknopt overzicht bekijken",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "Als u doorgaat, gaat u akkoord met de $tos_link_begin$servicevoorwaarden$tos_link_end$ en het $pp_link_begin$privacybeleid$pp_link_end$.",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "Terugkeren",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "Laten we een snelle tour nemen",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "Doorgaan met",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "Gedaan",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "Overslaan",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "Voor nu overslaan",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "Welkom bij Brave Rewards!",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Brave Private Ads beloont u met tokens om de makers van content te ondersteunten, in tegenstelling tot traditionele advertenties, terwijl je persoonlijke informatie privé blijft.",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "Waar verschijnen de advertenties?",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Brave Private Ads zullen verschijnen als een normale notificatie. U bepaalt zelf hoe vaak u deze advertenties ziet in instellingen.",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "Wanneer ontvangt u beloningen",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "U verdiende tokens van Brave Private Ads gedurende de hele lopende maand zullen op de 5e van de volgende maand aankomen.",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "Moeiteloos terugschenken",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "De makers ontvangen uw contributies automatisch op basis van uw engagementniveau's die we meten als 'Attention'.",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "Bedanken door middel van een fooi",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "Een fooi geven is een manier om inhoud of makers waar u van houdt persoonlijk aan te moedigen en te steunen. Laten we een fooi geven!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "Wat kunt u doen met tokens?",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "Tokens kunnen gebruikt worden buiten de ondersteuning van de makers. U kunt digitale content en andere producten kopen als handelaren aan boord komen.",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "Woehoe, u bent er helemaal klaar voor!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "Door Brave Rewards te gebruiken helpt u het internet een betere plek te maken voor iedereen. En dat is geweldig!",
+    "description": ""
   }
 }

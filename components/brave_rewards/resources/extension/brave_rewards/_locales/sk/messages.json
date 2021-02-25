@@ -4,7 +4,7 @@
     "description": "Title in welcome screen for the panel"
   },
   "welcomeButtonTextOne": {
-    "message": "Začnite zarábať hneď teraz!",
+    "message": "Začnite zarábať teraz!",
     "description": "CTA on welcome screen in the panel, existing users"
   },
   "welcomeButtonTextTwo": {
@@ -12,19 +12,23 @@
     "description": "CTA on welcome screen in the panel, new users"
   },
   "welcomeDescOne": {
-    "message": "Dostaňte zaplatené za pozeranie reklám a peniaze pošlite ďalej na podporu svojich obľúbených tvorcov obsahu.",
+    "message": "Dostaňte zaplatené za pozeranie reklám a peniaze posielajte ďalej na podporu svojich obľúbených tvorcov obsahu.",
     "description": "Entry text for welcome screen in the panel, existing user"
   },
   "welcomeDescTwo": {
-    "message": "Odteraz môžete získať žetóny za pozeranie reklám, ktoré rešpektujú súkromie.",
+    "message": "Odteraz môžete získať kupóny za pozeranie reklám, ktoré rešpektujú súkromie.",
     "description": "Entry text for welcome screen in the panel, new user"
+  },
+  "welcomeDescPoints": {
+    "message": "Teraz môžete získavať body za sledovanie reklám rešpektujúcich súkromie.",
+    "description": "Entry text for welcome screen in the panel, points"
   },
   "welcomeFooterTextOne": {
     "message": "Skontrolujte si, čo sa zlepšilo",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, existing user"
   },
   "welcomeFooterTextTwo": {
-    "message": "Dozvedieť sa viac",
+    "message": "Ďalšie informácie",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, new user"
   },
   "welcomeHeaderOne": {
@@ -43,6 +47,22 @@
     "message": "Príspevky",
     "description": "Title for grant section in wallet summary"
   },
+  "details": {
+    "message": "Detaily",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "Váš zostatok",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "Body BAT",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "dá sa použiť v odmenách Brave ako príspevok najobľúbenejším tvorcom obsahu. BAT body sa nedajú vymeniť za BAT.",
+    "description": "Text for BAT Point helper message"
+  },
   "on": {
     "message": "na",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -56,7 +76,7 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "Podporiť túto stránku každý mesiac",
+    "message": "Mesačný príspevok",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
@@ -68,7 +88,7 @@
     "description": "CTA for sending tip form site banner"
   },
   "enableTips": {
-    "message": "Povoliť dary",
+    "message": "Aktivovať tipy",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
   },
   "for": {
@@ -84,7 +104,7 @@
     "description": "Month"
   },
   "monthAug": {
-    "message": "august",
+    "message": "August",
     "description": "Month"
   },
   "monthDec": {
@@ -92,7 +112,7 @@
     "description": "Month"
   },
   "monthFeb": {
-    "message": "február",
+    "message": "Február",
     "description": "Month"
   },
   "monthJan": {
@@ -100,7 +120,7 @@
     "description": "Month"
   },
   "monthJul": {
-    "message": "Júl",
+    "message": "júl",
     "description": "Month"
   },
   "monthJun": {
@@ -128,19 +148,29 @@
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "Udelenia tokenov",
-    "description": "Title for grant notification"
+    "message": "$currency$ Dary",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
     "message": "Kupónové granty nárokované",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "Bodové granty boli nárokované",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "Zárobky z reklám",
     "description": "Title for ads section in wallet summary"
   },
   "rewardsContribute": {
-    "message": "Automatický príspevok",
+    "message": "Automaticky prispieť",
     "description": "Title for auto contribute section in wallet summary"
   },
   "oneTimeDonation": {
@@ -148,15 +178,15 @@
     "description": "Title for one time tips section in wallet summary"
   },
   "expiresOn": {
-    "message": "platné do",
+    "message": "uplynie v ",
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
     "message": "Mesačné príspevky",
-    "description": "Title for monthly tips section in wallet summary"
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
-    "message": "Vypnutý",
+    "message": "Vypnuté",
     "description": "Label used in toggle indicating that toggle is off"
   },
   "ok": {
@@ -164,12 +194,8 @@
     "description": "Used in notification to dismiss notification"
   },
   "braveAdsLaunchMsg": {
-    "message": "Teraz môžete zarobiť na prehliadaných reklamách.",
+    "message": "Teraz môžete zarábať sledovaním reklám.",
     "description": "Message for ads launch notification"
-  },
-  "braveAdsLaunchTitle": {
-    "message": "Reklamy Brave sú už tu!",
-    "description": "Message used in notification to let users know Ads is available"
   },
   "braveAdsTitle": {
     "message": "Reklamy Brave",
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "Prispeli ste $amount$ BAT",
+    "message": "Prispeli ste $amount$ $currency$",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "Vaša plánovaná automatická mesačná platba a mesačné príspevky nemohli byť zrealizované pre nedostatok peňazí. Skúsime to znovu o 30 dní.    ",
+    "message": "Vašu naplánovanú mesačnú platbu za Auto-Contribute a za mesačné príspevky nebolo možné dokončiť z dôvodu nedostatočných prostriedkov. Skúsime to znova o 30 dní.",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -261,10 +291,6 @@
     "message": "Dátum vypršania grantu",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "Ľutujeme, zdá sa, že tento grant už bol nárokovaný.",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
     "message": "OK",
     "description": "Button text for clearing the error."
@@ -276,18 +302,6 @@
   "grantGeneralErrorTitle": {
     "message": "Och, niečo sa pokazilo. Prosím, skúste to znova.",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "OK",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "Ľutujeme, zdá sa, že platnosť tohto grantu už vypršala.",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "Tento grant už viac nie je dostupný.",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "Obnoviť stav",
@@ -306,7 +320,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "Určili ste {{reservedAmount}} BAT pre tvorcov, ktorí sa zatiaľ nezaregistrovali, aby dostávali príspevky. Váš prehliadač sa bude snažiť prispievať, kým nedôjde k overeniu alebo kým neprejde 90 dní.",
+    "message": "{{reservedAmount}} {{currency}} ste vyhradili pre tvorcov, ktorí nepožiadali o zasielanie príspevkov. Váš prehliadač sa bude pokúšať poskytnúť príspevok dovtedy, kým ho tvorca neschváli alebo kým neuplynie 90 dní.",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
@@ -366,7 +380,7 @@
     "description": "Subtitle for wallet disabled panel"
   },
   "privacyPolicy": {
-    "message": "Zásady ochrany osobných údajov",
+    "message": "Zásady ochrany osobních údajů",
     "description": "Privacy Policy"
   },
   "serviceText": {
@@ -383,11 +397,11 @@
   },
   "tipsProcessedNotification": {
     "message": "Vaše mesačné príspevky boli spracované!",
-    "description": "Message for monthly tips processed notification"
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "Dary a príspevky",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "Kliknutím na „Pridať sa k odmenám“ označíte, že ste si prečítali a súhlasíte s",
@@ -397,8 +411,12 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
+  },
   "turnOnAds": {
-    "message": "Zapnúť reklamy",
+    "message": "Zapnite reklamy",
     "description": "Prompt to turn on Ads via notification"
   },
   "adsEarnings": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "Váš kupónový grant je na ceste.",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "Váš grant $currency$ je na ceste.",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "Bezplatný grant kupónov",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "Bezplatný bodový grant",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Brave odmeny za sledovanie reklám!",
+    "message": "Získali ste odmenu za reklamu!",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "Váš grant odmien od Brave reklám je už na ceste.",
+    "message": "Vaša odmena je na ceste do vašej peňaženky odmien Brave",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "Grant vášho tokenu Brave reklamy",
+    "message": "Objem vašich odmien",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "Aby mohol tento verifikovaný tvorca dostávať príspevky z verifikovanej peňaženky, musí ešte overiť (KYC) svoj účet. Kým sa verifikácia nedokončí, zostanú príspevky vo vašej peňaženke.",
+    "message": "Tento overený tvorca Brave si ešte nenakonfiguroval účet na príjem príspevkov od používateľov Brave. Finančné príspevky na prevádzku, ktoré mu odošlete, zostanú vo vašej peňaženke dovtedy, kým celý proces nedokončia.",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "Dokončiť verifikáciu peňaženky",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "Nastaviť...",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "žetóny",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "Bod",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "Token",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "body",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "Udelenia tokenov",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "Bodové granty",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "Dobrý deň, $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "Zrušiť",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "Zmeniť množstvo",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "Prihlásiť sa",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "Overenie peňaženky vám umožní efektívnejšie spravovať vaše finančné prostriedky. ",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "Potrebujete minimálne 25 BAT na vytvorenie účtu Uphold. Prosím, skúste to znova neskôr. Ak už máte overený účet Uphold, pokračujte prihlásením.",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "Pripojené",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "Prebieha",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "Poznámka: Po povolení budú vaše transakcie  viditeľné pre Uphold. Uvidia napríklad príjemcu a množstvo vašich príspevkov.",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "Zarábajte žetóny a dávajte späť",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "Zarábajte žetóny zobrazovaním reklám rešpektujúcich súkromie a automaticky podporujte svoje obľúbené weby a tvorcov obsahu.",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "Začnite používať Odmeny Brave",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "Urobte si rýchlu prehliadku",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "Pokračovaním vyjadrujete súhlas so $tos_link_begin$Zmluvnými podmienkami$tos_link_end$ a $pp_link_begin$Zásadami ochrany osobných údajov$pp_link_end$.",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "Ísť naspäť",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "Poďme na krátku prehliadku",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "Pokračovať",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "Hotovo",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "Preskočiť",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "Zatiaľ preskočiť",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "Vitajte v Odmenách Brave!",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Súkromné reklamy Brave vás odmenia žetónmi na podporu tvorcov obsahu na rozdiel od tradičných reklám, a to všetko pri zachovaní súkromia vašich osobných údajov.",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "Kde sa zobrazujú reklamy?",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Súkromné reklamy Brave sa zobrazia ako bežné upozornenie. V nastaveniach môžete určiť, ako často sa tieto reklamy zobrazia.",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "Kedy dostávate odmeny",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "Vaše získané žetóny zo služby Súkromné reklamy Brave za celý aktuálny mesiac dorazia 5. deň nasledujúceho mesiaca.",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "Dávajte naspäť bez akejkoľvek námahy",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "Autori dostávajú vaše tokenové príspevky automaticky na základe vašich úrovní zapojenia, ktoré meriame ako „pozornosť“.",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "Poďakujte sa tringeltami",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "Dávanie tringeltov je spôsob, ako osobne povzbudiť a podporiť obsah alebo autorov, ktorých máte radi. Získavajte tringelty!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "Čo môžete robiť so žetónmi?",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "Žetóny je možné používať nad rámec podpory tvorcov. Keď pribudnú obchodníci, môžete si kúpiť digitálny obsah a ďalší tovar.",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "Juchúúú, všetko je hotové!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "Používaním služby Odmeny Brave pomáhate robiť z webu lepšie miesto pre všetkých. A to je úžasné!",
+    "description": ""
   }
 }

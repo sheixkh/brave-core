@@ -4,16 +4,23 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ui/native_theme/native_theme.h"
+#include "ui/native_theme/native_theme_mac.h"
 
 namespace ui {
 bool ShouldOverride(NativeTheme::ColorId color_id) {
-  // This override only targets for old macOS like high sierra that doesn't
-  // support dark mode. We are using dark mode on old macOS but some below
-  // colors are fetched from system color and they are not dark mode aware.
-  // So, we should replace those colors with dark mode aware aura color.
-  if (@available(macOS 10.14, *))
+  // Always theme for these colors:
+  switch (color_id) {
+    // None at the moment
+    default:
+      break;
+  }
+  // The rest of these overrides only targets for old macOS like high sierra
+  // that doesn't support dark mode. We are using dark mode on old macOS but
+  // some below colors are fetched from system color and they are not dark mode
+  // aware. So, we should replace those colors with dark mode aware aura color.
+  if (@available(macOS 10.14, *)) {
     return false;
-
+  }
   switch (color_id) {
     case NativeTheme::kColorId_EnabledMenuItemForegroundColor:
     case NativeTheme::kColorId_DisabledMenuItemForegroundColor:
@@ -34,4 +41,14 @@ bool ShouldOverride(NativeTheme::ColorId color_id) {
 
 }  // namespace ui
 
-#include "../../../../ui/native_theme/native_theme_mac.mm"  // NOLINT
+#define GetSystemButtonPressedColor GetSystemButtonPressedColor_ChromiumImpl
+#include "../../../../ui/native_theme/native_theme_mac.mm"
+#undef GetSystemButtonPressedColor
+
+namespace ui {
+
+SkColor NativeThemeMac::GetSystemButtonPressedColor(SkColor base_color) const {
+  return NativeTheme::GetSystemButtonPressedColor(base_color);
+}
+
+}  // namespace ui

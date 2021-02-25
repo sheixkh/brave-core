@@ -1,9 +1,9 @@
 diff --git a/chrome/renderer/chrome_content_renderer_client.h b/chrome/renderer/chrome_content_renderer_client.h
-index c5b898da92ec54d1f3286df71146f1f404a52008..8b65f6e1764139da98c86d40050e9e800a037b3c 100644
+index 30718f6b057fcca8eef7516cb48720c4137c3cb4..14b4588ba36b27bd1a1c1454c1d35ce96671e0bf 100644
 --- a/chrome/renderer/chrome_content_renderer_client.h
 +++ b/chrome/renderer/chrome_content_renderer_client.h
-@@ -244,6 +244,7 @@ class ChromeContentRendererClient
-   ChromeRenderThreadObserver* GetChromeObserver() const;
+@@ -228,6 +228,7 @@ class ChromeContentRendererClient
+ #endif
  
   private:
 +  friend class BraveContentRendererClient;

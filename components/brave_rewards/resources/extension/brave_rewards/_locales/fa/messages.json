@@ -19,12 +19,16 @@
     "message": "اکنون می‌توانید برای تماشای آگهی‌های رعایت‌کننده حریم خصوصی، توکن دریافت کنید.",
     "description": "Entry text for welcome screen in the panel, new user"
   },
+  "welcomeDescPoints": {
+    "message": "اکنون می‌توانید برای تماشای آگهی‌های رعایت‌کننده حریم خصوصی، امتیاز دریافت کنید.",
+    "description": "Entry text for welcome screen in the panel, points"
+  },
   "welcomeFooterTextOne": {
     "message": "ببینید چه چیزی بهبود یافته است",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, existing user"
   },
   "welcomeFooterTextTwo": {
-    "message": "بیشتر بیاموزید",
+    "message": "بیشتر بدانید",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, new user"
   },
   "welcomeHeaderOne": {
@@ -43,6 +47,22 @@
     "message": "امتیازها",
     "description": "Title for grant section in wallet summary"
   },
+  "details": {
+    "message": "جزئیات",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "موجودی شما",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "امتیازهای BAT",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "می‌تواند در «پاداش‌های Brave» برای کمک مالی به پدیدآورندگان محتوای محبوب شما استفاده شود. «امتیازهای BAT» را نمی‌توان با BAT معاوضه کرد.",
+    "description": "Text for BAT Point helper message"
+  },
   "on": {
     "message": "روشن",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -56,7 +76,7 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "انعام ماهانه به این سایت",
+    "message": "کمک ماهانه",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
@@ -128,12 +148,22 @@
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "امتیازهای توکن",
-    "description": "Title for grant notification"
+    "message": "$currency$ هدیه",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
     "message": "امتیازهای توکن مطالبه شد",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "هدایای امتیاز مطالبه شد",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "درآمد از آگهی‌ها",
@@ -152,8 +182,8 @@
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "انعام ماهانه",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "کمک‌های ماهانه",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
     "message": "خاموش",
@@ -167,10 +197,6 @@
     "message": "اکنون می‌توانید با مشاهده آگهی‌ها، دریافت کنید.",
     "description": "Message for ads launch notification"
   },
-  "braveAdsLaunchTitle": {
-    "message": "«آگهی‌های Brave» ارائه شد!",
-    "description": "Message used in notification to let users know Ads is available"
-  },
   "braveAdsTitle": {
     "message": "آگهی‌های Brave",
     "description": "Notification title when we display info about ads"
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "$amount$ BAT کمک کرده‌اید",
+    "message": "$amount$ $currency$ کمک کرده‌اید",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "پرداخت ماهانه را برای کمک خودکار زمان‌بندی کرده‌اید و انعام ماهانه به‌دلیل سرمایه ناکافی قابل پرداخت نیست. ظرف ۳۰ روز دیگر دوباره امتحان می‌کنیم.",
+    "message": "به‌دلیل کافی نبودن وجه، انجام دادن پرداخت ماهیانه زمان‌بندی‌شده شما برای کمک خودکار و کمک‌های ماهانه امکان‌پذیر نبود. 30 روز دیگر دوباره تلاش خواهیم کرد.",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -261,12 +291,8 @@
     "message": "تاریخ انقضای امتیاز",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "متأسفیم، به‌نظر می‌رسد این امتیاز قبلاً مطالبه شده است.",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
-    "message": "تأیید",
+    "message": "قبول",
     "description": "Button text for clearing the error."
   },
   "grantGeneralErrorText": {
@@ -277,20 +303,8 @@
     "message": "متأسفیم، مشکلی پیش آمد. لطفاً بعداً دوباره امتحان کنید.",
     "description": "Error title when user is having problems claiming a grant."
   },
-  "grantGoneButton": {
-    "message": "تأیید",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "متأسفیم، اما به‌نظر می‌رسد این امتیاز منقضی شده است.",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "این امتیاز دیگر دردسترس نیست.",
-    "description": "Error title when user missed a grant."
-  },
   "unVerifiedCheck": {
-    "message": "بازخوانی وضعیت",
+    "message": "تازه‌سازی وضعیت",
     "description": "Text of link that allows to check verified status of unverified publisher"
   },
   "unVerifiedPublisher": {
@@ -306,7 +320,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "{{reservedAmount}}‏ BAT برای پدیدآورندگانی که هنوز برای دریافت کمک ثبت‌نام نکرده‌اند در نظر گرفته‌اید. مرورگرتان تا زمانی که آنها کمک را تأیید کنند، یا حداکثر 90 روز تلاش می‌کند کمک را انتقال دهد.",
+    "message": "{{reservedAmount}} {{currency}} را برای پدیدآورندگانی در نظر گرفته‌اید که هنوز جهت دریافت کمک مالی ثبت نام نکرده‌اند. مرورگرتان تا زمانی‌که آنها کمک را تأیید کنند، یا تا 90 روز، به تلاش برای انجام کمک مالی ادامه می‌دهد.",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
@@ -334,7 +348,7 @@
     "description": "Failure title for wallet creation"
   },
   "walletFailedButton": {
-    "message": "امتحان مجدد",
+    "message": "سعی مجدد",
     "description": "Button for re-try after wallet creation failed"
   },
   "addFunds": {
@@ -366,7 +380,7 @@
     "description": "Subtitle for wallet disabled panel"
   },
   "privacyPolicy": {
-    "message": "خط‌مشی رازداری",
+    "message": "خط‌مشی حریم‌خصوصی",
     "description": "Privacy Policy"
   },
   "serviceText": {
@@ -382,12 +396,12 @@
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "انعام ماهانه شما پردازش شد!",
-    "description": "Message for monthly tips processed notification"
+    "message": "کمک‌های ماهانه شما پردازش شده است!",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "مشارکت و انعام",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "با کلیک کردن روی «پیوستن به پاداش‌ها»، مشخص می‌کنید که موارد زیر را خوانده‌اید و با آن‌ها موافق هستید",
@@ -396,6 +410,10 @@
   "bat": {
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
+  },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
   },
   "turnOnAds": {
     "message": "روشن کردن آگهی‌ها",
@@ -444,7 +462,7 @@
     "description": "Notification text that tells user his wallet is under funded for pending contribution to complete"
   },
   "pendingContributionTitle": {
-    "message": "مشارکت معلق",
+    "message": "مشارکت در حال انتظار",
     "description": "Notification title for pending contribution type"
   },
   "grantFinishTitleUGP": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "امتیاز توکن شما در راه است.",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "هدیه $currency$ شما در راه است.",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "امتیاز توکن رایگان",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "امتیاز هدیه رایگان",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "پاداش‌های آگهی‌های Brave!",
+    "message": "شما «پاداش آگهی‌ها» را کسب کرده‌اید.",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "پاداش‌های اعطایی از «آگهی‌های Brave»‌ در راه است.",
+    "message": "پاداش شما در حال انتقال به کیف پول «پاداش‌های Brave» شما است.",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "امتیاز توکن آگهی‌های Brave شما",
+    "message": "مقدار پاداش شما",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "این پدیدآورنده هنوز حساب خود را برای دریافت انعام از کیف پول تأییدشده شما تأیید نکرده است. تا زمانی که پدیدآورنده کمک را تأیید نکند، انعام‌هایی که ارسال می‌کنید در کیف پولتان باقی می‌مانند.",
+    "message": "این «پدیدآورنده تأییدشده Brave» هنوز حسابش را تنظیم نکرده است تا از کاربران Brave کمک مالی دریافت کند. هر انعامی که ارسال می‌کنید تا زمانی که این روند کامل نشود، در کیف پولتان باقی می‌ماند.",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "تکمیل تأیید کیف پول",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "تنظیم...",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "توکن‌ها",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "امتیاز",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "توکن",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "امتیازها",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "امتیازهای توکن",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "هدایای امتیاز",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "سلام، $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "لغو",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "تغییر مقدار",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "ورود به سیستم",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "تأیید کیف پول به شما امکان می‌دهد سرمایه‌های خود را کارآمدتر مدیریت کنید.",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "برای ایجاد حساب Uphold، به حداقل 25 BAT نیاز دارید. لطفاً بعداً دوباره امتحان کنید. \nدر صورتی که ازقبل یک حساب تأییدشده Uphold دارید، ورود به سیستم را ادامه دهید.",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "متصل",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "معوق",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "توجه: تراکنش‌های شما به‌محض این‌که اجازه دهید برای Uphold قابل‌مشاهده خواهد بود؛ برای مثال، آن‌ها قادر به دیدن گیرنده و مقدار انعام‌های شما خواهند بود.",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "کسب توکن و برگرداندن",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "با مشاهده آگهی‌هایی که به حریم خصوصی احترام می‌گذارند، توکن کسب کنید و به‌طور خودکار از سایت‌ها و سازندگان محتوای دلخواهتان پشتیبانی کنید.",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "شروع استفاده از Brave Rewards",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "گشتی سریع بزنید",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "با ادامه دادن، با $tos_link_begin$شرایط سرویس$tos_link_end$ و $pp_link_begin$خط مشی حریم خصوصی$pp_link_end$ موافقت می‌کنید.",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "برگشتن",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "بیایید گشت سریعی بزنیم",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "ادامه",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "تمام",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "رد شدن",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "فعلاً رد شود",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "به Brave Rewards خوش آمدید!",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Brave Private Ads به شما توکن جایزه می‌دهد تا از سازندگان محتوا پشتیبانی شود (کاملاً برعکس آگهی‌های قدیمی)، همه این کارها را در حالی انجام می‌دهد که اطلاعات شخصی شما را خصوصی نگه می‌دارد.",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "آگهی‌ها کجا نمایش داده می‌شوند؟",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Brave Private Ads به‌عنوان اعلانی معمولی نشان داده خواهد شد. شما می‌توانید تعداد دفعات مشاهده این آگهی‌ها را در تنظیمات کنترل کنید.",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "چه زمانی پاداش دریافت می‌کنید",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "توکن‌های به‌دست‌آمده از Brave Private Ads در ماه فعلی، در 5ام ماه بعدی دریافت خواهند شد.",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "برگرداندن بی‌دردسر شده است",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "سازندگان همیاری‌های توکن شما را به‌طور خودکار بر اساس سطح مشارکتتان دریافت می‌کنند که ما آن را به‌عنوان «توجه» می‌سنجیم.",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "با انعام‌ها سپاس‌گزاری خود را اعلام کنید",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "انعام دادن روشی است برای تشویق شخصی و پشتیبانی از محتوا یا سازندگان مورد علاقه‌تان. انعام بدهید!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "با توکن‌ها چه‌کارهایی می‌توانید انجام دهید؟",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "توکن‌ها را فراتر از پشتیبانی از سازندگان می‌توان استفاده کرد. با پیوستن فروشندگان به تیم، می‌توانید محتوای دیجیتال و کالاهای دیگر خریداری کنید.",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "وو هوو، کاملاً آماده هستید!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "با استفاده از Brave Rewards کمک می‌کنید وب به مکانی بهتر برای همه تبدیل شود. و این فوق‌العاده است!",
+    "description": ""
   }
 }

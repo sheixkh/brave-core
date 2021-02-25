@@ -19,6 +19,10 @@
     "message": "Acum puteți câștiga token-uri pentru vizualizarea reclamelor care respectă confidențialitatea.",
     "description": "Entry text for welcome screen in the panel, new user"
   },
+  "welcomeDescPoints": {
+    "message": "Acum puteți câștiga puncte pentru că urmăriți reclame care respectă confidențialitatea.",
+    "description": "Entry text for welcome screen in the panel, points"
+  },
   "welcomeFooterTextOne": {
     "message": "Citiți care sunt îmbunătățirile",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, existing user"
@@ -40,8 +44,24 @@
     "description": "Title of wallet section where we display data about wallet"
   },
   "grants": {
-    "message": "Granturi",
+    "message": "Subvenții",
     "description": "Title for grant section in wallet summary"
+  },
+  "details": {
+    "message": "Detalii",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "Soldul dumneavoastră",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "Puncte BAT",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "pot fi folosite la Recompense Brave pentru a contribui la creatorii de conținut preferați. Punctele BAT nu pot fi schimbate în BAT.",
+    "description": "Text for BAT Point helper message"
   },
   "on": {
     "message": "pornit",
@@ -56,7 +76,7 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "Plată lunară către acest site",
+    "message": "Contribuție lunară",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
@@ -128,12 +148,22 @@
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "Donații în jetoane",
-    "description": "Title for grant notification"
+    "message": "Granturi de $currency$",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
     "message": "Granturi Token Revendicate",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "Acordarea de puncte a fost revendicată",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "Câștiguri din Reclame",
@@ -148,15 +178,15 @@
     "description": "Title for one time tips section in wallet summary"
   },
   "expiresOn": {
-    "message": "expiră în data de",
+    "message": "expiră pe",
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "Plăți lunare",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "Contribuții lunare",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
-    "message": "Oprit",
+    "message": "Dezactivat",
     "description": "Label used in toggle indicating that toggle is off"
   },
   "ok": {
@@ -167,10 +197,6 @@
     "message": "Acum puteți câștiga bani vizualizând reclame.",
     "description": "Message for ads launch notification"
   },
-  "braveAdsLaunchTitle": {
-    "message": "Brave Ads a sosit!",
-    "description": "Message used in notification to let users know Ads is available"
-  },
   "braveAdsTitle": {
     "message": "Reclame Brave",
     "description": "Notification title when we display info about ads"
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "Ați contribuit cu $amount$ BAT",
+    "message": "Ați contribuit cu $amount$ $currency$",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "Plata dumneavoastră lunară programată pentru Contribuție Automată și plățile lunare nu au putut fi finalizate din cauza fondurilor insuficiente. Vom încerca din nou peste 30 de zile.",
+    "message": "Plata dvs. lunară programată pentru Contribuția automată și contribuțiile lunare nu a putut fi finalizată din cauza fondurilor insuficiente. Vom încerca din nou peste 30 de zile.",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -261,10 +291,6 @@
     "message": "Data Expirării Grantului",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "Ne pare rău, se pare că acest grant a fost revendicat deja.",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
     "message": "OK",
     "description": "Button text for clearing the error."
@@ -276,18 +302,6 @@
   "grantGeneralErrorTitle": {
     "message": "Hopa, ceva nu funcționează. Vă rugăm încercați din nou mai târziu.",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "OK",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "Ne pare rău, se pare că acest grant a expirat deja.",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "Acest grant nu mai este disponibil.",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "Reîmprospătați starea",
@@ -306,7 +320,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "Ați alocat {{reservedAmount}} BAT pentru creatori care nu s-au înregistrat încă pentru a primi contribuții. Browserul dumneavoastră va continua să încerce să contribuie până când aceștia sunt verificați sau până la trecerea a 90 de zile.",
+    "message": "Ați alocat {{reservedAmount}} {{currency}} pentru creatori care nu s-au înregistrat încă pentru a primi contribuții. Browserul dumneavoastră va încerca în continuare să contribuie până când aceștia sunt verificați sau până când trec 90 de zile.",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
@@ -314,11 +328,11 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "disabledPanelOff": {
-    "message": "Oprit",
+    "message": "Dezactivat",
     "description": "Off state text for Panel's disabled state"
   },
   "disabledPanelSettings": {
-    "message": "Setări.",
+    "message": "Setări",
     "description": "Settings Link for Panel's disabled state"
   },
   "disabledPanelText": {
@@ -382,12 +396,12 @@
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "Bacșișurile dvs. lunare au fost procesate!",
-    "description": "Message for monthly tips processed notification"
+    "message": "Contribuțiile dvs. lunare au fost procesate!",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "Contribuții și bacșișuri",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "Făcând clic pe „Alăturați-vă Rewards” dați de înțeles că ați citit și sunteți de acord cu",
@@ -397,8 +411,12 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
+  },
   "turnOnAds": {
-    "message": "Activează Ads",
+    "message": "Activare Ads",
     "description": "Prompt to turn on Ads via notification"
   },
   "adsEarnings": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "Grantul token-ului dumneavoastră trebuie să sosească.",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "Grantul dvs. de $currency$ este pe drum.",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "Grant Token Gratuit",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "Acordare punct gratuit",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Recompense pentru reclame Brave!",
+    "message": "Ați câștigat o Recompensă Reclame!",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "Recompensele dvs. acordate din reclamele Brave sunt pe drum.",
+    "message": "Recompensa este pe drum spre portofelul dumneavoastră de Recompense Brave.",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "Tokenul dvs. acordat pentru reclame Brave",
+    "message": "Suma de Recompense",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "Acest creator verificat încă nu și-a verificat (KYC) contul pentru a primi bacșiș din portofelul dvs. verificat. Bacșișurile vor rămâne în portofelul dvs. până când creatorul își finalizează procesul de verificare.",
+    "message": "Acest Creator verificat Brave nu și-a configurat contul încă pentru a primi contribuții de la utilizatorii Brave. Toate plățile pe care le trimiteți vor rămâne în portofelul dvs. până când finalizează acest proces.",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "Finalizați verificarea portofelului",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "Setați...",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "token-uri",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "Punct",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "Indicativ",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "puncte",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "Donații în jetoane",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "Granturi de puncte",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "Bună ziua, $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "Anulează",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "Schimbă suma",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "Conectați-vă",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "Dacă vă confirmați portofelul, puteți să vă gestionați fondurile mai eficient.",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "Trebuie să aveți minimum 25BAT pentru a crea un cont Uphold. Vă rugăm să încercați din nou mai târziu.\nDacă aveți deja un cont Uphold verificat, continuați cu conectarea.",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "Conectată",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "În așteptare",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "Notă: Tranzacțiile dumneavoastră vor fi vizibile Uphold după autorizare; de exemplu, aceștia vor putea să vadă destinatarul și sumele plătite.",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "Câștigați tokenuri și dăruiți",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "Câștigați tokenuri vizualizând reclame care respectă confidențialitatea și susțineți automat site-urile și creatorii de conținut favoriți.",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "Începeți să folosiți Recompensele Brave",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "Faceți un tur rapid",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "Continuând, îți dai acordul pentru $tos_link_begin$Termenii de utilizare$tos_link_end$ și $pp_link_begin$Politica de confidențialitate$pp_link_end$.",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "Înapoi",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "Să facem un tur rapid",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "Continuă",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "Gata",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "Omite",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "Ignoră pentru moment",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "Bun venit la Recompensele Brave!",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Reclamele private Brave te recompensează cu tokeni, pentru a sprijini creatorii de conținut altfel decât reclamele tradiționale, menținându-ți în același timp informațiile personale private.",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "Unde se afișează reclamele/",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Reclamele private Brave vor apărea sub forma unei notificări obișnuite. Tu controlezi cât de des vezi aceste reclame, din setări.",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "Când primiți recompensele",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "Tokenii obținuți pentru reclamele private Brave urmărite pe parcursul acestei luni vor fi disponibili în data de 5 a lunii următoare.",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "Dăruiți fără efort",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "Creatorii primesc contribuțiile simbolice în mod automat, pe baza nivelurilor tale de implicare, pe care le măsurăm sub formă de „Atenție”.",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "Spuneți „mulțumesc” cu tokenuri",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "Trimiterea de tokenuri este o modalitate de a încuraja și de a susține personal conținutul sau creatorii care vă plac. Începeți să trimiteți!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "Ce puteți face cu tokenurile?",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "Tokenii pot fi folosiți la mai mult decât susținerea creatorilor. Poți cumpăra conținut digital și alte bunuri pe măsură ce ni se alătură mai mulți vânzători.",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "Iuhuu, totul e gata!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "Folosind Recompensele Brave, dai o mână de ajutor la efortul de a face internetul un loc mai bun pentru toată lumea. Și asta este minunat!",
+    "description": ""
   }
 }

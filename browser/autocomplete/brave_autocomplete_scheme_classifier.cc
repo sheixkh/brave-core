@@ -9,21 +9,23 @@
 
 #include "base/strings/string_util.h"
 #include "brave/common/url_constants.h"
-#include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
+#include "brave/components/ipfs/buildflags/buildflags.h"
 #include "chrome/browser/profiles/profile.h"
 
 #if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
 #include "brave/components/brave_webtorrent/browser/webtorrent_util.h"
 #endif
 
-// See the BraveAutocompleteProviderClient why GetOriginalProfile() is fetched.
-// All services except TemplateURLService exposed from AutocompleteClassifier
-// uses original profile. So, |profile_| should be original profile same as
-// base class does.
+#if BUILDFLAG(IPFS_ENABLED)
+#include "brave/components/ipfs/ipfs_constants.h"
+#endif
+
 BraveAutocompleteSchemeClassifier::BraveAutocompleteSchemeClassifier(
     Profile* profile)
-    : ChromeAutocompleteSchemeClassifier(profile->GetOriginalProfile()),
-      profile_(profile->GetOriginalProfile()) {
+    : ChromeAutocompleteSchemeClassifier(profile) {
+#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
+  profile_ = profile;
+#endif
 }
 
 BraveAutocompleteSchemeClassifier::~BraveAutocompleteSchemeClassifier() {
@@ -43,11 +45,20 @@ BraveAutocompleteSchemeClassifier::GetInputTypeForScheme(
 
 #if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
   if (base::IsStringASCII(scheme) &&
-      webtorrent::IsWebtorrentEnabled(profile_) &&
+      webtorrent::IsWebtorrentPrefEnabled(profile_) &&
       base::LowerCaseEqualsASCII(scheme, kMagnetScheme)) {
     return metrics::OmniboxInputType::URL;
   }
 #endif
+
+#if BUILDFLAG(IPFS_ENABLED)
+  if (base::IsStringASCII(scheme) &&
+      (base::LowerCaseEqualsASCII(scheme, ipfs::kIPFSScheme) ||
+       base::LowerCaseEqualsASCII(scheme, ipfs::kIPNSScheme))) {
+    return metrics::OmniboxInputType::URL;
+  }
+#endif
+
 
   return ChromeAutocompleteSchemeClassifier::GetInputTypeForScheme(scheme);
 }

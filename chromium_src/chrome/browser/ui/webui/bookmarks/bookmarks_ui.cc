@@ -4,14 +4,14 @@
 // you can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "brave/browser/ui/webui/navigation_bar_data_provider.h"
+#include "brave/grit/brave_generated_resources.h"
+#include "content/public/browser/web_ui_data_source.h"
 
-namespace {
+#define BRAVE_CREATE_BOOKMARKS_UI_HTML_SOURCE \
+  NavigationBarDataProvider::Initialize(source); \
+  source->AddLocalizedString( \
+      "emptyList", IDS_BRAVE_BOOKMARK_MANAGER_EMPTY_LIST);
 
-void BraveCustomizeBookmarksDataSource(content::WebUIDataSource* source) {
-  NavigationBarDataProvider::Initialize(source);
-}
+#include "../../../../../../../chrome/browser/ui/webui/bookmarks/bookmarks_ui.cc"
 
-}  // namespace
-
-#include "../../../../../../chrome/browser/ui/webui/bookmarks/bookmarks_ui.cc"  // NOLINT
-
+#undef BRAVE_CREATE_BOOKMARKS_UI_HTML_SOURCE

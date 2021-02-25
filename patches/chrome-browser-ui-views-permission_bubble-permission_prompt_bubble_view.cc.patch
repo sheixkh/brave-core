@@ -1,0 +1,12 @@
+diff --git a/chrome/browser/ui/views/permission_bubble/permission_prompt_bubble_view.cc b/chrome/browser/ui/views/permission_bubble/permission_prompt_bubble_view.cc
+index 9d6a49a56c95ef9f9636f7aa8f5b22eefba3c168..01bdc8f36f733deebbfea478a114310f7843fe63 100644
+--- a/chrome/browser/ui/views/permission_bubble/permission_prompt_bubble_view.cc
++++ b/chrome/browser/ui/views/permission_bubble/permission_prompt_bubble_view.cc
+@@ -135,6 +135,7 @@ PermissionPromptBubbleView::PermissionPromptBubbleView(
+ 
+   for (permissions::PermissionRequest* request : visible_requests_)
+     AddPermissionRequestLine(request);
++  BRAVE_PERMISSION_PROMPT_BUBBLE_VIEW
+ 
+   base::Optional<base::string16> extra_text = GetExtraText();
+   if (extra_text.has_value()) {

@@ -18,11 +18,14 @@
 #include "brave/browser/net/resource_context_data.h"
 #include "brave/browser/net/url_context.h"
 #include "content/public/browser/content_browser_client.h"
-#include "mojo/public/cpp/bindings/binding.h"
 #include "mojo/public/cpp/bindings/binding_set.h"
+#include "mojo/public/cpp/bindings/pending_receiver.h"
+#include "mojo/public/cpp/bindings/receiver.h"
+#include "mojo/public/cpp/bindings/remote.h"
 #include "services/network/public/cpp/resource_request.h"
-#include "services/network/public/cpp/resource_response.h"
+#include "services/network/public/mojom/ip_endpoint.mojom.h"
 #include "services/network/public/mojom/network_context.mojom.h"
+#include "services/network/public/mojom/url_response_head.mojom.h"
 #include "services/network/public/mojom/websocket.mojom.h"
 #include "url/gurl.h"
 #include "url/origin.h"
@@ -45,7 +48,8 @@ class BraveProxyingWebSocket : public network::mojom::WebSocketHandshakeClient,
   BraveProxyingWebSocket(
       WebSocketFactory factory,
       const network::ResourceRequest& request,
-      network::mojom::WebSocketHandshakeClientPtr handshake_client,
+      mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
+          handshake_client,
       int process_id,
       int frame_tree_node_id,
       content::BrowserContext* browser_context,
@@ -58,25 +62,29 @@ class BraveProxyingWebSocket : public network::mojom::WebSocketHandshakeClient,
       content::RenderFrameHost* frame,
       content::ContentBrowserClient::WebSocketFactory factory,
       const GURL& url,
-      const GURL& site_for_cookies,
+      const net::SiteForCookies& site_for_cookies,
       const base::Optional<std::string>& user_agent,
-      network::mojom::WebSocketHandshakeClientPtr handshake_client);
+      mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
+          handshake_client);
 
   void Start();
 
   content::ContentBrowserClient::WebSocketFactory web_socket_factory();
-  network::mojom::WebSocketHandshakeClientPtrInfo handshake_client();
+  mojo::Remote<network::mojom::WebSocketHandshakeClient> handshake_client();
   bool proxy_has_extra_headers();
 
   // network::mojom::WebSocketHandshakeClient methods:
   void OnOpeningHandshakeStarted(
       network::mojom::WebSocketHandshakeRequestPtr request) override;
-  void OnResponseReceived(
-      network::mojom::WebSocketHandshakeResponsePtr response) override;
-  void OnConnectionEstablished(network::mojom::WebSocketPtr websocket,
-                               const std::string& selected_protocol,
-                               const std::string& extensions,
-                               uint64_t receive_quota_threshold) override;
+  void OnFailure(const std::string& message,
+                 int32_t net_error,
+                 int32_t response_code) override;
+  void OnConnectionEstablished(
+      mojo::PendingRemote<network::mojom::WebSocket> websocket,
+      mojo::PendingReceiver<network::mojom::WebSocketClient> client_receiver,
+      network::mojom::WebSocketHandshakeResponsePtr response,
+      mojo::ScopedDataPipeConsumerHandle readable,
+      mojo::ScopedDataPipeProducerHandle writable) override;
 
   // network::mojom::AuthenticationHandler method:
   void OnAuthRequired(const net::AuthChallengeInfo& auth_info,
@@ -88,15 +96,18 @@ class BraveProxyingWebSocket : public network::mojom::WebSocketHandshakeClient,
   void OnBeforeSendHeaders(const net::HttpRequestHeaders& headers,
                            OnBeforeSendHeadersCallback callback) override;
   void OnHeadersReceived(const std::string& headers,
+                         const ::net::IPEndPoint& remote_endpoint,
                          OnHeadersReceivedCallback callback) override;
 
  private:
   void WebSocketFactoryRun(
       const GURL& url,
       std::vector<network::mojom::HttpHeaderPtr> additional_headers,
-      network::mojom::WebSocketHandshakeClientPtr handshake_client,
-      network::mojom::AuthenticationHandlerPtr auth_handler,
-      network::mojom::TrustedHeaderClientPtr trusted_header_client);
+      mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
+          handshake_client,
+      mojo::PendingRemote<network::mojom::AuthenticationHandler> auth_handler,
+      mojo::PendingRemote<network::mojom::TrustedHeaderClient>
+          trusted_header_client);
 
   void OnBeforeSendHeadersComplete(int error_code);
   void OnBeforeRequestComplete(int error_code);
@@ -109,7 +120,7 @@ class BraveProxyingWebSocket : public network::mojom::WebSocketHandshakeClient,
   void OnHeadersReceivedCompleteFromProxy(
       int error_code,
       const base::Optional<std::string>& headers,
-      const GURL& url);
+      const base::Optional<GURL>& url);
 
   void PauseIncomingMethodCallProcessing();
   void ResumeIncomingMethodCallProcessing();
@@ -127,25 +138,29 @@ class BraveProxyingWebSocket : public network::mojom::WebSocketHandshakeClient,
   content::ContentBrowserClient::WebSocketFactory factory_;
   content::BrowserContext* const browser_context_;
   scoped_refptr<RequestIDGenerator> request_id_generator_;
-  network::mojom::WebSocketHandshakeClientPtr forwarding_handshake_client_;
-  mojo::Binding<network::mojom::WebSocketHandshakeClient>
-      binding_as_handshake_client_;
-  mojo::Binding<network::mojom::AuthenticationHandler> binding_as_auth_handler_;
-  mojo::Binding<network::mojom::TrustedHeaderClient> binding_as_header_client_;
+  mojo::Remote<network::mojom::WebSocketHandshakeClient>
+      forwarding_handshake_client_;
+  mojo::Receiver<network::mojom::WebSocketHandshakeClient>
+      receiver_as_handshake_client_;
+  mojo::Receiver<network::mojom::AuthenticationHandler>
+      receiver_as_auth_handler_;
+  mojo::Receiver<network::mojom::TrustedHeaderClient>
+      receiver_as_header_client_;
 
   network::ResourceRequest request_;
-  network::ResourceResponseHead response_;
+  network::mojom::URLResponseHead response_;
   scoped_refptr<net::HttpResponseHeaders> override_headers_;
+  net::IPEndPoint remote_endpoint_;
 
   GURL redirect_url_;
   bool is_done_ = false;
-  bool waiting_for_header_client_headers_received_ = false;
   uint64_t request_id_ = 0;
 
   // chrome websocket proxy
   GURL proxy_url_;
-  network::mojom::AuthenticationHandlerPtr proxy_auth_handler_;
-  network::mojom::TrustedHeaderClientPtr proxy_trusted_header_client_;
+  mojo::Remote<network::mojom::AuthenticationHandler> proxy_auth_handler_;
+  mojo::Remote<network::mojom::TrustedHeaderClient>
+      proxy_trusted_header_client_;
 
   OnHeadersReceivedCallback on_headers_received_callback_;
   OnBeforeSendHeadersCallback on_before_send_headers_callback_;

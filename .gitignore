@@ -1,15 +1,18 @@
 .DS_Store
 .tags*
 /.idea/
+/components/brave_new_tab_ui/data/LICENSE
 /components/brave_webtorrent/extension/out/
 /components/brave_rewards/resources/extension/brave_rewards/out/
-/components/brave_sync/extension/brave-crypto/
 /components/brave_sync/extension/brave-sync/
+/components/brave_sync/extension/brave-sync-android/
+/components/brave_sync/extension/brave-crypto/
+/components/third_party/adblock/LICENSE
+/components/third_party/local_data/LICENSE
 /dist/
 /out/
 /vendor/*
 !/vendor/bat-native-ledger
-!/vendor/bat-native-confirmations
 !/vendor/bat-native-ads
 !/vendor/brave-ios
 !/vendor/CPPLINT.cfg
@@ -40,3 +43,5 @@ venv/
 *.rpm
 *.exe
 .storybook-out
+test_get_pkgs
+*_override_*.xtb

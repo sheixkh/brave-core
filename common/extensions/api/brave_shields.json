@@ -29,6 +29,24 @@
     ],
     "functions": [
       {
+        "name": "openBrowserActionUI",
+        "type": "function",
+        "description": "Prompts the user with a popup UI",
+        "parameters": [
+          {
+            "name": "windowID",
+            "type": "integer",
+            "minimum": 0,
+            "optional": true
+          },
+          {
+            "name": "relativePath",
+            "type": "string",
+            "optional": true
+          }
+        ]
+      },
+      {
         "name": "setBraveShieldsEnabled",
         "type": "function",
         "description": "Set brave shields control type for a url",
@@ -50,6 +68,12 @@
         ]
       },
       {
+        "name": "onShieldsPanelShown",
+        "type": "function",
+        "description": "Notifies the browser about the fact of showing the panel",
+        "parameters": []
+      },
+      {
         "name": "getBraveShieldsEnabled",
         "type": "function",
         "description": "Get brave shields control type for a url",
@@ -64,6 +88,69 @@
             "parameters": [
               {
                 "name": "enabled",
+                "type": "boolean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "shouldDoCosmeticFiltering",
+        "type": "function",
+        "description": "Determine whether or not to do cosmetic filtering on the given url",
+        "parameters": [
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "doCosmeticFiltering",
+                "type": "boolean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "setCosmeticFilteringControlType",
+        "type": "function",
+        "description": "Set cosmetic filtering control type for a url",
+        "parameters": [
+          {
+            "name": "controlType",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "optional": true,
+            "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "isFirstPartyCosmeticFilteringEnabled",
+        "type": "function",
+        "description": "Check if first-party cosmetic filtering is enabled for the given url",
+        "parameters": [
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "hide1pContent",
                 "type": "boolean"
               }
             ]
@@ -299,6 +386,17 @@
             "name": "callback",
             "optional": true,
             "parameters": []
+          }
+        ]
+      },
+      {
+        "name": "reportBrokenSite",
+        "type": "function",
+        "description": "Bring up a modal for reporting a site broken by Shields to the Brave developers",
+        "parameters": [
+          {
+            "name": "tabId",
+            "type": "integer"
           }
         ]
       }

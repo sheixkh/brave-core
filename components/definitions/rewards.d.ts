@@ -15,22 +15,19 @@ declare namespace Rewards {
     TOO_MANY_RESULTS = 8,
     NOT_FOUND = 9,
     REGISTRATION_VERIFICATION_FAILED = 10,
-    BAD_REGISTRATION_RESPONSE = 11,
-    WALLET_CREATED = 12,
-    GRANT_NOT_FOUND = 13
+    BAD_REGISTRATION_RESPONSE = 11
   }
 
-  export enum RewardsCategory {
-    AUTO_CONTRIBUTE = 2,
-    ONE_TIME_TIP = 8,
-    RECURRING_TIP = 16
-  }
+  export type AddressesType = 'BTC' | 'ETH' | 'BAT' | 'LTC'
+  export type Address = { address: string, qr: string | null }
 
   export interface State {
+    addresses?: Record<AddressesType, Address>
     adsData: AdsData
-    adsHistory: AdsHistoryData[]
+    adsHistory: AdsHistory[]
     autoContributeList: Publisher[]
     balance: Balance
+    balanceReport?: BalanceReport
     contributeLoad: boolean
     contributionMinTime: number
     contributionMinVisits: number
@@ -38,14 +35,14 @@ declare namespace Rewards {
     contributionNonVerified: boolean
     contributionVideos: boolean
     createdTimestamp: number | null
-    currentGrant?: Grant
+    currentCountryCode: string
     donationAbilityTwitter: boolean
     donationAbilityYT: boolean
     enabledAds: boolean
     enabledAdsMigrated: boolean
     enabledContribute: boolean
-    enabledMain: boolean
     externalWallet?: ExternalWallet
+    initializing: boolean
     inlineTip: {
       twitter: boolean
       reddit: boolean
@@ -53,30 +50,40 @@ declare namespace Rewards {
     }
     excludedList: ExcludedPublisher[]
     firstLoad: boolean | null
-    grants?: Grant[]
+    monthlyReport: MonthlyReport
+    monthlyReportIds: string[]
+    parameters: RewardsParameters
+    paymentId: string
+    promotions?: Promotion[]
     pendingContributions: PendingContribution[]
     pendingContributionTotal: number
     reconcileStamp: number
     recoveryKey: string
     recurringList: Publisher[]
     recurringLoad: boolean
-    reports: Record<string, Report>
+    safetyNetFailed?: boolean
+    showOnboarding?: boolean
     tipsList: Publisher[]
     tipsLoad: boolean
     ui: {
       emptyWallet: boolean
       modalBackup: boolean
-      modalRedirect: 'show' | 'hide' | 'error' | 'notAllowed'
+      modalRedirect: 'show' | 'hide' | 'error' | 'notAllowed' | 'batLimit'
       paymentIdCheck: boolean
-      walletRecoverySuccess: boolean | null
+      promosDismissed?: {
+        [key: string]: boolean
+      }
+      walletRecoveryStatus: number | null
       walletServerProblem: boolean
-      walletCorrupted: boolean
-      walletImported: boolean
-      onBoardingDisplayed?: boolean
+      verifyOnboardingDisplayed?: boolean
+      onlyAnonWallet?: boolean
     }
-    walletCreated: boolean
-    walletCreateFailed: boolean
-    walletInfo: WalletProperties
+  }
+
+  export interface RewardsParameters {
+    rate: number
+    autoContributeChoice: number
+    autoContributeChoices: number[]
   }
 
   export interface ComponentProps {
@@ -84,40 +91,83 @@ declare namespace Rewards {
     actions: any
   }
 
-  export type GrantStatus = 'wrongPosition' | 'grantGone' | 'generalError' | 'grantAlreadyClaimed' | number | null
+  export interface MonthlyReport {
+    month: number
+    year: number
+    balance?: BalanceReport
+    transactions?: TransactionReport[]
+    contributions?: ContributionReport[]
+  }
 
-  export interface Grant {
-    promotionId?: string
-    altcurrency?: string
-    probi: string
-    expiryTime: number
-    captcha?: string
+  export enum ReportType {
+    GRANT_UGP = 0,
+    AUTO_CONTRIBUTION = 1,
+    GRANT_AD = 3,
+    TIP_RECURRING = 4,
+    TIP = 5
+  }
+
+  export enum Processor {
+    NONE = 0,
+    BRAVE_TOKENS = 1,
+    UPHOLD = 2,
+    BRAVE_USER_FUNDS = 3
+  }
+
+  export interface TransactionReport {
+    amount: number
+    type: ReportType
+    processor: Processor
+    created_at: number
+  }
+
+  export interface ContributionReport {
+    amount: number
+    type: ReportType
+    processor: Processor
+    created_at: number
+    publishers: Publisher[]
+  }
+
+  export type CaptchaStatus = 'start' | 'wrongPosition' | 'generalError' | 'finished' | null
+
+  export enum PromotionTypes {
+    UGP = 0,
+    ADS = 1
+  }
+
+  export enum PromotionStatus {
+    ACTIVE = 0,
+    ATTESTED = 1,
+    FINISHED = 4,
+    OVER = 5
+  }
+
+  export interface Promotion {
+    promotionId: string
+    amount: number
+    expiresAt: number
+    status: PromotionStatus
+    type: PromotionTypes
+    captchaImage?: string
+    captchaId?: string
     hint?: string
-    status?: GrantStatus
-    type?: string
+    captchaStatus?: CaptchaStatus
   }
 
-  export interface GrantResponse {
-    promotionId?: string
-    status?: number
-    type?: string
-  }
-
-  export interface WalletProperties {
-    choices: number[]
-    grants?: Grant[]
+  export interface PromotionResponse {
+    result: number
+    promotions: Promotion[]
   }
 
   export interface RecoverWallet {
     result: Result
     balance: number
-    grants?: Grant[]
   }
 
-  export interface GrantFinish {
+  export interface PromotionFinish {
     result: Result,
-    statusCode: number,
-    expiryTime: number
+    promotion?: Promotion
   }
 
   export enum ExcludeStatus {
@@ -143,6 +193,7 @@ declare namespace Rewards {
     favIcon: string
     id: string
     tipDate?: number
+    weight: number
   }
 
   export interface ExcludedPublisher {
@@ -154,34 +205,35 @@ declare namespace Rewards {
     favIcon: string
   }
 
-  export interface Report {
-    ads: string
-    closing: string
-    contribute: string
-    deposit: string
-    donation: string
-    grant: string
-    tips: string
-    opening: string
-    total: string
+  export interface BalanceReport {
+    ads: number
+    contribute: number
+    monthly: number
+    grant: number
+    tips: number
   }
 
   export interface Captcha {
-    image: string
+    result: number
+    promotionId: string
+    captchaImage: string
     hint: string
   }
 
   export interface AdsData {
     adsEnabled: boolean
     adsPerHour: number
+    adsSubdivisionTargeting: string
+    automaticallyDetectedAdsSubdivisionTargeting: string
+    shouldAllowAdsSubdivisionTargeting: boolean
     adsUIEnabled: boolean
     adsIsSupported: boolean
     adsEstimatedPendingRewards: number
     adsNextPaymentDate: string
-    adsAdNotificationsReceivedThisMonth: number
+    adsReceivedThisMonth: number
   }
 
-  export enum Category {
+  export enum RewardsType {
     AUTO_CONTRIBUTE = 2,
     ONE_TIME_TIP = 8,
     RECURRING_TIP = 21
@@ -189,10 +241,11 @@ declare namespace Rewards {
 
   export interface ContributionSaved {
     success: boolean
-    category: Category
+    type: RewardsType
   }
 
   export interface PendingContribution {
+    id: number
     publisherKey: string
     percentage: number
     status: PublisherStatus
@@ -202,14 +255,13 @@ declare namespace Rewards {
     favIcon: string
     amount: number
     addedDate: string
-    category: RewardsCategory
+    type: RewardsType
     viewingId: string
     expirationDate: string
   }
 
   export interface Balance {
     total: number
-    rates: Record<string, number>
     wallets: Record<string, number>
   }
 
@@ -233,6 +285,7 @@ declare namespace Rewards {
     withdrawUrl: string
     userName?: string
     accountUrl: string
+    loginUrl: string
   }
 
   export interface ProcessRewardsPageUrl {
@@ -242,21 +295,21 @@ declare namespace Rewards {
     args: Record<string, string>
   }
 
-  export interface AdsHistoryData {
+  export interface AdsHistory {
     [key: string]: any
-    id: string
+    uuid: string
     date: string
-    adDetailRows: AdHistoryDetail[]
+    adDetailRows: AdHistory[]
   }
 
-  export interface AdHistoryDetail {
-    id: string
+  export interface AdHistory {
+    uuid: string
     adContent: AdContent
     categoryContent: CategoryContent
   }
 
   export interface AdContent {
-    uuid: string
+    creativeInstanceId: string
     creativeSetId: string
     brand: string
     brandInfo: string

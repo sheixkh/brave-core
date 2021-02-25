@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Bu siteyi hiçbir gizlilik ve güvenlik önlemi olmadan görüntülüyorsunuz.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Bu siteyi Brave'in gizlilik ve güvenlik önlemleri olmadan ziyaret ediyorsunuz. Kalkanlar aktifken doğru çalışmıyor mu?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Arızalı bir siteyi bildir",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Öğeler engellendi",
@@ -51,6 +55,22 @@
     "message": "Siteler arası iz sürücüler engellendi",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Engellenen izleyiciler & reklamlar",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "İzleyiciler ve reklamlar engellendi (agresif)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "İzleyiciler ve reklamlar engellendi (standart)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Tüm izleyici ve reklamlara izin ver",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Bağlantılar HTTPS'e yükseltildi",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "Tüm çerezlere izin verildi",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Siteler arası cihaz tanımlama engellendi",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Engellenen parmak izleri",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Cihaz tanımlama girişimleri engellendi",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Parmak izi engelli (standart)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Tüm cihaz tanımlama girişimlerine izin verildi",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Parmak izi engelli (katı, siteleri kırabilir)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Tüm parmak izlerine izin ver",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Cihaz tanıma girişimleri",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Parmak izi girişimleri",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Bu sitedeki komutlar",
@@ -156,7 +180,7 @@
     "description": "Message for context menu that resets the site filters for cosmetic filtering"
   },
   "resetAllFilterSettings": {
-    "message": "Bu site için CSS kurallarını temizle",
+    "message": "Tüm siteler için CSS kurallarını temizle",
     "description": "Message for context menu that resets all cosmetic filters"
   },
   "advancedView": {

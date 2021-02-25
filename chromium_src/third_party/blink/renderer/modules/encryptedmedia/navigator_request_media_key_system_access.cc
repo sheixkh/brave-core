@@ -13,9 +13,15 @@ void MaybeOnWidevineRequest(MediaKeySystemAccessInitializer* initializer,
 }  // namespace
 }  // namespace blink
 
-#include "../../../../../../../third_party/blink/renderer/modules/encryptedmedia/navigator_request_media_key_system_access.cc"  // NOLINT
+// Notify Brave about the widevine availability request.
+#define BRAVE_NAVIGATOR_REQUEST_MEDIA_KEY_SYSTEM_ACCESS \
+  MaybeOnWidevineRequest(initializer, window->GetFrame());
 
-#include "brave/components/brave_drm/brave_drm.mojom.h"
+#include "../../../../../../../third_party/blink/renderer/modules/encryptedmedia/navigator_request_media_key_system_access.cc"  // NOLINT
+#undef BRAVE_NAVIGATOR_REQUEST_MEDIA_KEY_SYSTEM_ACCESS
+
+#include "brave/components/brave_drm/brave_drm.mojom-blink.h"
+#include "mojo/public/cpp/bindings/associated_remote.h"
 #include "third_party/blink/public/common/associated_interfaces/associated_interface_provider.h"
 #include "third_party/blink/renderer/core/frame/local_frame_client.h"
 #include "third_party/blink/renderer/core/frame/web_local_frame_impl.h"
@@ -28,7 +34,8 @@ void MaybeOnWidevineRequest(MediaKeySystemAccessInitializer* initializer,
                             LocalFrame* frame) {
   if (initializer->KeySystem() == "com.widevine.alpha") {
     if (frame->Client()->GetRemoteNavigationAssociatedInterfaces()) {
-      brave_drm::mojom::BraveDRMAssociatedPtr brave_drm_binding;
+      mojo::AssociatedRemote<brave_drm::mojom::blink::BraveDRM>
+          brave_drm_binding;
       frame->Client()->GetRemoteNavigationAssociatedInterfaces()->GetInterface(
           &brave_drm_binding);
       DCHECK(brave_drm_binding.is_bound());

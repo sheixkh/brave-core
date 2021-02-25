@@ -11,8 +11,6 @@
 #include "base/test/thread_test_helper.h"
 #include "brave/browser/brave_browser_process_impl.h"
 #include "brave/common/brave_paths.h"
-#include "brave/components/brave_component_updater/browser/local_data_files_observer.h"
-#include "brave/components/brave_component_updater/browser/local_data_files_service.h"
 #include "chrome/browser/extensions/extension_browsertest.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
@@ -70,7 +68,7 @@ void BaseLocalDataFilesBrowserTest::WaitForService() {
       g_brave_browser_process->local_data_files_service()->GetTaskRunner()));
   ASSERT_TRUE(tr_helper->Run());
   scoped_refptr<base::ThreadTestHelper> io_helper(new base::ThreadTestHelper(
-      base::CreateSingleThreadTaskRunnerWithTraits({BrowserThread::IO}).get()));
+      base::CreateSingleThreadTaskRunner({BrowserThread::IO}).get()));
   ASSERT_TRUE(io_helper->Run());
   base::RunLoop().RunUntilIdle();
 }

@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Vaatate seda saiti ilma igasuguse privaatsuse ja turvalisuse kaitseta.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Sirvite seda veebisaiti ilma Brave’i privaatsuse ja turvalisuse kaitseta. Kas see ei tööta õigesti, kui kaitse on aktiivne?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Teata mittetoimivast veebisaidist",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Üksused blokeeritud",
@@ -51,6 +55,22 @@
     "message": "Saitidevahelised jälitajad on blokeeritud",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Blokeeritud jälitajad ja reklaamid",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Jälgijad ja reklaamid blokeeritud (põhjalik)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Jälgijad ja reklaamid blokeeritud (tavaline)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Luba kõik jälgijad ja reklaamid",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Ühendused täiendatud HTTPS-ile",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -68,28 +88,32 @@
     "description": "Message for the option in the cookies select field to block all 3rd party cookies"
   },
   "allCookiesBlocked": {
-    "message": "Küpsisefailid on blokeeritud",
+    "message": "Küpsised blokeeritud",
     "description": "Message for the option in the cookies select field to block all cookies"
   },
   "allCookiesAllowed": {
-    "message": "Kõik lubatud küpsisefailid",
+    "message": "Kõik küpsised lubatud",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Saitidevaheline seadme tuvastamine on blokeeritud",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Seadmetuvastus blokeeritud",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Seadme tuvastamise katsed on blokeeritud",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Sõrmejälje lugemine blokeeritud (standard)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Kõik seadme tuvastamise katsed on lubatud",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Sõrmejälje lugemine blokeeritud (piiratud, võib saite lõhkuda)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Luba seadmetuvastus igal pool",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Seadme tuvastamise katsed",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Seadmetuvastuse katsed",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Selle saidi skriptid",

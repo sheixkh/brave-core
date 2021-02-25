@@ -10,13 +10,12 @@
 
 #include "base/task/post_task.h"
 #include "brave/components/brave_rewards/browser/rewards_service.h"
-#include "brave/components/brave_rewards/browser/rewards_service_factory.h"
+#include "brave/browser/brave_rewards/rewards_service_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/sessions/session_tab_helper.h"
+#include "components/sessions/content/session_tab_helper.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/browser/render_frame_host.h"
-#include "content/public/browser/resource_request_info.h"
 #include "content/public/browser/web_contents.h"
 #include "url/gurl.h"
 
@@ -58,7 +57,7 @@ void DispatchOnUI(
   if (!web_contents)
     return;
 
-  auto* tab_helper = SessionTabHelper::FromWebContents(web_contents);
+  auto* tab_helper = sessions::SessionTabHelper::FromWebContents(web_contents);
   if (!tab_helper)
     return;
 
@@ -75,19 +74,17 @@ void DispatchOnUI(
 int OnBeforeURLRequest(
   const brave::ResponseCallback& next_callback,
   std::shared_ptr<brave::BraveRequestInfo> ctx) {
-  DCHECK_CURRENTLY_ON(content::BrowserThread::IO);
+  DCHECK_CURRENTLY_ON(content::BrowserThread::UI);
 
   if (IsMediaLink(ctx->request_url, ctx->tab_origin, ctx->referrer)) {
     if (!ctx->upload_data.empty()) {
-      base::PostTaskWithTraits(FROM_HERE, {content::BrowserThread::UI},
-          base::BindOnce(&DispatchOnUI,
-                         ctx->upload_data,
-                         ctx->request_url,
-                         ctx->tab_url,
-                         ctx->referrer.spec(),
-                         ctx->render_process_id,
-                         ctx->render_frame_id,
-                         ctx->frame_tree_node_id));
+      DispatchOnUI(ctx->upload_data,
+                   ctx->request_url,
+                   ctx->tab_url,
+                   ctx->referrer.spec(),
+                   ctx->render_process_id,
+                   ctx->render_frame_id,
+                   ctx->frame_tree_node_id);
     }
   }
 

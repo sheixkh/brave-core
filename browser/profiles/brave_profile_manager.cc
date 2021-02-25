@@ -7,87 +7,79 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "base/metrics/histogram_macros.h"
-#include "brave/browser/brave_browser_process_impl.h"
-#include "brave/browser/tor/buildflags.h"
-#include "brave/browser/tor/tor_profile_service.h"
-#include "brave/browser/tor/tor_profile_service_factory.h"
-#include "brave/browser/translate/buildflags/buildflags.h"
+#include "brave/browser/brave_rewards/rewards_service_factory.h"
+#include "brave/browser/profiles/profile_util.h"
 #include "brave/common/pref_names.h"
-#include "brave/common/tor/pref_names.h"
-#include "brave/common/tor/tor_constants.h"
-#include "brave/components/brave_webtorrent/browser/buildflags/buildflags.h"
 #include "brave/components/brave_ads/browser/ads_service_factory.h"
-#include "brave/components/brave_rewards/browser/rewards_service_factory.h"
-#include "brave/components/brave_shields/browser/ad_block_regional_service.h"
-#include "brave/components/brave_shields/browser/ad_block_service.h"
-#include "brave/components/brave_shields/browser/brave_shields_util.h"
+#include "brave/components/brave_wallet/buildflags/buildflags.h"
+#include "brave/components/content_settings/core/browser/brave_content_settings_pref_provider.h"
+#include "brave/components/ipfs/buildflags/buildflags.h"
+#include "brave/components/tor/tor_constants.h"
 #include "brave/content/browser/webui/brave_shared_resources_data_source.h"
 #include "chrome/browser/browser_process.h"
-#include "chrome/browser/profiles/profile_attributes_storage.h"
+#include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/profiles/profile_attributes_entry.h"
+#include "chrome/browser/profiles/profile_attributes_storage.h"
+#include "chrome/browser/profiles/profiles_state.h"
 #include "chrome/common/chrome_constants.h"
 #include "chrome/common/pref_names.h"
 #include "chrome/grit/generated_resources.h"
 #include "components/bookmarks/common/bookmark_pref_names.h"
+#include "components/gcm_driver/gcm_buildflags.h"
 #include "components/prefs/pref_service.h"
-#include "components/safe_browsing/common/safe_browsing_prefs.h"
 #include "components/signin/public/base/signin_pref_names.h"
-#include "components/translate/core/browser/translate_pref_names.h"
 #include "content/public/browser/browser_thread.h"
+#include "content/public/browser/notification_service.h"
+#include "content/public/browser/notification_source.h"
 #include "content/public/browser/url_data_source.h"
-#include "content/public/common/webrtc_ip_handling_policy.h"
 #include "ui/base/l10n/l10n_util.h"
+
+#if BUILDFLAG(BRAVE_WALLET_ENABLED)
+#include "brave/browser/brave_wallet/brave_wallet_service_factory.h"
+#endif
+
+#if !BUILDFLAG(USE_GCM_FROM_PLATFORM)
+#include "brave/browser/gcm_driver/brave_gcm_channel_status.h"
+#endif
+
+#if BUILDFLAG(IPFS_ENABLED)
+#include "brave/browser/ipfs/ipfs_service_factory.h"
+#endif
 
 using content::BrowserThread;
 
 BraveProfileManager::BraveProfileManager(const base::FilePath& user_data_dir)
-  : ProfileManager(user_data_dir) {
+    : ProfileManager(user_data_dir) {
   MigrateProfileNames();
+
+  registrar_.Add(this, chrome::NOTIFICATION_PROFILE_CREATED,
+                 content::NotificationService::AllSources());
 }
 
-// static
-base::FilePath BraveProfileManager::GetTorProfilePath() {
-  DCHECK_CURRENTLY_ON(BrowserThread::UI);
-
-  ProfileManager* profile_manager = g_browser_process->profile_manager();
-
-  base::FilePath tor_path = profile_manager->user_data_dir();
-  return tor_path.Append(tor::kTorProfileDir);
-}
-
-// static
-void BraveProfileManager::InitTorProfileUserPrefs(Profile* profile) {
-  PrefService* pref_service = profile->GetPrefs();
-  pref_service->SetInteger(prefs::kProfileAvatarIndex, 0);
-  pref_service->SetBoolean(prefs::kProfileUsingDefaultName, false);
-  pref_service
-    ->SetString(prefs::kProfileName,
-                l10n_util::GetStringUTF8(IDS_PROFILES_TOR_PROFILE_NAME));
-  pref_service->SetBoolean(tor::prefs::kProfileUsingTor, true);
-  pref_service->SetString(prefs::kWebRTCIPHandlingPolicy,
-                          content::kWebRTCIPHandlingDisableNonProxiedUdp);
-  pref_service->SetBoolean(prefs::kSafeBrowsingEnabled, false);
-  // https://blog.torproject.org/bittorrent-over-tor-isnt-good-idea
-#if BUILDFLAG(ENABLE_BRAVE_WEBTORRENT)
-  pref_service->SetBoolean(kWebTorrentEnabled, false);
-#endif
-  // Disable the automatic translate bubble in Tor because we currently don't
-  // support extensions in Tor mode and users cannot disable this through
-  // settings page for Tor windows.
-#if BUILDFLAG(ENABLE_BRAVE_TRANSLATE_EXTENSION)
-  pref_service->SetBoolean(prefs::kOfferTranslateEnabled, false);
-#endif
+BraveProfileManager::~BraveProfileManager() {
+  std::vector<Profile*> profiles = GetLoadedProfiles();
+  for (Profile* profile : profiles) {
+    if (brave::IsSessionProfile(profile)) {
+      // passing false for `success` removes the profile from the info cache
+      OnProfileCreated(profile, false, false);
+    }
+  }
 }
 
 void BraveProfileManager::InitProfileUserPrefs(Profile* profile) {
-  if (profile->GetPath() == GetTorProfilePath()) {
-    InitTorProfileUserPrefs(profile);
-  } else {
-    ProfileManager::InitProfileUserPrefs(profile);
-  }
+  // migrate obsolete plugin prefs to temporary migration pref because otherwise
+  // they get deleteed by PrefProvider before we can migrate them in
+  // BravePrefProvider
+  content_settings::BravePrefProvider::CopyPluginSettingsForMigration(
+      profile->GetPrefs());
+
+  ProfileManager::InitProfileUserPrefs(profile);
+  brave::RecordInitialP3AValues(profile);
+  brave::SetDefaultSearchVersion(profile, profile->IsNewProfile());
 }
 
 std::string BraveProfileManager::GetLastUsedProfileName() {
@@ -95,8 +87,10 @@ std::string BraveProfileManager::GetLastUsedProfileName() {
   DCHECK(local_state);
   const std::string last_used_profile_name =
       local_state->GetString(prefs::kProfileLastUsed);
+  // Keep this for legacy tor profile migration because tor profile might be
+  // last active profile before upgrading
   if (last_used_profile_name ==
-          base::FilePath(tor::kTorProfileDir).AsUTF8Unsafe())
+      base::FilePath(tor::kTorProfileDir).AsUTF8Unsafe())
     return chrome::kInitialProfile;
   return ProfileManager::GetLastUsedProfileName();
 }
@@ -104,23 +98,46 @@ std::string BraveProfileManager::GetLastUsedProfileName() {
 void BraveProfileManager::DoFinalInitForServices(Profile* profile,
                                                  bool go_off_the_record) {
   ProfileManager::DoFinalInitForServices(profile, go_off_the_record);
+  if (!do_final_services_init_)
+    return;
   brave_ads::AdsServiceFactory::GetForProfile(profile);
   brave_rewards::RewardsServiceFactory::GetForProfile(profile);
-  content::URLDataSource::Add(profile,
-      std::make_unique<brave_content::BraveSharedResourcesDataSource>());
+#if BUILDFLAG(BRAVE_WALLET_ENABLED)
+  BraveWalletServiceFactory::GetForProfile(profile);
+#endif
+#if BUILDFLAG(IPFS_ENABLED)
+  ipfs::IpfsServiceFactory::GetForContext(profile);
+#endif
+#if !BUILDFLAG(USE_GCM_FROM_PLATFORM)
+  gcm::BraveGCMChannelStatus* status =
+      gcm::BraveGCMChannelStatus::GetForProfile(profile);
+  DCHECK(status);
+  status->UpdateGCMDriverStatus();
+#endif
 }
 
-void BraveProfileManager::OnProfileCreated(Profile* profile,
-                                           bool success,
-                                           bool is_new_profile) {
-  ProfileManager::OnProfileCreated(profile, success, is_new_profile);
+bool BraveProfileManager::IsAllowedProfilePath(
+    const base::FilePath& path) const {
+  // Chromium only allows profiles to be created in the user_data_dir, but we
+  // want to also be able to create profile in subfolders of user_data_dir.
+  return ProfileManager::IsAllowedProfilePath(path) ||
+         user_data_dir().IsParent(path.DirName());
+}
 
-#if BUILDFLAG(ENABLE_TOR)
-  // we need to wait until OnProfileCreated to
-  // ensure that the request context is available
-  if (profile->GetPath() == GetTorProfilePath())
-    TorProfileServiceFactory::GetForProfile(profile);
-#endif
+bool BraveProfileManager::LoadProfileByPath(const base::FilePath& profile_path,
+                         bool incognito,
+                         ProfileLoadedCallback callback) {
+  // Prevent legacy tor session profile to be loaded so we won't hit
+  // DCHECK(!GetProfileAttributesWithPath(...)). Workaround for legacy tor guest
+  // profile won't work because when AddProfile to storage we will hit
+  // DCHECK(user_data_dir_ == profile_path.DirName()), legacy tor session
+  // profile was not under user_data_dir like legacy tor guest profile did.
+  if (profile_path.BaseName().value() == tor::kTorProfileDir) {
+    return false;
+  }
+
+  return ProfileManager::LoadProfileByPath(profile_path, incognito,
+                                           std::move(callback));
 }
 
 // This overridden method doesn't clear |kDefaultSearchProviderDataPrefName|.
@@ -144,12 +161,40 @@ void BraveProfileManager::MigrateProfileNames() {
       storage.GetAllProfilesAttributesSortedByName();
   // Make sure we keep the numbering the same.
   for (auto* entry : entries) {
-    // Rename the necessary profiles.
+    // Rename the necessary profiles. Don't check for legacy names as profile
+    // info cache should have migrated them by now.
     if (entry->IsUsingDefaultName() &&
-        !storage.IsDefaultProfileName(entry->GetName())) {
+        !storage.IsDefaultProfileName(
+            entry->GetName(),
+            /*include_check_for_legacy_profile_name=*/false)) {
       auto icon_index = entry->GetAvatarIconIndex();
-      entry->SetName(storage.ChooseNameForNewProfile(icon_index));
+      entry->SetLocalProfileName(storage.ChooseNameForNewProfile(icon_index),
+                                 /*is_default_name=*/true);
     }
   }
 #endif
+}
+
+void BraveProfileManager::Observe(int type,
+                                  const content::NotificationSource& source,
+                                  const content::NotificationDetails& details) {
+  switch (type) {
+    case chrome::NOTIFICATION_PROFILE_CREATED: {
+      Profile* profile = content::Source<Profile>(source).ptr();
+      content::URLDataSource::Add(
+          profile,
+          std::make_unique<brave_content::BraveSharedResourcesDataSource>());
+      break;
+    }
+    default: {
+      ProfileManager::Observe(type, source, details);
+      break;
+    }
+  }
+}
+
+BraveProfileManagerWithoutInit::BraveProfileManagerWithoutInit(
+    const base::FilePath& user_data_dir)
+    : BraveProfileManager(user_data_dir) {
+  set_do_final_services_init(false);
 }

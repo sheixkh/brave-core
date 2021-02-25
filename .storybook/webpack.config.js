@@ -12,9 +12,11 @@ module.exports = async ({ config, mode }) => {
   // Make whatever fine-grained changes you need
   config.module.rules.push({
     test: /\.(ts|tsx)$/,
-    loader: require.resolve('awesome-typescript-loader'),
+    loader: require.resolve('ts-loader'),
+    exclude: /node_modules\/(?!brave-ui)/,
     options: {
-      configFileName: path.resolve(__dirname, '..', 'tsconfig-storybook.json'),
+      configFile: path.resolve(__dirname, '..', 'tsconfig-storybook.json'),
+      allowTsInNodeModules: true,
       getCustomTransformers: () => ({
         before: [
           createStyledComponentsTransformer({
@@ -25,6 +27,10 @@ module.exports = async ({ config, mode }) => {
         ]
       })
     }
+  })
+  config.module.rules.push({
+    test: /\.avif$/,
+    loader: 'file-loader'
   })
   config.resolve.alias = {
     ...config.resolve.alias,

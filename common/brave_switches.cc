@@ -20,24 +20,16 @@ const char kDisableBraveRewardsExtension[] = "disable-brave-rewards-extension";
 // This switch disables update module(Sparkle).
 const char kDisableBraveUpdate[] = "disable-brave-update";
 
-// This switch disables the ChromeGoogleURLTrackerClient
-const char kDisableChromeGoogleURLTrackingClient[] =
-    "disable-chrome-google-url-tracking-client";
-
-// Allows disabling the Tor client updater extension.
-const char kDisableTorClientUpdaterExtension[] =
-    "disable-tor-client-updater-extension";
-
 // Allows disabling the WebTorrent extension.
 const char kDisableWebTorrentExtension[] = "disable-webtorrent-extension";
 
-// Specifies overriding the built-in theme setting.
-// Valid values are: "dark" | "light".
-const char kUiMode[] = "ui-mode";
+// Allows disabling the Wayback Machine extension.
+const char kDisableBraveWaybackMachineExtension[] =
+    "disable-brave-wayback-machine-extension";
 
-// Triggers auto-import of profile data from Brave browser-laptop/Muon, if
-// available.
-const char kUpgradeFromMuon[] = "upgrade-from-muon";
+// Specifies overriding the built-in dark mode setting.
+// Valid values are: "dark" | "light".
+const char kDarkMode[] = "dark-mode";
 
 // Allows disabling the machine ID generation on Windows.
 const char kDisableMachineId[] = "disable-machine-id";
@@ -53,4 +45,9 @@ const char kEnableSmartTrackingProtection[] =
 
 const char kFastWidevineBundleUpdate[] = "fast-widevine-bundle-update";
 
+// Use custom update interval in sec
+const char kComponentUpdateIntervalInSec[] = "component-update-interval-in-sec";
+
+// Disables DOH using a runtime flag mainly for network audit
+const char kDisableDnsOverHttps[] = "disable-doh";
 }  // namespace switches

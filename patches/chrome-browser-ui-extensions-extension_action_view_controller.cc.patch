@@ -1,11 +1,11 @@
 diff --git a/chrome/browser/ui/extensions/extension_action_view_controller.cc b/chrome/browser/ui/extensions/extension_action_view_controller.cc
-index 28d030c401cd0df200451163c9a9ff07a8332136..be0113341fd5377e5d0f76a07db0b3fabfdf256e 100644
+index 7c00f25811fa41badd45c26930f34cc0f2c1cce3..f9d71e194560e95726b76ec7db5eafcd0c14bf3d 100644
 --- a/chrome/browser/ui/extensions/extension_action_view_controller.cc
 +++ b/chrome/browser/ui/extensions/extension_action_view_controller.cc
 @@ -61,7 +61,6 @@ ExtensionActionViewController::ExtensionActionViewController(
+       icon_factory_(browser->profile(), extension, extension_action, this),
        extension_registry_(
-           extensions::ExtensionRegistry::Get(browser_->profile())),
-       popup_host_observer_(this) {
+           extensions::ExtensionRegistry::Get(browser_->profile())) {
 -  DCHECK(extensions_container);
    DCHECK(extension_action);
    DCHECK(extension);

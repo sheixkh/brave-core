@@ -15,7 +15,6 @@ import ImportBox from './screens/importBox'
 import RewardsBox from './screens/rewardsBox'
 import SearchBox from './screens/searchBox'
 import ShieldsBox from './screens/shieldsBox'
-import ThemeBox from './screens/themeBox'
 import FooterBox from './screens/footerBox'
 
 // Images
@@ -25,8 +24,8 @@ import { Background, BackgroundContainer } from '../components/images'
 import * as welcomeActions from '../actions/welcome_actions'
 
 // Assets
-import '../../fonts/muli.css'
-import '../../fonts/poppins.css'
+import '../../../ui/webui/resources/fonts/muli.css'
+import '../../../ui/webui/resources/fonts/poppins.css'
 import 'emptykit.css'
 
 interface Props {
@@ -35,17 +34,27 @@ interface Props {
 }
 
 export interface State {
-  currentScreen: number
+  currentScreen: number,
+  finished: boolean,
+  skipped: boolean
+  shouldUpdateElementOverflow: boolean
 }
 
-const totalScreensSize = 6
+const totalScreensSize = 5
 
 export class WelcomePage extends React.Component<Props, State> {
   constructor (props: Props) {
     super(props)
     this.state = {
-      currentScreen: 1
+      currentScreen: 1,
+      finished: false,
+      skipped: false,
+      shouldUpdateElementOverflow: false
     }
+  }
+
+  componentDidUpdate (prevProps: Props) {
+    this.props.actions.recordP3A(this.state)
   }
 
   get currentScreen () {
@@ -53,42 +62,62 @@ export class WelcomePage extends React.Component<Props, State> {
   }
 
   onClickLetsGo = () => {
-    this.setState({ currentScreen: this.state.currentScreen + 1 })
+    this.setState({
+      currentScreen: this.state.currentScreen + 1
+    })
   }
 
   onClickImport = (sourceBrowserProfileIndex: number) => {
     this.props.actions.importBrowserProfileRequested(sourceBrowserProfileIndex)
-    this.setState({ currentScreen: this.state.currentScreen + 1 })
+    this.setState({
+      currentScreen: this.state.currentScreen + 1
+    })
   }
 
   onClickRewardsGetStarted = () => {
-    this.props.actions.goToTabRequested('chrome://rewards', '_blank')
+    this.props.actions.goToTabRequested('chrome://rewards/enable', '_blank')
   }
 
   onClickSlideBullet = (nextScreen: number) => {
-    this.setState({ currentScreen: nextScreen })
+    this.setState({
+      currentScreen: nextScreen
+    })
   }
 
   onClickNext = () => {
-    this.setState({ currentScreen: this.state.currentScreen + 1 })
+    this.setState({
+      currentScreen: this.state.currentScreen + 1
+    })
   }
 
   onClickDone = () => {
+    this.setState({
+      finished: true
+    })
     this.props.actions.goToTabRequested('chrome://newtab', '_self')
   }
 
   onClickSkip = () => {
+    this.setState({
+      skipped: true
+    })
     this.props.actions.goToTabRequested('chrome://newtab', '_self')
+  }
+
+  resetStyleOverflow = () => {
+    this.setState({ shouldUpdateElementOverflow: true })
   }
 
   render () {
     const { welcomeData, actions } = this.props
+    const { shouldUpdateElementOverflow } = this.state
     return (
       <>
-        <Page id='welcomePage'>
-          <BackgroundContainer>
-            <Background/>
-          </BackgroundContainer>
+        <Page
+          id='welcomePage'
+          onAnimationEnd={this.resetStyleOverflow}
+          shouldUpdateElementOverflow={shouldUpdateElementOverflow}
+        >
           <Panel>
             <SlideContent>
               <WelcomeBox index={1} currentScreen={this.currentScreen} onClick={this.onClickLetsGo} />
@@ -98,21 +127,15 @@ export class WelcomePage extends React.Component<Props, State> {
                 onClick={this.onClickImport}
                 browserProfiles={welcomeData.browserProfiles}
               />
+              <ShieldsBox index={3} currentScreen={this.currentScreen} />
               <SearchBox
-                index={3}
+                index={4}
                 currentScreen={this.currentScreen}
                 onClick={this.onClickNext}
                 changeDefaultSearchProvider={actions.changeDefaultSearchProvider}
                 searchProviders={welcomeData.searchProviders}
               />
-              <ThemeBox
-                index={4}
-                currentScreen={this.currentScreen}
-                onChangeTheme={actions.setTheme}
-                browserThemes={welcomeData.browserThemes}
-              />
-              <ShieldsBox index={5} currentScreen={this.currentScreen} />
-              <RewardsBox index={6} currentScreen={this.currentScreen} onClick={this.onClickRewardsGetStarted} />
+              <RewardsBox index={5} currentScreen={this.currentScreen} onClick={this.onClickRewardsGetStarted} />
             </SlideContent>
             <FooterBox
               totalScreensSize={totalScreensSize}
@@ -123,6 +146,9 @@ export class WelcomePage extends React.Component<Props, State> {
               onClickDone={this.onClickDone}
             />
           </Panel>
+          <BackgroundContainer>
+            <Background/>
+          </BackgroundContainer>
         </Page>
       </>
     )

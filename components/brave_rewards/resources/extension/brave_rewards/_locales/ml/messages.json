@@ -19,6 +19,10 @@
     "message": "You can now earn tokens for watching privacy-respecting ads.",
     "description": "Entry text for welcome screen in the panel, new user"
   },
+  "welcomeDescPoints": {
+    "message": "You can now earn points for watching privacy-respecting ads.",
+    "description": "Entry text for welcome screen in the panel, points"
+  },
   "welcomeFooterTextOne": {
     "message": "Check out what’s improved",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, existing user"
@@ -43,6 +47,22 @@
     "message": "Grants",
     "description": "Title for grant section in wallet summary"
   },
+  "details": {
+    "message": "വിശദാംശങ്ങൾ",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "Your Balance",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "BAT Points",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "can be used in Brave Rewards to contribute to your favorite content creators. BAT Points cannot be exchanged for BAT.",
+    "description": "Text for BAT Point helper message"
+  },
   "on": {
     "message": "on",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -56,7 +76,7 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "Tip this site monthly",
+    "message": "Monthly Contribution",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
@@ -128,12 +148,22 @@
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "Token Grants",
-    "description": "Title for grant notification"
+    "message": "$currency$ Grants",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
     "message": "Token Grants Claimed",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "Point Grants Claimed",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "Earnings from Ads",
@@ -152,11 +182,11 @@
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "Monthly Tips",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "Monthly Contributions",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
-    "message": "ഓഫാക്കുക",
+    "message": "ഓഫാണ്",
     "description": "Label used in toggle indicating that toggle is off"
   },
   "ok": {
@@ -167,10 +197,6 @@
     "message": "Now you can earn by viewing ads.",
     "description": "Message for ads launch notification"
   },
-  "braveAdsLaunchTitle": {
-    "message": "Brave Ads has arrived!",
-    "description": "Message used in notification to let users know Ads is available"
-  },
   "braveAdsTitle": {
     "message": "Brave Ads",
     "description": "Notification title when we display info about ads"
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "You've contributed $amount$ BAT",
+    "message": "You've contributed $amount$ $currency$",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "Your scheduled monthly payment for Auto-Contribute and monthly tips could not be completed due to insufficient funds. We’ll try again in 30 days.",
+    "message": "Your scheduled monthly payment for Auto-Contribute and monthly contributions could not be completed due to insufficient funds. We’ll try again in 30 days.",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -261,10 +291,6 @@
     "message": "Grant Expiration Date",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "Sorry, it appears that this grant has already been claimed.",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
     "message": "ശരി",
     "description": "Button text for clearing the error."
@@ -276,18 +302,6 @@
   "grantGeneralErrorTitle": {
     "message": "Oops, something is wrong. Please try again later.",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "ശരി",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "Sorry, it appears that this grant has already expired.",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "This grant is no longer available.",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "Refresh Status",
@@ -306,7 +320,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "You’ve designated {{reservedAmount}} BAT for creators who haven’t yet signed up to receive contributions. Your browser will keep trying to contribute until they verify, or until 90 days have passed.",
+    "message": "You’ve designated {{reservedAmount}} {{currency}} for creators who haven’t yet signed up to receive contributions. Your browser will keep trying to contribute until they verify, or until 90 days have passed.",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
@@ -314,7 +328,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "disabledPanelOff": {
-    "message": "ഓഫാക്കുക",
+    "message": "ഓഫാണ്",
     "description": "Off state text for Panel's disabled state"
   },
   "disabledPanelSettings": {
@@ -382,12 +396,12 @@
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "Your monthly tips have been processed!",
-    "description": "Message for monthly tips processed notification"
+    "message": "Your monthly contributions have been processed!",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "Contributions & Tips",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "By clicking ‘Join Rewards’, you indicate that you have read and agree to the",
@@ -396,6 +410,10 @@
   "bat": {
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
+  },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
   },
   "turnOnAds": {
     "message": "Turn on Ads",
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "Your token grant is on its way.",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "Your $currency$ grant is on its way.",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "Free Token Grant",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "Free Point Grant",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Brave Ads Rewards!",
+    "message": "You've earned an Ads Reward!",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "Your rewards grant from Brave Ads is on its way.",
+    "message": "Your Reward is on its way to your Brave Rewards wallet.",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "Your Brave Ads Token Grant",
+    "message": "Your Reward Amount",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "This verified creator has yet to verify (KYC) their account to receive tips from your verified wallet. Tips will remain in your wallet until they complete verification.",
+    "message": "This Brave Verified Creator has not yet configured their account to receive contributions from Brave Users. Any tips you send will remain in your wallet until they complete this process.",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "Complete wallet verification",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "Set...",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "tokens",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "Point",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "Token",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "points",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "Token Grants",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "Point Grants",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "Hello, $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "റദ്ദാക്കൂ",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "Change amount",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "സൈൻ ഇൻ",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "Verifying wallet allows you to manage your funds more efficiently.",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "You need to have minimum 25 BAT to create an Uphold account. Please try again later. \n If you already have a verified Uphold account, continue to login.",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "ബന്ധിപ്പിച്ചു",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "Pending",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "Note: Your transactions will be visible to Uphold once you authorize; for instance, they will be able to see the recipient and amount of your tips.",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "Earn Tokens & Give Back",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "Earn tokens by viewing privacy-respecting ads and support your favorite sites and content creators automatically.",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "Start using Brave Rewards",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "Take a quick tour",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "By proceeding, you agree to the $tos_link_begin$Terms of Service$tos_link_end$ and $pp_link_begin$Privacy Policy$pp_link_end$.",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "Go Back",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "Let’s take a quick tour",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "തുടരുക",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "പൂർത്തിയാക്കി",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "ഉപേക്ഷിക്കുക",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "Skip for now",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "Welcome to Brave Rewards!",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Brave Private Ads reward you with tokens to support content creators unlike traditional ads, all while keeping your personal information private.",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "Where do ads show up?",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Brave Private Ads will appear as a normal notification. You control how often you see these ads in settings.",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "When do you receive rewards",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "Your earned tokens from Brave Private Ads throughout the current month will arrive on the 5th of the next month.",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "Giving back made effortless",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "Creators receive your token contributions automatically based on your engagement levels that we measure as ‘Attention’.",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "Say thank you with tips",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "Tipping is a way to personally encourage and support content or creators that you love. Get tippin!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "What can you do with tokens?",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "Tokens can be used beyond supporting creators. You can buy digital content and other goods as merchants come onboard.",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "Woohoo, you’re all set!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "By using Brave Rewards you are helping make the web a better place for everyone. And that’s awesome!",
+    "description": ""
   }
 }

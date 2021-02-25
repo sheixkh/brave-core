@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Jūs pārlūkojat šo vietni bez privātuma un drošības aizsardzības.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Jūs pārskatāt šo vietni bez Brave privātuma un drošības aizsardzības. Vai ar ieslēgtu aizsardzību tā nedarbojas pareizi?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Ziņot par bojātu vietni",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Vienumi bloķēti",
@@ -51,6 +55,22 @@
     "message": "Bloķēti starpvietņu izsekotāji",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Bloķētie izsekotāji un reklāmas",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Izsekotāji un reklāmas ir bloķēti (agresīvais režīms)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Izsekotāji un reklāmas ir bloķēti (standarta režīms)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Atļaut visus izsekotājus un reklāmas",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Savienojumi jaunināti uz HTTPS",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "Atļauti visi sīkfaili",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Bloķēta starpvieņu ierīces atpazīšana",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Pirkstu nospiedumu ņemšana bloķēta",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Bloķēti ierīces atpazīšanas mēģinājumi",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Pirkstu nospiedumu ņemšana bloķēta (standarta režīms)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Atļauti visi ierīču atpazīšanas mēģinājumi",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Pirkstu nospiedumu ņemšana bloķēta (stingrais režīms, var radīt vietņu darbības traucējumus)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Atļaut visu identificējošās dokumenta ciparvirknes veidošanu",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Ierīces atpazīšanas mēģinājumi",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Identificējošās ciparvirknes veidošanas mēģinājumi",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Skripti šajā vietnē",

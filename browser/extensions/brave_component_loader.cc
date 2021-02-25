@@ -7,61 +7,102 @@
 
 #include <string>
 
+#include "base/bind.h"
 #include "base/command_line.h"
+#include "bat/ads/pref_names.h"
 #include "brave/browser/brave_browser_process_impl.h"
 #include "brave/browser/component_updater/brave_component_installer.h"
 #include "brave/common/brave_switches.h"
-#include "brave/common/extensions/extension_constants.h"
 #include "brave/common/pref_names.h"
+#include "brave/components/brave_ads/common/pref_names.h"
+#include "brave/components/brave_component_updater/browser/brave_on_demand_updater.h"
 #include "brave/components/brave_extension/grit/brave_extension.h"
 #include "brave/components/brave_rewards/browser/buildflags/buildflags.h"
+#include "brave/components/brave_rewards/common/pref_names.h"
 #include "brave/components/brave_rewards/resources/extension/grit/brave_rewards_extension_resources.h"
 #include "brave/components/brave_webtorrent/grit/brave_webtorrent_resources.h"
 #include "chrome/browser/extensions/extension_service.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/ui/webui/components_ui.h"
 #include "chrome/common/pref_names.h"
 #include "components/grit/brave_components_resources.h"
+#include "components/prefs/pref_change_registrar.h"
+#include "components/prefs/pref_service.h"
 #include "extensions/browser/extension_prefs.h"
 #include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_system.h"
+#include "extensions/common/constants.h"
+
+#if BUILDFLAG(BRAVE_WALLET_ENABLED)
+#include "brave/browser/extensions/brave_wallet_util.h"
+#include "brave/components/brave_wallet/brave_wallet_constants.h"
+#include "brave/components/brave_wallet/pref_names.h"
+#endif
 
 namespace extensions {
 
-BraveComponentLoader::BraveComponentLoader(
-    ExtensionServiceInterface* extension_service,
-    Profile* profile)
-    : ComponentLoader(extension_service, profile),
+BraveComponentLoader::BraveComponentLoader(ExtensionSystem* extension_system,
+                                           Profile* profile)
+    : ComponentLoader(extension_system, profile),
       profile_(profile),
-      profile_prefs_(profile->GetPrefs()) {}
-
-BraveComponentLoader::~BraveComponentLoader() {
+      profile_prefs_(profile->GetPrefs()) {
+#if BUILDFLAG(BRAVE_REWARDS_ENABLED)
+  pref_change_registrar_.Init(profile_prefs_);
+  pref_change_registrar_.Add(
+      brave_rewards::prefs::kAutoContributeEnabled,
+      base::Bind(&BraveComponentLoader::CheckRewardsStatus,
+                 base::Unretained(this)));
+#endif
 }
 
+BraveComponentLoader::~BraveComponentLoader() {}
+
 void BraveComponentLoader::OnComponentRegistered(std::string extension_id) {
-  // TODO(bridiver) - I don't think this is correct
-  ComponentsUI::OnDemandUpdate(extension_id);
+  brave_component_updater::BraveOnDemandUpdater::GetInstance()->OnDemandUpdate(
+      extension_id);
 }
 
 void BraveComponentLoader::OnComponentReady(std::string extension_id,
-    bool allow_file_access,
-    const base::FilePath& install_dir,
-    const std::string& manifest) {
+                                            bool allow_file_access,
+                                            const base::FilePath& install_dir,
+                                            const std::string& manifest) {
   Add(manifest, install_dir);
   if (allow_file_access) {
     ExtensionPrefs::Get(profile_)->SetAllowFileAccess(extension_id, true);
   }
+#if BUILDFLAG(BRAVE_WALLET_ENABLED)
+  if (extension_id == ethereum_remote_client_extension_id) {
+    ReinstallAsNonComponent(ethereum_remote_client_extension_id);
+  }
+#endif
+}
+
+void BraveComponentLoader::ReinstallAsNonComponent(
+    const std::string extension_id) {
+  extensions::ExtensionService* service =
+      extensions::ExtensionSystem::Get(profile_)->extension_service();
+  extensions::ExtensionRegistry* registry =
+      extensions::ExtensionRegistry::Get(profile_);
+  const Extension* extension = registry->GetInstalledExtension(extension_id);
+  DCHECK(extension);
+  if (extension->location() == Manifest::COMPONENT) {
+    service->RemoveComponentExtension(extension_id);
+    std::string error;
+    scoped_refptr<Extension> normal_extension = Extension::Create(
+        extension->path(), Manifest::EXTERNAL_PREF,
+        *extension->manifest()->value(), extension->creation_flags(), &error);
+    service->AddExtension(normal_extension.get());
+  }
 }
 
 void BraveComponentLoader::AddExtension(const std::string& extension_id,
-    const std::string& name, const std::string& public_key) {
-  brave::RegisterComponent(g_browser_process->component_updater(),
-    name,
-    public_key,
-    base::Bind(&BraveComponentLoader::OnComponentRegistered,
-        base::Unretained(this), extension_id),
-    base::Bind(&BraveComponentLoader::OnComponentReady,
-        base::Unretained(this), extension_id, true));
+                                        const std::string& name,
+                                        const std::string& public_key) {
+  brave::RegisterComponent(
+      g_browser_process->component_updater(), name, public_key,
+      base::Bind(&BraveComponentLoader::OnComponentRegistered,
+                 base::Unretained(this), extension_id),
+      base::Bind(&BraveComponentLoader::OnComponentReady,
+                 base::Unretained(this), extension_id, true));
 }
 
 void BraveComponentLoader::AddHangoutServicesExtension() {
@@ -89,40 +130,62 @@ void BraveComponentLoader::AddDefaultComponentExtensions(
   }
 
 #if BUILDFLAG(BRAVE_REWARDS_ENABLED)
-  if (!command_line.HasSwitch(switches::kDisableBraveRewardsExtension)) {
+  // Enable rewards extension if already opted-in
+  CheckRewardsStatus();
+#endif
+}
+
+#if BUILDFLAG(BRAVE_REWARDS_ENABLED)
+void BraveComponentLoader::AddRewardsExtension() {
+  const base::CommandLine& command_line =
+      *base::CommandLine::ForCurrentProcess();
+  if (!command_line.HasSwitch(switches::kDisableBraveRewardsExtension) &&
+      !Exists(brave_rewards_extension_id)) {
     base::FilePath brave_rewards_path(FILE_PATH_LITERAL(""));
     brave_rewards_path =
         brave_rewards_path.Append(FILE_PATH_LITERAL("brave_rewards"));
     Add(IDR_BRAVE_REWARDS, brave_rewards_path);
   }
-#endif
-
-  if (!command_line.HasSwitch(switches::kDisableWebTorrentExtension) &&
-      (!profile_prefs_->FindPreference(kWebTorrentEnabled) ||
-      profile_prefs_->GetBoolean(kWebTorrentEnabled))) {
-    base::FilePath brave_webtorrent_path(FILE_PATH_LITERAL(""));
-    brave_webtorrent_path =
-      brave_webtorrent_path.Append(FILE_PATH_LITERAL("brave_webtorrent"));
-    Add(IDR_BRAVE_WEBTORRENT, brave_webtorrent_path);
-  }
-
-#if BUILDFLAG(BRAVE_WALLET_ENABLED)
-  // If brave://wallet has been loaded at least once, then load it again.
-  if (ExtensionPrefs::Get(profile_)->
-      HasPrefForExtension(ethereum_remote_client_extension_id)) {
-    AddEthereumRemoteClientExtension();
-  }
-#endif
 }
+
+void BraveComponentLoader::CheckRewardsStatus() {
+  const bool is_ac_enabled =
+      profile_prefs_->GetBoolean(brave_rewards::prefs::kAutoContributeEnabled);
+
+  if (is_ac_enabled) {
+    AddRewardsExtension();
+  }
+}
+#endif
 
 #if BUILDFLAG(BRAVE_WALLET_ENABLED)
 void BraveComponentLoader::AddEthereumRemoteClientExtension() {
-  if (profile_prefs_->GetBoolean(kBraveWalletEnabled)) {
-    AddExtension(ethereum_remote_client_extension_id,
-        ethereum_remote_client_extension_name,
-        ethereum_remote_client_extension_public_key);
+  AddExtension(ethereum_remote_client_extension_id,
+               ethereum_remote_client_extension_name,
+               ethereum_remote_client_extension_public_key);
+}
+
+void BraveComponentLoader::AddEthereumRemoteClientExtensionOnStartup() {
+  // Only load if the eagerly load Crypto Wallets setting is on and there is a
+  // project id configured in the build.
+  if (HasInfuraProjectID() &&
+      profile_prefs_->GetBoolean(kLoadCryptoWalletsOnStartup)) {
+    AddEthereumRemoteClientExtension();
   }
 }
 #endif
+
+void BraveComponentLoader::AddWebTorrentExtension() {
+  const base::CommandLine& command_line =
+      *base::CommandLine::ForCurrentProcess();
+  if (!command_line.HasSwitch(switches::kDisableWebTorrentExtension) &&
+      (!profile_prefs_->FindPreference(kWebTorrentEnabled) ||
+       profile_prefs_->GetBoolean(kWebTorrentEnabled))) {
+    base::FilePath brave_webtorrent_path(FILE_PATH_LITERAL(""));
+    brave_webtorrent_path =
+        brave_webtorrent_path.Append(FILE_PATH_LITERAL("brave_webtorrent"));
+    Add(IDR_BRAVE_WEBTORRENT, brave_webtorrent_path);
+  }
+}
 
 }  // namespace extensions

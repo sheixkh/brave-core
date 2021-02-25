@@ -1,12 +1,12 @@
 diff --git a/chrome/browser/extensions/api/webrtc_logging_private/webrtc_logging_private_api.cc b/chrome/browser/extensions/api/webrtc_logging_private/webrtc_logging_private_api.cc
-index 3896f0b9e8f764fa425e0702c6ff97ba0a4b1bcf..37c067c77588130a78318d22eb695f70e982dc70 100644
+index e0a0322126230516c61972184eb0d04923e0846c..fc9be21023aed80515d1734cff7f4c5133e354e4 100644
 --- a/chrome/browser/extensions/api/webrtc_logging_private/webrtc_logging_private_api.cc
 +++ b/chrome/browser/extensions/api/webrtc_logging_private/webrtc_logging_private_api.cc
-@@ -87,6 +87,7 @@ std::string HashIdWithOrigin(const std::string& security_origin,
- content::RenderProcessHost* WebrtcLoggingPrivateFunction::RphFromRequest(
+@@ -89,6 +89,7 @@ content::RenderProcessHost* WebrtcLoggingPrivateFunction::RphFromRequest(
      const api::webrtc_logging_private::RequestInfo& request,
-     const std::string& security_origin) {
-+  return nullptr; // feature disabled in Brave
+     const std::string& security_origin,
+     std::string* error) {
++  BRAVE_DISABLE_RPH_FROM_REQUEST //feature disabled in Brave
    // There are 2 ways these API functions can get called.
    //
-   //  1. From a whitelisted component extension on behalf of a page with the
+   //  1. From an allowlisted component extension on behalf of a page with the

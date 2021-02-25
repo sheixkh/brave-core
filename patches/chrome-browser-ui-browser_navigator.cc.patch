@@ -1,16 +1,16 @@
 diff --git a/chrome/browser/ui/browser_navigator.cc b/chrome/browser/ui/browser_navigator.cc
-index 441d74eb9c66b5aca7b728e30ef42304ecac67d1..a32b1023f18a9b8138ebe2a580f4a5ea4f699816 100644
+index 4bf854459b2ca8c73c5fb559266d8682d6999d52..340224731d68ed1eaf42cce251ea1d4759de4d48 100644
 --- a/chrome/browser/ui/browser_navigator.cc
 +++ b/chrome/browser/ui/browser_navigator.cc
-@@ -106,6 +106,7 @@ Browser* GetOrCreateBrowser(Profile* profile, bool user_gesture) {
- // Returns true on success. Otherwise, if changing params leads the browser into
- // an erroneous state, returns false.
- bool AdjustNavigateParamsForURL(NavigateParams* params) {
-+  AdjustNavigateParamsForURLBraveImpl(params);
-   if (params->contents_to_insert || params->switch_to_singleton_tab ||
-       IsURLAllowedInIncognito(params->url, params->initiating_profile) ||
-       params->initiating_profile->IsGuestSession()) {
-@@ -730,6 +731,7 @@ void Navigate(NavigateParams* params) {
+@@ -487,6 +487,7 @@ void Navigate(NavigateParams* params) {
+     // Block any navigation requests in locked fullscreen mode.
+     return;
+   }
++  BRAVE_ADJUST_NAVIGATE_PARAMS_FOR_URL
+ 
+   // Open System Apps in their standalone window if necessary.
+   // TODO(crbug.com/1096345): Remove this code after we integrate with intent
+@@ -758,6 +759,7 @@ void Navigate(NavigateParams* params) {
  bool IsHostAllowedInIncognito(const GURL& url) {
    std::string scheme = url.scheme();
    base::StringPiece host = url.host_piece();

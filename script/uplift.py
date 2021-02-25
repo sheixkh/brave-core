@@ -26,14 +26,6 @@ from lib.github import (GitHub, get_authenticated_user_login, parse_user_logins,
                         get_title_from_first_commit, push_branches_to_remote)
 
 
-# TODOs
-#####
-# - parse out issue (so it can be included in body). ex: git log --pretty=format:%b
-# - discover associated issues
-#    - put them in the uplift / original PR body
-#    - set milestone! (on the ISSUE)
-
-
 class PrConfig:
     channel_names = channels()
     channels_to_process = channels()
@@ -42,7 +34,7 @@ class PrConfig:
     branches_to_push = []
     master_pr_number = -1
     github_token = None
-    reviewers = ['bbondy', 'bsclifton', 'kjozwiak', 'rebron', 'srirambv']
+    team_reviewers = ['uplift-approvers']
     parsed_owners = []
     milestones = None
     title = None
@@ -60,7 +52,10 @@ class PrConfig:
             self.github_token = get_env_var('GITHUB_TOKEN')
             if len(self.github_token) == 0:
                 try:
-                    result = execute(['npm', 'config', 'get', 'BRAVE_GITHUB_TOKEN']).strip()
+                    npm_cmd = 'npm'
+                    if sys.platform.startswith('win'):
+                        npm_cmd = 'npm.cmd'
+                    result = execute([npm_cmd, 'config', 'get', 'BRAVE_GITHUB_TOKEN']).strip()
                     if result == 'undefined':
                         raise Exception('`BRAVE_GITHUB_TOKEN` value not found!')
                     self.github_token = result
@@ -89,7 +84,7 @@ def is_nightly(channel):
     return config.channel_names[0] == channel
 
 
-# given something like "0.60.2", return branch version ("0.60.x")
+# given something like "1.5.2", return branch version ("1.5.x")
 def get_current_version_branch(version):
     version = str(version)
     if version[0] == 'v':
@@ -99,13 +94,18 @@ def get_current_version_branch(version):
     return '.'.join(parts)
 
 
-# given something like "0.60.x", get previous version ("0.59.x")
+# given something like "1.6.x", get previous version ("1.5.x")
 def get_previous_version_branch(version):
     version = str(version)
     if version[0] == 'v':
         version = version[1:]
     parts = version.split('.', 3)
-    parts[1] = str(int(parts[1]) - 1)
+    # TODO(bsclifton): hack used when deprecating dev channel
+    # remove me when 1.7 hits release channel
+    if int(parts[1]) == 7:
+        parts[1] = "5"
+    else:
+        parts[1] = str(int(parts[1]) - 1)
     parts[2] = 'x'
     return '.'.join(parts)
 
@@ -113,14 +113,12 @@ def get_previous_version_branch(version):
 def get_remote_channel_branches(raw_nightly_version):
     global config
     nightly_version = get_current_version_branch(raw_nightly_version)
-    dev_version = get_previous_version_branch(nightly_version)
-    beta_version = get_previous_version_branch(dev_version)
+    beta_version = get_previous_version_branch(nightly_version)
     release_version = get_previous_version_branch(beta_version)
     return {
         config.channel_names[0]: nightly_version,
-        config.channel_names[1]: dev_version,
-        config.channel_names[2]: beta_version,
-        config.channel_names[3]: release_version
+        config.channel_names[1]: beta_version,
+        config.channel_names[2]: release_version
     }
 
 
@@ -141,13 +139,13 @@ def parse_args():
                         default=None)
     parser.add_argument('--uplift-to',
                         help='starting at nightly (master), how far back to uplift the changes',
-                        default='dev')
+                        default='beta')
     parser.add_argument('--uplift-using-pr',
                         help='link to already existing pull request (number) to use as a reference for uplifting',
                         required=True)
     parser.add_argument('--start-from',
-                        help='instead of starting from nightly (default), start from dev/beta/release',
-                        default='dev')
+                        help='instead of starting from nightly (default), start from beta/release',
+                        default='beta')
     parser.add_argument('-v', '--verbose', action='store_true',
                         help='prints the output of the GitHub API calls')
     parser.add_argument('-n', '--dry-run', action='store_true',
@@ -175,6 +173,15 @@ def fancy_print(text):
     print('#' * len(text))
 
 
+def parse_issues_fixed(body):
+    try:
+        regex = r'((Resolves|Fixes|Fix|Closes|Close|resolves|fixes|fix|closes|close) https:\/\/github\.com\/brave\/brave-browser\/issues\/(\d*))'  # nopep8
+        return re.findall(regex, body)
+    except Exception as e:
+        print str(e)
+        return []
+
+
 def main():
     args = parse_args()
     if args.verbose:
@@ -193,6 +200,7 @@ def main():
     brave_browser_version = get_remote_version('master')
     remote_branches = get_remote_channel_branches(brave_browser_version)
     top_level_base = 'master'
+    issues_fixed = []
 
     # if starting point is NOT nightly, remove options which aren't desired
     # also, find the branch which should be used for diffs (for cherry-picking)
@@ -220,6 +228,7 @@ def main():
             top_level_sha = response['base']['sha']
             merged_at = str(response['merged_at']).strip()
             config.title = str(response['title']).strip()
+            issues_fixed = parse_issues_fixed(response['body'])
 
         except Exception as e:
             print('[ERROR] Error parsing or error returned from API when looking up pull request "' +
@@ -230,7 +239,7 @@ def main():
         config.master_pr_number = pr_number
         if top_level_base == 'master':
             config.channels_to_process = config.channel_names[1:]
-        else:
+        elif len(config.channels_to_process) == 0:
             branch_index = remote_branches.index(top_level_base)
             config.channels_to_process = config.channel_names[branch_index:]
 
@@ -294,7 +303,8 @@ def main():
                 channel,
                 top_level_base,
                 remote_branches[channel],
-                local_branches[channel])
+                local_branches[channel],
+                issues_fixed)
             if channel == args.uplift_to:
                 break
         print('\nDone!')
@@ -397,18 +407,19 @@ def get_milestone_for_branch(channel_branch):
     if not config.milestones:
         config.milestones = get_milestones(config.github_token, BRAVE_CORE_REPO)
     for milestone in config.milestones:
-        if milestone['title'].startswith(channel_branch + ' - '):
+        if (milestone['title'].startswith(channel_branch + ' - ') or
+           milestone['title'].startswith('Android ' + channel_branch + ' - ')):
             return milestone['number']
     return None
 
 
-def submit_pr(channel, top_level_base, remote_base, local_branch):
+def submit_pr(channel, top_level_base, remote_base, local_branch, issues_fixed):
     global config
 
     try:
         milestone_number = get_milestone_for_branch(remote_base)
         if milestone_number is None:
-            print('milestone for "' + remote_base + '"" was not found!')
+            print('milestone for "' + remote_base + '" was not found!')
             return 0
 
         print('(' + channel + ') creating pull request')
@@ -422,13 +433,24 @@ def submit_pr(channel, top_level_base, remote_base, local_branch):
             pr_body = 'TODO: fill me in\n(created using `npm run pr`)'
         else:
             pr_title += ' (uplift to ' + remote_base + ')'
-            pr_body = 'Uplift of #' + str(config.master_pr_number) + '\n\n'
-            pr_body += 'Approved, please ensure that before merging: \n'
-            pr_body += '- [ ] You have checked CI and the builds, lint, and tests all ' \
-                       'pass or are not related to your PR. \n'
+            pr_body = 'Uplift of #' + str(config.master_pr_number) + '\n'
+
+            if len(issues_fixed) > 0:
+                for fixed in issues_fixed:
+                    pr_body += (fixed[0] + '\n')
+
+            pr_body += '\nPre-approval checklist: \n'
             pr_body += '- [ ] You have tested your change on Nightly. \n'
+            pr_body += '- [ ] This contains text which needs to be translated. \n'
+            pr_body += '    - [ ] There are more than 7 days before the release. \n'
+            pr_body += '    - [ ] I\'ve notified folks in #l10n on Slack that translations are needed. \n'
             pr_body += '- [ ] The PR milestones match the branch they are landing to. \n\n'
-            pr_body += 'After you merge: \n'
+
+            pr_body += '\nPre-merge checklist: \n'
+            pr_body += '- [ ] You have checked CI and the builds, lint, and tests all ' \
+                       'pass or are not related to your PR. \n\n'
+
+            pr_body += 'Post-merge checklist: \n'
             pr_body += '- [ ] The associated issue milestone is set to the smallest version ' \
                        'that the changes is landed on.'
 
@@ -442,7 +464,7 @@ def submit_pr(channel, top_level_base, remote_base, local_branch):
 
         # assign milestone / reviewer(s) / owner(s)
         add_reviewers_to_pull_request(config.github_token, BRAVE_CORE_REPO, number,
-                                      reviewers=config.reviewers,
+                                      team_reviewers=config.team_reviewers,
                                       verbose=config.is_verbose, dryrun=config.is_dryrun)
         set_issue_details(config.github_token, BRAVE_CORE_REPO, number, milestone_number,
                           config.parsed_owners, config.labels,

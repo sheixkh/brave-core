@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Vi pregledate ovu lokaciju bez ikakve zaštite privatnosti i sigurnosti.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Pregleđujete ovaj sajt bez zaštite privatnosti i bezbednosne zaštite od strane aplikacije Brave. Zar to ne funkcioniše ispravno sa „Shields up”?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Prijavite raskinutu vezu sa sajtom",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Stavke je blokirane",
@@ -51,6 +55,22 @@
     "message": "Višelokacijska praćenja blokirana",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Praćenja i reklame su blokirani",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Tragači i oglasi su blokirani (agresivno)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Tragači i oglasi su blokirani (standardno)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Dozvoli sve tragače i oglase",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Veze su nadograđene u HTTPS",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "Svi kolačići su omogućeni",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Blokirano je višelokacijsko prepoznavanje uređaja",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Fingerprinting je blokiran",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Blokirani su pokušaji prepoznavanja uređaja",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Blokirano je beleženje posebnih obeležja (standard)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Dozvoljeni svi pokušaji prepoznavanja uređaja",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Blokirano je beleženje posebnih obeležja (strogo, može da probija lokacije)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Dozvoli sva beleženja posebnih obeležja",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Pokušaji prepoznavanja uređaja",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Pokušaji beleženja posebnih obeležja",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Skripte na ovoj veb lokaciji",

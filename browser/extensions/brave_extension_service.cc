@@ -8,12 +8,11 @@
 #include <string>
 
 #include "base/one_shot_event.h"
-#include "brave/browser/profiles/profile_util.h"
-#include "brave/common/extensions/extension_constants.h"
 #include "chrome/browser/extensions/api/content_settings/content_settings_service.h"
-#include "chrome/browser/extensions/extension_action.h"
-#include "chrome/browser/extensions/extension_action_manager.h"
 #include "chrome/browser/profiles/profile.h"
+#include "extensions/browser/extension_action.h"
+#include "extensions/browser/extension_action_manager.h"
+#include "extensions/common/constants.h"
 
 namespace extensions {
 
@@ -21,12 +20,12 @@ BraveExtensionService::BraveExtensionService(Profile* profile,
     const base::CommandLine* command_line,
     const base::FilePath& install_directory,
     ExtensionPrefs* extension_prefs,
-    Blacklist* blacklist,
+    Blocklist* blocklist,
     bool autoupdate_enabled,
     bool extensions_enabled,
     base::OneShotEvent* ready) :
     ExtensionService(profile, command_line, install_directory, extension_prefs,
-        blacklist, autoupdate_enabled, extensions_enabled, ready) {
+        blocklist, autoupdate_enabled, extensions_enabled, ready) {
 }
 
 BraveExtensionService::~BraveExtensionService() {
@@ -43,10 +42,10 @@ void BraveExtensionService::AddComponentExtension(const Extension* extension) {
   // the extension when BraveActionViewController is queried about the
   // visibility of the action.
   if ((extension->id() == brave_rewards_extension_id) &&
-      (profile_->IsGuestSession() || brave::IsTorProfile(profile_))) {
+      (profile_->IsGuestSession() || profile_->IsTor())) {
     extensions::ExtensionActionManager* extension_action_manager =
         ExtensionActionManager::Get(profile_);
-    ExtensionAction* action =
+    extensions::ExtensionAction* action =
         extension_action_manager->GetExtensionAction(*extension);
     action->SetIsVisible(ExtensionAction::kDefaultTabId, false);
   }
@@ -62,7 +61,7 @@ void BraveExtensionService::AddComponentExtension(const Extension* extension) {
                                          syncer::StringOrdinal(),
                                          extensions::kInstallFlagNone,
                                          std::string(),
-                                         base::nullopt);
+                                         {} /* ruleset_checksums */);
   extensions::ContentSettingsService::Get(profile_)->OnExtensionPrefsLoaded(
       extension->id(), extension_prefs_);
 }

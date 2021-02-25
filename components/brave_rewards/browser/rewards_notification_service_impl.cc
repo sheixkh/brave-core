@@ -15,36 +15,31 @@
 #include "base/strings/stringprintf.h"
 #include "base/time/time.h"
 #include "base/values.h"
-#include "bat/ledger/ledger_callback_handler.h"
-#include "bat/ledger/publisher_info.h"
+#include "bat/ledger/ledger.h"
 #include "brave/components/brave_rewards/common/pref_names.h"
-#include "brave/components/brave_rewards/browser/rewards_notification_service_observer.h"
 #include "chrome/browser/profiles/profile.h"
 #include "components/prefs/pref_service.h"
-#include "extensions/buildflags/buildflags.h"
-
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-#include "brave/components/brave_rewards/browser/extension_rewards_notification_service_observer.h"
-#endif
 
 namespace brave_rewards {
 
 RewardsNotificationServiceImpl::RewardsNotificationServiceImpl(Profile* profile)
     : profile_(profile) {
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  extension_rewards_notification_service_observer_ =
-          std::make_unique<ExtensionRewardsNotificationServiceObserver>
-              (profile);
-  AddObserver(extension_rewards_notification_service_observer_.get());
-#endif
   ReadRewardsNotificationsJSON();
 }
 
 RewardsNotificationServiceImpl::~RewardsNotificationServiceImpl() {
   StoreRewardsNotifications();
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  RemoveObserver(extension_rewards_notification_service_observer_.get());
-#endif
+  if (extension_observer_) {
+    RemoveObserver(extension_observer_.get());
+  }
+}
+
+void RewardsNotificationServiceImpl::Init(
+    std::unique_ptr<RewardsNotificationServiceObserver> extension_observer) {
+  if (extension_observer) {
+    extension_observer_ = std::move(extension_observer);
+    AddObserver(extension_observer_.get());
+  }
 }
 
 void RewardsNotificationServiceImpl::AddNotification(
@@ -67,6 +62,7 @@ void RewardsNotificationServiceImpl::AddNotification(
   RewardsNotification rewards_notification(
       id, type, GenerateRewardsNotificationTimestamp(), std::move(args));
   rewards_notifications_[id] = rewards_notification;
+  StoreRewardsNotifications();
   OnNotificationAdded(rewards_notification);
 
   if (only_once) {
@@ -91,11 +87,25 @@ void RewardsNotificationServiceImpl::DeleteNotification(
     rewards_notification = rewards_notifications_[id];
     rewards_notifications_.erase(id);
   }
+  StoreRewardsNotifications();
+
   OnNotificationDeleted(rewards_notification);
 }
 
-void RewardsNotificationServiceImpl::DeleteAllNotifications() {
+void RewardsNotificationServiceImpl::DeleteAllNotifications(
+    const bool delete_displayed) {
+  bool displayed = delete_displayed;
+
+  #if defined(OS_ANDROID)
+    displayed = true;
+  #endif
+
+  if (displayed) {
+    rewards_notifications_displayed_.clear();
+  }
+
   rewards_notifications_.clear();
+  StoreRewardsNotifications();
   OnAllNotificationsDeleted();
 }
 
@@ -132,7 +142,7 @@ RewardsNotificationServiceImpl::GenerateRewardsNotificationTimestamp() const {
 
 void RewardsNotificationServiceImpl::ReadRewardsNotificationsJSON() {
   std::string json =
-      profile_->GetPrefs()->GetString(prefs::kRewardsNotifications);
+      profile_->GetPrefs()->GetString(prefs::kNotifications);
   if (json.empty())
     return;
   base::Optional<base::Value> dictionary = base::JSONReader::Read(json);
@@ -165,7 +175,7 @@ void RewardsNotificationServiceImpl::ReadRewardsNotificationsJSON() {
 }
 
 void RewardsNotificationServiceImpl::ReadRewardsNotifications(
-    const base::Value::ListStorage& root) {
+    base::Value::ConstListView root) {
   for (auto it = root.cbegin(); it != root.cend(); ++it) {
     if (!it->is_dict())
       continue;
@@ -238,7 +248,7 @@ void RewardsNotificationServiceImpl::StoreRewardsNotifications() {
     return;
   }
 
-  profile_->GetPrefs()->SetString(prefs::kRewardsNotifications, result);
+  profile_->GetPrefs()->SetString(prefs::kNotifications, result);
 }
 
 bool RewardsNotificationServiceImpl::Exists(RewardsNotificationID id) const {
@@ -303,75 +313,94 @@ void RewardsNotificationServiceImpl::OnGetAllNotifications(
   TriggerOnGetAllNotifications(rewards_notifications_list);
 }
 
-bool RewardsNotificationServiceImpl::IsUGPGrant(const std::string& grant_type) {
-  return (grant_type == "ugp");
+bool RewardsNotificationServiceImpl::IsAds(
+    const ledger::type::PromotionType promotion_type) {
+  return promotion_type == ledger::type::PromotionType::ADS;
 }
 
-std::string RewardsNotificationServiceImpl::GetGrantIdPrefix(
-    const std::string& grant_type) {
-  std::string prefix = IsUGPGrant(grant_type)
-      ? "rewards_notification_grant_"
-      : "rewards_notification_grant_ads_";
-  return prefix;
+std::string RewardsNotificationServiceImpl::GetPromotionIdPrefix(
+    const ledger::type::PromotionType promotion_type) {
+  return IsAds(promotion_type)
+      ? "rewards_notification_grant_ads_"
+      : "rewards_notification_grant_";
 }
 
-void RewardsNotificationServiceImpl::OnGrant(RewardsService* rewards_service,
-                                             unsigned int result,
-                                             Grant properties) {
-  if (static_cast<ledger::Result>(result) != ledger::Result::LEDGER_OK) {
+void RewardsNotificationServiceImpl::OnFetchPromotions(
+    RewardsService* rewards_service,
+    const ledger::type::Result result,
+    const ledger::type::PromotionList& list) {
+  if (static_cast<ledger::type::Result>(result) !=
+      ledger::type::Result::LEDGER_OK) {
     return;
   }
 
-  std::string grant_type = properties.type;
-  std::string prefix = GetGrantIdPrefix(grant_type);
-  RewardsNotificationService::RewardsNotificationType notification_type
-      = IsUGPGrant(grant_type)
-      ? RewardsNotificationService::REWARDS_NOTIFICATION_GRANT
-      : RewardsNotificationService::REWARDS_NOTIFICATION_GRANT_ADS;
+  for (const auto& item : list) {
+    if (item->status == ledger::type::PromotionStatus::FINISHED) {
+      continue;
+    }
 
-  RewardsNotificationService::RewardsNotificationArgs args;
-  AddNotification(notification_type,
-                  args,
-                  prefix + properties.promotionId,
-                  true);
+    const std::string prefix = GetPromotionIdPrefix(item->type);
+    auto notification_type = IsAds(item->type)
+        ? RewardsNotificationService::REWARDS_NOTIFICATION_GRANT_ADS
+        : RewardsNotificationService::REWARDS_NOTIFICATION_GRANT;
+
+    RewardsNotificationService::RewardsNotificationArgs args;
+
+    bool only_once = true;
+  #if defined(OS_ANDROID)
+    only_once = false;
+  #endif
+
+    AddNotification(
+        notification_type,
+        args,
+        prefix + item->id,
+        only_once);
+  }
 }
 
-void RewardsNotificationServiceImpl::OnGrantFinish(
+void RewardsNotificationServiceImpl::OnPromotionFinished(
     RewardsService* rewards_service,
-    unsigned int result,
-    Grant grant) {
-  std::string grant_type = grant.type;
-  std::string prefix = GetGrantIdPrefix(grant_type);
+    const ledger::type::Result result,
+    ledger::type::PromotionPtr promotion) {
+  std::string prefix = GetPromotionIdPrefix(promotion->type);
+  DeleteNotification(prefix + promotion->id);
 
-  DeleteNotification(prefix + grant.promotionId);
   // We keep it for back compatibility
-  if (IsUGPGrant(grant_type)) {
+  if (!IsAds(promotion->type)) {
     DeleteNotification("rewards_notification_grant");
   }
 }
 
 void RewardsNotificationServiceImpl::OnReconcileComplete(
     RewardsService* rewards_service,
-    unsigned int result,
-    const std::string& viewing_id,
-    int32_t category,
-    const std::string& probi) {
-  auto converted_result = static_cast<ledger::Result>(result);
-  if ((converted_result == ledger::Result::LEDGER_OK &&
-       category == ledger::REWARDS_CATEGORY::AUTO_CONTRIBUTE) ||
-       converted_result == ledger::Result::LEDGER_ERROR ||
-       converted_result == ledger::Result::NOT_ENOUGH_FUNDS ||
-       converted_result == ledger::Result::TIP_ERROR) {
+    const ledger::type::Result result,
+    const std::string& contribution_id,
+    const double amount,
+    const ledger::type::RewardsType type,
+    const ledger::type::ContributionProcessor processor) {
+  if (type == ledger::type::RewardsType::ONE_TIME_TIP) {
+    return;
+  }
+
+  const bool completed_auto_contribute =
+      result == ledger::type::Result::LEDGER_OK &&
+      type == ledger::type::RewardsType::AUTO_CONTRIBUTE;
+
+  if (completed_auto_contribute ||
+      result == ledger::type::Result::NOT_ENOUGH_FUNDS ||
+      result == ledger::type::Result::LEDGER_ERROR ||
+      result == ledger::type::Result::TIP_ERROR) {
     RewardsNotificationService::RewardsNotificationArgs args;
-    args.push_back(viewing_id);
-    args.push_back(std::to_string(result));
-    args.push_back(std::to_string(category));
-    args.push_back(probi);
+    args.push_back(contribution_id);
+    args.push_back(std::to_string(static_cast<int>(result)));
+    args.push_back(std::to_string(static_cast<int>(type)));
+    args.push_back(std::to_string(amount));
 
     AddNotification(
         RewardsNotificationService::REWARDS_NOTIFICATION_AUTO_CONTRIBUTE,
         args,
-        "contribution_" + viewing_id);
+        "contribution_" + contribution_id);
   }
 }
 

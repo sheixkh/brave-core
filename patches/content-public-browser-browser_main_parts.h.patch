@@ -1,8 +1,8 @@
 diff --git a/content/public/browser/browser_main_parts.h b/content/public/browser/browser_main_parts.h
-index e4727f3a7dc4c03a7f370d96f04ec3fe203bcffb..2922c6eb42918433d8dea4b1ff03a91604fff436 100644
+index 2bfefad46b9ef071a9bafebe03550238c0acfad4..1c3a7a299e65457fa66070e0f94efb05e5222442 100644
 --- a/content/public/browser/browser_main_parts.h
 +++ b/content/public/browser/browser_main_parts.h
-@@ -97,6 +97,9 @@ class CONTENT_EXPORT BrowserMainParts {
+@@ -99,6 +99,9 @@ class CONTENT_EXPORT BrowserMainParts {
    // Called as the very last part of shutdown, after threads have been
    // stopped and destroyed.
    virtual void PostDestroyThreads() {}

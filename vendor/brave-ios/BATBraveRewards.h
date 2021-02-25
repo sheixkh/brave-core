@@ -10,13 +10,17 @@
 NS_ASSUME_NONNULL_BEGIN
 
 /// Configuration around brave rewards for ads & ledger
+OBJC_EXPORT
 NS_SWIFT_NAME(BraveRewardsConfiguration)
 @interface BATBraveRewardsConfiguration : NSObject <NSCopying>
 
 /// Whether or not rewards is being tested
 @property (nonatomic, getter=isTesting) BOOL testing;
-/// Whether or not rewards is in production
-@property (nonatomic, getter=isProduction) BOOL production;
+//@property (nonatomic, getter=isDebug) BOOL debug;
+/// The rewards environment
+@property (nonatomic) BATEnvironment environment;
+/// The rewards build channel
+@property (nonatomic, nullable) BATBraveAdsBuildChannel *buildChannel;
 /// Where ledger and ads should save their state
 @property (nonatomic, copy) NSString *stateStoragePath;
 /// The number of seconds between overrides. Defaults to 0 (no override) which means reconciles
@@ -25,25 +29,35 @@ NS_SWIFT_NAME(BraveRewardsConfiguration)
 /// Whether or not to enable short retries between contribution attempts
 @property (nonatomic) BOOL useShortRetries;
 
-/// The default configuration. Channel is debug, no changes to ledger configuration
+/// The default configuration. Environment is dev, no changes to ads or ledger configuration
 ///
 /// State is stored in Application Support
 @property (nonatomic, class, readonly) BATBraveRewardsConfiguration *defaultConfiguration NS_SWIFT_NAME(default);
-/// The production configuration. Channel is production, no changes to ledger configuration
+/// The staging configuration. Environment is staging, no changes to ads or ledger configuration
+///
+/// State is stored in Application Support
+@property (nonatomic, class, readonly) BATBraveRewardsConfiguration *stagingConfiguration NS_SWIFT_NAME(staging);
+/// The production configuration. Environment is production, no changes to ads or ledger configuration
 ///
 /// State is stored in Application Support
 @property (nonatomic, class, readonly) BATBraveRewardsConfiguration *productionConfiguration NS_SWIFT_NAME(production);
-/// The testing configuration. Channel is debug & testing. Short retries are enabled, number of
-/// seconds between reconciles is set to 30 seconds instead of 30 days.
+/// The testing configuration. Environment is development & is_testing is set to true. Short retries are enabled,
+/// number of seconds between reconciles is set to 30 seconds instead of 30 days.
 ///
 /// State is saved to a directory created in /tmp
 @property (nonatomic, class, readonly) BATBraveRewardsConfiguration *testingConfiguration NS_SWIFT_NAME(testing);
 
 @end
 
+OBJC_EXPORT
 NS_SWIFT_NAME(BraveRewardsDelegate)
 @protocol BATBraveRewardsDelegate <NSObject>
 @required
+
+- (void)logMessageWithFilename:(NSString *)file
+                    lineNumber:(int)lineNumber
+                     verbosity:(int)verbosity
+                       message:(NSString *)message;
 
 /// Obtain the favicon URL given some page's URL. The client can then choose
 /// to download said favicon and cache it for later when `retrieveFavicon` is
@@ -57,10 +71,13 @@ NS_SWIFT_NAME(BraveRewardsDelegate)
 
 /// A container for handling Brave Rewards. Use `ads` to handle how many ads the users see,
 /// when to display them. Use `ledger` to manage interactions between the users wallet & publishers
+OBJC_EXPORT
 NS_SWIFT_NAME(BraveRewards)
 @interface BATBraveRewards : NSObject
 
 @property (nonatomic, readonly) BATBraveAds *ads;
+/// Whether or not Brave Ads is enabled
+@property (nonatomic, assign, getter=isAdsEnabled) BOOL adsEnabled;
 @property (nonatomic, readonly) BATBraveLedger *ledger;
 @property (nonatomic, weak) id<BATBraveRewardsDelegate> delegate;
 
@@ -78,6 +95,7 @@ NS_SWIFT_NAME(BraveRewards)
 
 @end
 
+OBJC_EXPORT
 @interface BATBraveRewards (Reporting)
 
 /// Report that a tab with a given id was updated
@@ -88,14 +106,14 @@ NS_SWIFT_NAME(BraveRewards)
                isPrivate:(BOOL)isPrivate;
 /// Report that a page has loaded in the current browser tab, and the HTML is available for analysis
 ///
-/// @note Send false for `shouldClassifyForAds` if the load happened due to tabs restoring
-///       after app launch or if response header for the page load contains
-///       "cache-control: no-store"
+/// @note Send nil for `adsInnerText` if the load happened due to tabs restoring
+///       after app launch
 - (void)reportLoadedPageWithURL:(NSURL *)url
+             redirectedFromURLs:(NSArray<NSURL *> *)redirectionURLs
                      faviconURL:(nullable NSURL *)faviconURL
                           tabId:(UInt32)tabId
                            html:(NSString *)html
-           shouldClassifyForAds:(BOOL)shouldClassify NS_SWIFT_NAME(reportLoadedPage(url:faviconUrl:tabId:html:shouldClassifyForAds:));
+                   adsInnerText:(nullable NSString *)adsInnerText NS_SWIFT_NAME(reportLoadedPage(url:redirectionURLs:faviconUrl:tabId:html:adsInnerText:));
 /// Report any XHR load happening in the page
 - (void)reportXHRLoad:(NSURL *)url
                 tabId:(UInt32)tabId

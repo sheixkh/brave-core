@@ -29,18 +29,17 @@ class RewardsNotificationService {
 
   enum RewardsNotificationType {
     REWARDS_NOTIFICATION_INVALID = 0,
-    REWARDS_NOTIFICATION_AUTO_CONTRIBUTE,
-    REWARDS_NOTIFICATION_GRANT,
-    REWARDS_NOTIFICATION_GRANT_ADS,
-    REWARDS_NOTIFICATION_FAILED_CONTRIBUTION,
-    REWARDS_NOTIFICATION_IMPENDING_CONTRIBUTION,
-    REWARDS_NOTIFICATION_INSUFFICIENT_FUNDS,
-    REWARDS_NOTIFICATION_BACKUP_WALLET,
-    REWARDS_NOTIFICATION_TIPS_PROCESSED,
-    REWARDS_NOTIFICATION_ADS_ONBOARDING,
-    REWARDS_NOTIFICATION_VERIFIED_PUBLISHER,
-    REWARDS_NOTIFICATION_PENDING_NOT_ENOUGH_FUNDS,
-    REWARDS_NOTIFICATION_GENERAL_LEDGER
+    REWARDS_NOTIFICATION_AUTO_CONTRIBUTE = 1,
+    REWARDS_NOTIFICATION_GRANT = 2,
+    REWARDS_NOTIFICATION_GRANT_ADS = 3,
+    REWARDS_NOTIFICATION_FAILED_CONTRIBUTION = 4,
+    REWARDS_NOTIFICATION_IMPENDING_CONTRIBUTION = 5,
+    REWARDS_NOTIFICATION_INSUFFICIENT_FUNDS = 6,
+    REWARDS_NOTIFICATION_BACKUP_WALLET = 7,
+    REWARDS_NOTIFICATION_TIPS_PROCESSED = 8,
+    REWARDS_NOTIFICATION_VERIFIED_PUBLISHER = 10,
+    REWARDS_NOTIFICATION_PENDING_NOT_ENOUGH_FUNDS = 11,
+    REWARDS_NOTIFICATION_GENERAL_LEDGER = 12
   };
 
   struct RewardsNotification {
@@ -66,7 +65,7 @@ class RewardsNotificationService {
                                RewardsNotificationID id = "",
                                bool only_once = false) = 0;
   virtual void DeleteNotification(RewardsNotificationID id) = 0;
-  virtual void DeleteAllNotifications() = 0;
+  virtual void DeleteAllNotifications(const bool delete_displayed) = 0;
   virtual void GetNotification(RewardsNotificationID id) = 0;
   virtual void GetNotifications() = 0;
   virtual const RewardsNotificationsMap& GetAllNotifications() const = 0;

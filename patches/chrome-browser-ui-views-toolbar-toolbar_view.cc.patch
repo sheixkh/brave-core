@@ -1,13 +1,13 @@
 diff --git a/chrome/browser/ui/views/toolbar/toolbar_view.cc b/chrome/browser/ui/views/toolbar/toolbar_view.cc
-index 53845f75f0a397917f1b7bc9302d29147118bc85..0085d875e195ca98ee8e04f8ca3da39ac22f94fe 100644
+index ae3fc740beca6ad5491c04783bd9c2212abcf636..910b5f7a58fd58375704f11fff0978ca17347a01 100644
 --- a/chrome/browser/ui/views/toolbar/toolbar_view.cc
 +++ b/chrome/browser/ui/views/toolbar/toolbar_view.cc
-@@ -266,7 +266,7 @@ void ToolbarView::Init() {
+@@ -295,7 +295,7 @@ void ToolbarView::Init() {
+   } else {
+     // TODO(crbug.com/932818): Remove this once the
+     // |kAutofillEnableToolbarStatusChip| is fully launched.
+-    avatar_ = AddChildView(std::make_unique<AvatarToolbarButton>(browser_));
++    avatar_ = AddChildView(std::make_unique<BraveAvatarToolbarButton>(browser_));
+     avatar_->SetVisible(show_avatar_toolbar_button);
+   }
  
-   std::unique_ptr<AvatarToolbarButton> avatar;
-   if (show_avatar_toolbar_button)
--    avatar = std::make_unique<AvatarToolbarButton>(browser_);
-+    avatar = std::make_unique<BraveAvatarToolbarButton>(browser_);
- 
-   auto app_menu_button = std::make_unique<BrowserAppMenuButton>(this);
-   app_menu_button->EnableCanvasFlippingForRTLUI(true);

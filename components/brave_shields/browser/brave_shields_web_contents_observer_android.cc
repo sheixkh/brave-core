@@ -9,7 +9,7 @@
 
 #include "brave/browser/android/brave_shields_content_settings.h"
 #include "chrome/browser/android/tab_android.h"
-#include "chrome/browser/sessions/session_tab_helper.h"
+#include "components/sessions/content/session_tab_helper.h"
 #include "content/public/browser/web_contents.h"
 
 using content::WebContents;
@@ -19,6 +19,10 @@ namespace brave_shields {
 void BraveShieldsWebContentsObserver::DispatchBlockedEventForWebContents(
     const std::string& block_type, const std::string& subresource,
     WebContents* web_contents) {
+  if (!web_contents) {
+    return;
+  }
+
   int tabId = 0;
   TabAndroid* tab = TabAndroid::FromWebContents(web_contents);
   DCHECK(tab);

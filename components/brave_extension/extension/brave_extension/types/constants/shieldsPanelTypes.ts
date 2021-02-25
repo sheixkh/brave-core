@@ -6,6 +6,7 @@ import * as types from '../../constants/shieldsPanelTypes'
 
 export type SHIELDS_PANEL_DATA_UPDATED = typeof types.SHIELDS_PANEL_DATA_UPDATED
 export type SHIELDS_TOGGLED = typeof types.SHIELDS_TOGGLED
+export type REPORT_BROKEN_SITE = typeof types.REPORT_BROKEN_SITE
 export type RESOURCE_BLOCKED = typeof types.RESOURCE_BLOCKED
 export type BLOCK_ADS_TRACKERS = typeof types.BLOCK_ADS_TRACKERS
 export type CONTROLS_TOGGLED = typeof types.CONTROLS_TOGGLED
@@ -20,3 +21,6 @@ export type SET_ALL_SCRIPTS_BLOCKED_ONCE_CURRENT_STATE = typeof types.SET_ALL_SC
 export type SET_FINAL_SCRIPTS_BLOCKED_ONCE_STATE = typeof types.SET_FINAL_SCRIPTS_BLOCKED_ONCE_STATE
 export type SET_ADVANCED_VIEW_FIRST_ACCESS = typeof types.SET_ADVANCED_VIEW_FIRST_ACCESS
 export type TOGGLE_ADVANCED_VIEW = typeof types.TOGGLE_ADVANCED_VIEW
+export type SHIELDS_READY = typeof types.SHIELDS_READY
+export type GENERATE_CLASS_ID_STYLESHEET = typeof types.GENERATE_CLASS_ID_STYLESHEET
+export type CONTENT_SCRIPTS_LOADED = typeof types.CONTENT_SCRIPTS_LOADED

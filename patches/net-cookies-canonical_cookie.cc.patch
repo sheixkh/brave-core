@@ -1,18 +1,12 @@
 diff --git a/net/cookies/canonical_cookie.cc b/net/cookies/canonical_cookie.cc
-index c63b2d836db8cba9ca7fe72ffd86e0be149e6370..ee2e0cd8bcc7a9f4698051d4222fffc267dbb5be 100644
+index 927fe7c58d400908018c4f6a384b6b59fa4742ba..5adebc0aa5dde1ed608a0629967b7744951761dd 100644
 --- a/net/cookies/canonical_cookie.cc
 +++ b/net/cookies/canonical_cookie.cc
-@@ -238,9 +238,10 @@ std::unique_ptr<CanonicalCookie> CanonicalCookie::Create(
-     server_time = options.server_time();
+@@ -440,6 +440,7 @@ std::unique_ptr<CanonicalCookie> CanonicalCookie::Create(
+   // Get the port, this will get a default value if a port isn't provided.
+   int source_port = url.EffectiveIntPort();
  
-   DCHECK(!creation_time.is_null());
--  Time cookie_expires = CanonicalCookie::CanonExpiration(parsed_cookie,
--                                                         creation_time,
--                                                         server_time);
-+  Time cookie_expires = BraveCanonExpiration(parsed_cookie,
-+                                             creation_time,
-+                                             server_time,
-+                                             !options.exclude_httponly());
- 
-   CookiePrefix prefix = GetCookiePrefix(parsed_cookie.Name());
-   bool is_cookie_valid = IsCookiePrefixValid(prefix, url, parsed_cookie);
++  BRAVE_CREATE
+   std::unique_ptr<CanonicalCookie> cc = base::WrapUnique(new CanonicalCookie(
+       parsed_cookie.Name(), parsed_cookie.Value(), cookie_domain, cookie_path,
+       creation_time, cookie_expires, creation_time, parsed_cookie.IsSecure(),

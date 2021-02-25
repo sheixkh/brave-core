@@ -10,16 +10,17 @@
 #include <utility>
 
 #include "brave/browser/ui/brave_actions/brave_action_icon_with_badge_image_source.h"
-#include "brave/common/extensions/extension_constants.h"
-#include "chrome/browser/extensions/extension_action.h"
+#include "brave/browser/profiles/profile_util.h"
 #include "chrome/browser/extensions/extension_view_host.h"
 #include "chrome/browser/extensions/extension_view_host_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/sessions/session_tab_helper.h"
 #include "chrome/browser/themes/theme_properties.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/toolbar/toolbar_action_view_delegate.h"
+#include "components/sessions/content/session_tab_helper.h"
 #include "components/vector_icons/vector_icons.h"
+#include "extensions/browser/extension_action.h"
+#include "extensions/common/constants.h"
 #include "ui/base/theme_provider.h"
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/image/canvas_image_source.h"
@@ -31,7 +32,7 @@ bool BraveActionViewController::IsEnabled(
     content::WebContents* web_contents) const {
   bool is_enabled = ExtensionActionViewController::IsEnabled(web_contents);
   if (is_enabled && extension_->id() == brave_rewards_extension_id &&
-      browser_->profile()->IsOffTheRecord())
+      !brave::IsRegularProfile(browser_->profile()))
     is_enabled = false;
   return is_enabled;
 }
@@ -46,6 +47,13 @@ ui::MenuModel* BraveActionViewController::GetContextMenu() {
   return nullptr;
 }
 
+bool BraveActionViewController::ExecuteActionUI(
+    std::string relative_path) {
+  return TriggerPopupWithUrl(PopupShowAction::SHOW_POPUP,
+      extension()->GetResourceURL(relative_path),
+      true);
+}
+
 ExtensionActionViewController*
 BraveActionViewController::GetPreferredPopupViewController() {
   return this;
@@ -55,6 +63,11 @@ bool BraveActionViewController::TriggerPopupWithUrl(
     PopupShowAction show_action,
     const GURL& popup_url,
     bool grant_tab_permissions) {
+  // If this extension is currently showing a popup, hide it. This behavior is
+  // a bit different than ExtensionActionViewController, which will hide any
+  // popup, regardless of extension. Consider duplicating the original behavior.
+  HidePopup();
+
   std::unique_ptr<extensions::ExtensionViewHost> host =
       extensions::ExtensionViewHostFactory::CreatePopupHost(popup_url,
                                                             browser_);
@@ -83,14 +96,15 @@ gfx::Image BraveActionViewController::GetIcon(
 std::unique_ptr<BraveActionIconWithBadgeImageSource>
 BraveActionViewController::GetIconImageSource(
   content::WebContents* web_contents, const gfx::Size& size) {
-  int tab_id = SessionTabHelper::IdForTab(web_contents).id();
+  int tab_id = sessions::SessionTabHelper::IdForTab(web_contents).id();
   // generate icon
   std::unique_ptr<BraveActionIconWithBadgeImageSource> image_source(
       new BraveActionIconWithBadgeImageSource(size));
   image_source->SetIcon(icon_factory_.GetIcon(tab_id));
   // set text
   std::unique_ptr<IconWithBadgeImageSource::Badge> badge;
-  std::string badge_text = extension_action()->GetBadgeText(tab_id);
+  std::string badge_text =
+      extension_action()->GetExplicitlySetBadgeText(tab_id);
   if (!badge_text.empty()) {
     badge.reset(new IconWithBadgeImageSource::Badge(
             badge_text,

@@ -9,8 +9,6 @@
 #include "base/memory/singleton.h"
 #include "components/keyed_service/content/browser_context_keyed_service_factory.h"
 
-class Profile;
-
 namespace tor {
 class TorProfileService;
 }  // namespace tor
@@ -19,11 +17,18 @@ class TorProfileService;
 // Profiles.
 class TorProfileServiceFactory : public BrowserContextKeyedServiceFactory {
  public:
-  static tor::TorProfileService* GetForProfile(Profile* profile);
+  static tor::TorProfileService* GetForContext(
+      content::BrowserContext* context);
   static TorProfileServiceFactory* GetInstance();
+
+  static void SetTorDisabled(bool disabled);
+  static bool IsTorDisabled();
 
  private:
   friend struct base::DefaultSingletonTraits<TorProfileServiceFactory>;
+
+  static tor::TorProfileService* GetForContext(content::BrowserContext* context,
+                                               bool create);
 
   TorProfileServiceFactory();
   ~TorProfileServiceFactory() override;
@@ -33,9 +38,6 @@ class TorProfileServiceFactory : public BrowserContextKeyedServiceFactory {
       content::BrowserContext* context) const override;
   content::BrowserContext* GetBrowserContextToUse(
       content::BrowserContext* context) const override;
-  bool ServiceIsNULLWhileTesting() const override;
-  void BrowserContextShutdown(content::BrowserContext* context) override;
-  void BrowserContextDestroyed(content::BrowserContext* context) override;
 
   DISALLOW_COPY_AND_ASSIGN(TorProfileServiceFactory);
 };

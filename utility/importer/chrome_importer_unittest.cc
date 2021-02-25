@@ -1,16 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright (c) 2019 The Brave Authors. All rights reserved.
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "brave/utility/importer/chrome_importer.h"
-#include "brave/common/brave_paths.h"
-#include "brave/common/importer/brave_mock_importer_bridge.h"
+
+#include <string>
 
 #include "base/files/file_path.h"
 #include "base/files/file_util.h"
 #include "base/files/scoped_temp_dir.h"
-#include "base/strings/utf_string_conversions.h"
 #include "base/path_service.h"
+#include "base/strings/utf_string_conversions.h"
+#include "brave/common/brave_paths.h"
 #include "chrome/common/chrome_paths.h"
 #include "chrome/common/importer/imported_bookmark_entry.h"
 #include "chrome/common/importer/importer_data_types.h"
@@ -41,8 +43,9 @@ class ChromeImporterTest : public ::testing::Test {
   void SetUpChromeProfile() {
     // Creates a new profile in a new subdirectory in the temp directory.
     ASSERT_TRUE(temp_dir_.CreateUniqueTempDir());
-    base::FilePath test_path = temp_dir_.GetPath().AppendASCII("ChromeImporterTest");
-    base::DeleteFile(test_path, true);
+    base::FilePath test_path =
+        temp_dir_.GetPath().AppendASCII("ChromeImporterTest");
+    base::DeletePathRecursively(test_path);
     base::CreateDirectory(test_path);
     profile_dir_ = test_path.AppendASCII("profile");
 
@@ -56,14 +59,14 @@ class ChromeImporterTest : public ::testing::Test {
   void SetUp() override {
     SetUpChromeProfile();
     importer_ = new ChromeImporter;
-    bridge_ = new BraveMockImporterBridge;
+    bridge_ = new MockImporterBridge;
   }
 
   base::ScopedTempDir temp_dir_;
   base::FilePath profile_dir_;
   importer::SourceProfile profile_;
   scoped_refptr<ChromeImporter> importer_;
-  scoped_refptr<BraveMockImporterBridge> bridge_;
+  scoped_refptr<MockImporterBridge> bridge_;
 };
 
 TEST_F(ChromeImporterTest, ImportHistory) {
@@ -134,26 +137,27 @@ TEST_F(ChromeImporterTest, ImportFavicons) {
             favicons[3].favicon_url.spec());
 }
 
-// The mock keychain only works on macOS, so only run this test on macOS (for now)
-#if defined(OS_MACOSX)
+// The mock keychain only works on macOS, so only run this test on macOS (for
+// now)
+#if defined(OS_MAC)
 TEST_F(ChromeImporterTest, ImportPasswords) {
   // Use mock keychain on mac to prevent blocking permissions dialogs.
   OSCryptMocker::SetUp();
 
-  autofill::PasswordForm autofillable_login;
-  autofill::PasswordForm blacklisted_login;
+  importer::ImportedPasswordForm autofillable_login;
+  importer::ImportedPasswordForm blocked_login;
 
   EXPECT_CALL(*bridge_, NotifyStarted());
   EXPECT_CALL(*bridge_, NotifyItemStarted(importer::PASSWORDS));
   EXPECT_CALL(*bridge_, SetPasswordForm(_))
       .WillOnce(::testing::SaveArg<0>(&autofillable_login))
-      .WillOnce(::testing::SaveArg<0>(&blacklisted_login));
+      .WillOnce(::testing::SaveArg<0>(&blocked_login));
   EXPECT_CALL(*bridge_, NotifyItemEnded(importer::PASSWORDS));
   EXPECT_CALL(*bridge_, NotifyEnded());
 
   importer_->StartImport(profile_, importer::PASSWORDS, bridge_.get());
 
-  EXPECT_FALSE(autofillable_login.blacklisted_by_user);
+  EXPECT_FALSE(autofillable_login.blocked_by_user);
   EXPECT_EQ("http://127.0.0.1:8080/",
             autofillable_login.signon_realm);
   EXPECT_EQ("test-autofillable-login",
@@ -161,34 +165,13 @@ TEST_F(ChromeImporterTest, ImportPasswords) {
   EXPECT_EQ("autofillable-login-password",
             UTF16ToASCII(autofillable_login.password_value));
 
-  EXPECT_TRUE(blacklisted_login.blacklisted_by_user);
+  EXPECT_TRUE(blocked_login.blocked_by_user);
   EXPECT_EQ("http://127.0.0.1:8081/",
-            blacklisted_login.signon_realm);
-  EXPECT_EQ("", UTF16ToASCII(blacklisted_login.username_value));
-  EXPECT_EQ("", UTF16ToASCII(blacklisted_login.password_value));
+            blocked_login.signon_realm);
+  EXPECT_EQ("", UTF16ToASCII(blocked_login.username_value));
+  EXPECT_EQ("", UTF16ToASCII(blocked_login.password_value));
 
   OSCryptMocker::TearDown();
 }
 
-TEST_F(ChromeImporterTest, ImportCookies) {
-  OSCryptMocker::SetUp();
-
-  std::vector<net::CanonicalCookie> cookies;
-
-  EXPECT_CALL(*bridge_, NotifyStarted());
-  EXPECT_CALL(*bridge_, NotifyItemStarted(importer::COOKIES));
-  EXPECT_CALL(*bridge_, SetCookies(_))
-      .WillOnce(::testing::SaveArg<0>(&cookies));
-  EXPECT_CALL(*bridge_, NotifyItemEnded(importer::COOKIES));
-  EXPECT_CALL(*bridge_, NotifyEnded());
-
-  importer_->StartImport(profile_, importer::COOKIES, bridge_.get());
-
-  ASSERT_EQ(1u, cookies.size());
-  EXPECT_EQ("localhost", cookies[0].Domain());
-  EXPECT_EQ("test", cookies[0].Name());
-  EXPECT_EQ("test", cookies[0].Value());
-
-  OSCryptMocker::TearDown();
-}
 #endif

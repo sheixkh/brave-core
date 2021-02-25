@@ -4,6 +4,8 @@
 
 #import "DataController.h"
 
+#import "ledger.mojom.objc.h"
+
 @interface DataController ()
 @property (nonatomic) NSOperationQueue *operationQueue;
 @property (nonatomic) NSPersistentContainer *container;
@@ -28,7 +30,7 @@ static DataController *_dataController = nil;
 
 - (NSURL *)storeDirectoryURL
 {
-  const auto urls = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+  const auto urls = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
   const auto documentURL = urls.lastObject;
   if (!documentURL) {
     return nil;
@@ -39,6 +41,18 @@ static DataController *_dataController = nil;
 - (NSURL *)storeURL
 {
   return [[self storeDirectoryURL] URLByAppendingPathComponent:@"BraveRewards.sqlite"];
+}
+
++ (BOOL)defaultStoreExists
+{
+  const auto urls = NSSearchPathForDirectoriesInDomains(NSApplicationSupportDirectory, NSUserDomainMask, YES);
+  const auto documentURL = urls.lastObject;
+  if (!documentURL) {
+    return NO;
+  }
+  const auto directoryURL = [NSURL fileURLWithPath:[documentURL stringByAppendingPathComponent:@"rewards"]];
+  const auto storeURL = [directoryURL URLByAppendingPathComponent:@"BraveRewards.sqlite"];
+  return [NSFileManager.defaultManager fileExistsAtPath:storeURL.path];
 }
 
 - (instancetype)init
@@ -77,11 +91,6 @@ static DataController *_dataController = nil;
   self.container.persistentStoreDescriptions = @[storeDescription];
 }
 
-- (BOOL)storeExists
-{
-  return [NSFileManager.defaultManager fileExistsAtPath:self.storeURL.path];
-}
-
 + (NSManagedObjectContext *)newBackgroundContext
 {
   const auto backgroundContext = [DataController.shared.container newBackgroundContext];
@@ -94,61 +103,6 @@ static DataController *_dataController = nil;
 
 + (NSManagedObjectContext *)viewContext {
   return DataController.shared.container.viewContext;
-}
-
-+ (void)save:(NSManagedObjectContext *)context
-{
-  if (context == DataController.viewContext) {
-    NSLog(@"Writing to view context, this should be avoided.");
-  }
-  [context performBlock:^{
-    if (!context.hasChanges) { return; }
-    NSError *error;
-    if (![context save:&error]) {
-      NSLog(@"Error saving DB: %@", error);
-    }
-  }];
-}
-
-- (void)performOnContext:(NSManagedObjectContext *)context task:(void (^)(NSManagedObjectContext * _Nonnull))task
-{
-  [self performOnContext:context save:YES task:task completion:nil];
-}
-
-- (void)performOnContext:(NSManagedObjectContext *)context task:(void (^)(NSManagedObjectContext * _Nonnull))task completion:(nullable DataControllerCompletion)completion
-{
-  [self performOnContext:context save:YES task:task completion:completion];
-}
-
-- (void)performOnContext:(NSManagedObjectContext *)context save:(BOOL)save task:(void (^)(NSManagedObjectContext * _Nonnull))task completion:(nullable DataControllerCompletion)completion
-{
-  // If existing context is provided, we only call the code closure.
-  // Queue operation and saving is done in `performTask()` called at higher level when a nil context
-  // is passed
-  if (context) {
-    task(context);
-    if (completion) { completion(nil); }
-    return;
-  }
-
-  [self.operationQueue addOperationWithBlock:^{
-    const auto backgroundContext = [DataController newBackgroundContext];
-    // performAndWait doesn't block main thread because it fires on OperationQueue`s background thread.
-    [backgroundContext performBlockAndWait:^{
-      task(backgroundContext);
-
-      if (save && backgroundContext.hasChanges) {
-        assert(![NSThread isMainThread]);
-        NSError *error;
-        if (![backgroundContext save:&error]) {
-          NSLog(@"performTask save error: %@", error);
-        }
-        if (completion) { completion(error); }
-      } else {
-        if (completion) { completion(nil); }
-      }
-    }];
-  }];
 }
 
 @end

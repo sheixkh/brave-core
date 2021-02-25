@@ -12,107 +12,120 @@
 
 #include "bat/ads/ads_client.h"
 #include "brave/components/services/bat_ads/public/interfaces/bat_ads.mojom.h"
+#include "mojo/public/cpp/bindings/associated_remote.h"
+#include "mojo/public/cpp/bindings/pending_associated_remote.h"
 
 namespace bat_ads {
 
-class BatAdsClientMojoBridge : public ads::AdsClient {
+class BatAdsClientMojoBridge
+    : public ads::AdsClient {
  public:
   explicit BatAdsClientMojoBridge(
-      mojom::BatAdsClientAssociatedPtrInfo client_info);
+      mojo::PendingAssociatedRemote<mojom::BatAdsClient> client_info);
 
   ~BatAdsClientMojoBridge() override;
 
+  BatAdsClientMojoBridge(const BatAdsClientMojoBridge&) = delete;
+  BatAdsClientMojoBridge& operator=(const BatAdsClientMojoBridge&) = delete;
+
   // AdsClient implementation
-  bool IsEnabled() const override;
-
-  uint64_t GetAdsPerHour() const override;
-  uint64_t GetAdsPerDay() const override;
-
-  void GetClientInfo(
-      ads::ClientInfo* info) const override;
-
-  const std::string GetLocale() const override;
+  bool CanShowBackgroundNotifications() const override;
 
   bool IsNetworkConnectionAvailable() const override;
 
-  void SetIdleThreshold(
-      const int threshold) override;
-
   bool IsForeground() const override;
 
-  const std::vector<std::string> GetUserModelLanguages() const override;
-  void LoadUserModelForLanguage(
-      const std::string& language,
-      ads::OnLoadCallback callback) const override;
-
   void ShowNotification(
-      std::unique_ptr<ads::NotificationInfo> info) override;
-  bool ShouldShowNotifications() const override;
+      const ads::AdNotificationInfo& ad_notification) override;
+  bool ShouldShowNotifications() override;
   void CloseNotification(
-      const std::string& id) override;
+      const std::string& uuid) override;
 
-  void SetCatalogIssuers(
-      std::unique_ptr<ads::IssuersInfo> info) override;
-
-  void ConfirmAd(
-      std::unique_ptr<ads::NotificationInfo> info) override;
-  void ConfirmAction(
-      const std::string& uuid,
-      const std::string& creative_set_id,
-      const ads::ConfirmationType& type) override;
-
-  uint32_t SetTimer(
-      const uint64_t time_offset) override;
-  void KillTimer(
-      const uint32_t timer_id) override;
-
-  void URLRequest(
-      const std::string& url,
-      const std::vector<std::string>& headers,
-      const std::string& content,
-      const std::string& content_type,
-      const ads::URLRequestMethod method,
-      ads::URLRequestCallback callback) override;
+  void UrlRequest(
+      ads::UrlRequestPtr url_request,
+      ads::UrlRequestCallback callback) override;
 
   void Save(
       const std::string& name,
       const std::string& value,
-      ads::OnSaveCallback callback) override;
+      ads::ResultCallback callback) override;
+  void LoadUserModelForId(
+      const std::string& id,
+      ads::LoadCallback callback) override;
+
+  void RecordP2AEvent(
+      const std::string& name,
+      const ads::P2AEventType type,
+      const std::string& value) override;
+
   void Load(
       const std::string& name,
-      ads::OnLoadCallback callback) override;
-  void Reset(
-      const std::string& name,
-      ads::OnResetCallback callback) override;
+      ads::LoadCallback callback) override;
 
-  const std::string LoadJsonSchema(
-      const std::string& name) override;
+  std::string LoadResourceForId(
+      const std::string& id) override;
 
-  void LoadSampleBundle(
-      ads::OnLoadSampleBundleCallback callback) override;
+  void RunDBTransaction(
+      ads::DBTransactionPtr transaction,
+      ads::RunDBTransactionCallback callback) override;
 
-  void SaveBundleState(
-      std::unique_ptr<ads::BundleState> bundle_state,
-      ads::OnSaveCallback callback) override;
+  void OnAdRewardsChanged() override;
 
-  void GetAds(
-      const std::string& category,
-      ads::OnGetAdsCallback callback) override;
-
-  void EventLog(
-      const std::string& json) const override;
-
-  std::unique_ptr<ads::LogStream> Log(
+  void Log(
       const char* file,
       const int line,
-      const ads::LogLevel log_level) const override;
+      const int verbose_level,
+      const std::string& message) override;
+
+  bool GetBooleanPref(
+      const std::string& path) const override;
+
+  void SetBooleanPref(
+      const std::string& path,
+      const bool value) override;
+
+  int GetIntegerPref(
+      const std::string& path) const override;
+
+  void SetIntegerPref(
+      const std::string& path,
+      const int value) override;
+
+  double GetDoublePref(
+      const std::string& path) const override;
+
+  void SetDoublePref(
+      const std::string& path,
+      const double value) override;
+
+  std::string GetStringPref(
+      const std::string& path) const override;
+
+  void SetStringPref(
+      const std::string& path,
+      const std::string& value) override;
+
+  int64_t GetInt64Pref(
+      const std::string& path) const override;
+
+  void SetInt64Pref(
+      const std::string& path,
+      const int64_t value) override;
+
+  uint64_t GetUint64Pref(
+      const std::string& path) const override;
+
+  void SetUint64Pref(
+      const std::string& path,
+      const uint64_t value) override;
+
+  void ClearPref(
+      const std::string& path) override;
 
  private:
   bool connected() const;
 
-  mojom::BatAdsClientAssociatedPtr bat_ads_client_;
-
-  DISALLOW_COPY_AND_ASSIGN(BatAdsClientMojoBridge);
+  mojo::AssociatedRemote<mojom::BatAdsClient> bat_ads_client_;
 };
 
 }  // namespace bat_ads

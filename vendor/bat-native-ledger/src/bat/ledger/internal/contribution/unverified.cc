@@ -3,26 +3,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <utility>
+
+#include "base/guid.h"
+#include "bat/ledger/internal/common/time_util.h"
 #include "bat/ledger/internal/contribution/unverified.h"
 #include "bat/ledger/internal/ledger_impl.h"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-namespace braveledger_contribution {
+namespace ledger {
+namespace contribution {
 
-Unverified::Unverified(bat_ledger::LedgerImpl* ledger,
-    Contribution* contribution) :
-    ledger_(ledger),
-    contribution_(contribution),
-    unverified_publishers_timer_id_(0u) {
+Unverified::Unverified(LedgerImpl* ledger) :
+    ledger_(ledger) {
 }
 
-Unverified::~Unverified() {
-}
+Unverified::~Unverified() = default;
 
 void Unverified::Contribute() {
-  ledger_->FetchBalance(
+  ledger_->wallet()->FetchBalance(
       std::bind(&Unverified::OnContributeUnverifiedBalance,
                 this,
                 _1,
@@ -30,13 +31,14 @@ void Unverified::Contribute() {
 }
 
 void Unverified::OnContributeUnverifiedBalance(
-    ledger::Result result,
-    ledger::BalancePtr properties) {
-  if (result != ledger::Result::LEDGER_OK || !properties) {
+    type::Result result,
+    type::BalancePtr properties) {
+  if (result != type::Result::LEDGER_OK || !properties) {
+    BLOG(0, "Balance is null");
     return;
   }
 
-  ledger_->GetPendingContributions(
+  ledger_->database()->GetPendingContributions(
       std::bind(&Unverified::OnContributeUnverifiedPublishers,
                 this,
                 properties->total,
@@ -45,29 +47,30 @@ void Unverified::OnContributeUnverifiedBalance(
 
 void Unverified::OnContributeUnverifiedPublishers(
     double balance,
-    const ledger::PendingContributionInfoList& list) {
+    const type::PendingContributionInfoList& list) {
   if (list.empty()) {
+    BLOG(1, "List is empty");
     return;
   }
 
   if (balance == 0) {
-    ledger_->OnContributeUnverifiedPublishers(
-        ledger::Result::PENDING_NOT_ENOUGH_FUNDS);
+    BLOG(0, "Not enough funds");
+    ledger_->ledger_client()->OnContributeUnverifiedPublishers(
+        type::Result::PENDING_NOT_ENOUGH_FUNDS,
+        "",
+        "");
     return;
   }
 
-  base::Time now = base::Time::Now();
-  double now_seconds = now.ToDoubleT();
+  const auto now = util::GetCurrentTimeStamp();
 
-  ledger::PendingContributionInfoPtr current;
+  type::PendingContributionInfoPtr current;
 
   for (const auto& item : list) {
     // remove pending contribution if it's over expiration date
-    if (now_seconds > item->expiration_date) {
-      ledger_->RemovePendingContribution(
-          item->publisher_key,
-          item->viewing_id,
-          item->added_date,
+    if (now > item->expiration_date) {
+      ledger_->database()->RemovePendingContribution(
+          item->id,
           std::bind(&Unverified::OnRemovePendingContribution,
                     this,
                     _1));
@@ -75,7 +78,7 @@ void Unverified::OnContributeUnverifiedPublishers(
     }
 
     // verified status didn't change
-    if (item->status != ledger::PublisherStatus::VERIFIED) {
+    if (item->status != type::PublisherStatus::VERIFIED) {
       continue;
     }
 
@@ -85,64 +88,123 @@ void Unverified::OnContributeUnverifiedPublishers(
   }
 
   if (!current) {
+    BLOG(1, "Nothing to process");
     return;
   }
 
-  if (!ledger_->WasPublisherAlreadyProcessed(current->publisher_key)) {
-    ledger_->OnContributeUnverifiedPublishers(
-        ledger::Result::VERIFIED_PUBLISHER,
-        current->publisher_key,
-        current->name);
-    ledger_->SavePublisherProcessed(current->publisher_key);
+  auto get_callback = std::bind(&Unverified::WasPublisherProcessed,
+      this,
+      _1,
+      current->publisher_key,
+      current->name);
+
+  ledger_->database()->WasPublisherProcessed(
+      current->publisher_key,
+      get_callback);
+
+  if (balance < current->amount) {
+    BLOG(0, "Not enough funds");
+    ledger_->ledger_client()->OnContributeUnverifiedPublishers(
+        type::Result::PENDING_NOT_ENOUGH_FUNDS,
+        "",
+        "");
+    return;
   }
 
-  // Trigger contribution
-  if (balance >= current->amount) {
-    auto direction = braveledger_bat_helper::RECONCILE_DIRECTION(
-        current->publisher_key,
-        current->amount,
-        "BAT");
+  type::ContributionQueuePublisherList queue_list;
+  auto publisher = type::ContributionQueuePublisher::New();
+  publisher->publisher_key = current->publisher_key;
+  publisher->amount_percent = 100.0;
+  queue_list.push_back(std::move(publisher));
 
-    auto direction_list = std::vector
-        <braveledger_bat_helper::RECONCILE_DIRECTION> { direction };
-    contribution_->InitReconcile(
-        ledger::REWARDS_CATEGORY::ONE_TIME_TIP,
-        {},
-        direction_list);
+  auto queue = type::ContributionQueue::New();
+  queue->id = base::GenerateGUID();
+  queue->type = type::RewardsType::ONE_TIME_TIP;
+  queue->amount = current->amount;
+  queue->partial = false;
+  queue->publishers = std::move(queue_list);
 
-    ledger_->RemovePendingContribution(
-        current->publisher_key,
-        current->viewing_id,
-        current->added_date,
-        std::bind(&Unverified::OnRemovePendingContribution,
-                  this,
-                  _1));
+  auto save_callback = std::bind(&Unverified::QueueSaved,
+      this,
+      _1,
+      current->id);
 
-    if (ledger::is_testing) {
-      contribution_->SetTimer(&unverified_publishers_timer_id_, 1);
-    } else {
-      contribution_->SetTimer(&unverified_publishers_timer_id_);
-    }
+  ledger_->database()->SaveContributionQueue(std::move(queue), save_callback);
+}
+
+void Unverified::QueueSaved(
+    const type::Result result,
+    const uint64_t pending_contribution_id) {
+  if (result == type::Result::LEDGER_OK) {
+    ledger_->database()->RemovePendingContribution(
+      pending_contribution_id,
+      std::bind(&Unverified::OnRemovePendingContribution,
+                this,
+                _1));
+
+    ledger_->contribution()->ProcessContributionQueue();
   } else {
-    ledger_->OnContributeUnverifiedPublishers(
-        ledger::Result::PENDING_NOT_ENOUGH_FUNDS);
+    BLOG(1, "Queue was not saved");
   }
+
+  base::TimeDelta delay = ledger::is_testing
+      ? base::TimeDelta::FromSeconds(2)
+      : util::GetRandomizedDelay(
+          base::TimeDelta::FromSeconds(45));
+
+  BLOG(1, "Unverified contribution timer set for " << delay);
+
+  unverified_publishers_timer_.Start(FROM_HERE, delay,
+      base::BindOnce(&Unverified::Contribute, base::Unretained(this)));
+}
+
+void Unverified::WasPublisherProcessed(
+    const type::Result result,
+    const std::string& publisher_key,
+    const std::string& name) {
+  if (result == type::Result::LEDGER_ERROR) {
+    BLOG(0, "Couldn't get processed data");
+    return;
+  }
+
+  if (result == type::Result::LEDGER_OK) {
+    BLOG(1, "Publisher already processed");
+    // Nothing to do here as publisher was already processed
+    return;
+  }
+
+  auto save_callback = std::bind(&Unverified::ProcessedPublisherSaved,
+      this,
+      _1,
+      publisher_key,
+      name);
+  ledger_->database()->SaveProcessedPublisherList(
+      {publisher_key},
+      save_callback);
+}
+
+void Unverified::ProcessedPublisherSaved(
+    const type::Result result,
+    const std::string& publisher_key,
+    const std::string& name) {
+  ledger_->ledger_client()->OnContributeUnverifiedPublishers(
+      type::Result::VERIFIED_PUBLISHER,
+      publisher_key,
+      name);
 }
 
 void Unverified::OnRemovePendingContribution(
-    ledger::Result result) {
-  if (result == ledger::Result::LEDGER_OK) {
-    ledger_->OnContributeUnverifiedPublishers(
-        ledger::Result::PENDING_PUBLISHER_REMOVED);
-  }
-}
-
-void Unverified::OnTimer(uint32_t timer_id) {
-  if (timer_id == unverified_publishers_timer_id_) {
-    unverified_publishers_timer_id_ = 0;
-    Contribute();
+    type::Result result) {
+  if (result != type::Result::LEDGER_OK) {
+    BLOG(0, "Problem removing pending contribution");
     return;
   }
+
+  ledger_->ledger_client()->OnContributeUnverifiedPublishers(
+      type::Result::PENDING_PUBLISHER_REMOVED,
+      "",
+      "");
 }
 
-}  // namespace braveledger_contribution
+}  // namespace contribution
+}  // namespace ledger

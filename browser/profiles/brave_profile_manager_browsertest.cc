@@ -6,16 +6,29 @@
 #include <vector>
 
 #include "base/strings/utf_string_conversions.h"
+#include "brave/browser/brave_browser_process_impl.h"
+#include "brave/browser/brave_rewards/rewards_service_factory.h"
+#include "brave/components/brave_ads/browser/ads_service_factory.h"
+#include "brave/components/ipfs/buildflags/buildflags.h"
+#include "brave/components/tor/tor_constants.h"
 #include "chrome/browser/browser_process.h"
-#include "chrome/browser/chrome_notification_types.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_attributes_entry.h"
 #include "chrome/browser/profiles/profile_attributes_storage.h"
 #include "chrome/browser/profiles/profile_manager.h"
+#include "chrome/browser/profiles/profile_window.h"
+#include "chrome/common/chrome_constants.h"
+#include "chrome/common/pref_names.h"
 #include "chrome/test/base/in_process_browser_test.h"
-#include "content/public/test/test_utils.h"
+#include "chrome/test/base/ui_test_utils.h"
+#include "components/prefs/pref_service.h"
+#include "content/public/test/browser_test.h"
 
-using BraveProfileManagerTest = InProcessBrowserTest;
+#if BUILDFLAG(IPFS_ENABLED)
+#include "base/test/scoped_feature_list.h"
+#include "brave/browser/ipfs/ipfs_service_factory.h"
+#include "brave/components/ipfs/features.h"
+#endif
 
 namespace {
 
@@ -59,10 +72,25 @@ std::vector<TestProfileData> GetTestProfileData(
 
 }  // namespace
 
+class BraveProfileManagerTest : public InProcessBrowserTest {
+ public:
+  BraveProfileManagerTest() {
+#if BUILDFLAG(IPFS_ENABLED)
+    feature_list_.InitAndEnableFeature(ipfs::features::kIpfsFeature);
+#endif
+  }
+
+ private:
+#if BUILDFLAG(IPFS_ENABLED)
+  base::test::ScopedFeatureList feature_list_;
+#endif
+};
+
 // Test that legacy profile names (Person X) that have
 // not been user-modified are automatically renamed
 // to brave profile names (Profile X).
-IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest, PRE_MigrateProfileNames) {
+IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest,
+                       DISABLED_PRE_MigrateProfileNames) {
   ProfileManager* profile_manager = g_browser_process->profile_manager();
   ProfileAttributesStorage& storage =
       profile_manager->GetProfileAttributesStorage();
@@ -76,10 +104,8 @@ IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest, PRE_MigrateProfileNames) {
   bool has_entry1 = storage.GetProfileAttributesWithPath(
       profile_data[0].profile_path, &entry1);
   ASSERT_EQ(has_entry1, true);
-  entry1->SetName(profile_data[0].profile_name);
-  if (profile_data[0].force_default_name) {
-    entry1->SetIsUsingDefaultName(true);
-  }
+  entry1->SetLocalProfileName(profile_data[0].profile_name,
+                              profile_data[0].force_default_name);
   // Rest are generated
   for (size_t i = 0; i != profile_data.size(); i++) {
     base::RunLoop run_loop;
@@ -92,12 +118,13 @@ IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest, PRE_MigrateProfileNames) {
     bool has_entry = storage.GetProfileAttributesWithPath(
         profile_data[i].profile_path, &entry);
     ASSERT_EQ(has_entry, true);
-    entry->SetName(profile_data[i].profile_name);
-    entry->SetIsUsingDefaultName(profile_data[i].force_default_name);
+    entry->SetLocalProfileName(profile_data[i].profile_name,
+                               profile_data[i].force_default_name);
   }
 }
 
-IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest, MigrateProfileNames) {
+IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest,
+                       DISABLED_MigrateProfileNames) {
   ProfileManager* profile_manager = g_browser_process->profile_manager();
   ProfileAttributesStorage& storage =
       profile_manager->GetProfileAttributesStorage();
@@ -117,4 +144,53 @@ IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest, MigrateProfileNames) {
     // aren't re-assigned.
     ASSERT_EQ(entries[i]->GetPath(), profile_data[i].profile_path);
   }
+}
+
+IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest,
+                       ExcludeServicesInOTRAndGuestProfiles) {
+  ProfileManager* profile_manager = g_browser_process->profile_manager();
+  ASSERT_TRUE(profile_manager);
+  Profile* profile = ProfileManager::GetActiveUserProfile();
+  Profile* otr_profile = profile->GetPrimaryOTRProfile();
+
+  profiles::SwitchToGuestProfile(ProfileManager::CreateCallback());
+  ui_test_utils::WaitForBrowserToOpen();
+
+  Profile* guest_profile =
+      profile_manager->GetProfileByPath(ProfileManager::GetGuestProfilePath());
+  ASSERT_TRUE(otr_profile->IsOffTheRecord());
+  ASSERT_TRUE(guest_profile->IsGuestSession());
+
+  EXPECT_NE(
+      brave_rewards::RewardsServiceFactory::GetForProfile(profile), nullptr);
+  EXPECT_EQ(
+      brave_rewards::RewardsServiceFactory::GetForProfile(otr_profile),
+      nullptr);
+  EXPECT_EQ(
+      brave_rewards::RewardsServiceFactory::GetForProfile(guest_profile),
+      nullptr);
+
+  EXPECT_NE(brave_ads::AdsServiceFactory::GetForProfile(profile), nullptr);
+  EXPECT_EQ(brave_ads::AdsServiceFactory::GetForProfile(otr_profile),
+            nullptr);
+  EXPECT_EQ(brave_ads::AdsServiceFactory::GetForProfile(guest_profile),
+            nullptr);
+
+#if BUILDFLAG(IPFS_ENABLED)
+  EXPECT_NE(ipfs::IpfsServiceFactory::GetForContext(profile), nullptr);
+  EXPECT_EQ(ipfs::IpfsServiceFactory::GetForContext(otr_profile), nullptr);
+  EXPECT_EQ(ipfs::IpfsServiceFactory::GetForContext(guest_profile), nullptr);
+#endif
+}
+
+IN_PROC_BROWSER_TEST_F(BraveProfileManagerTest,
+                       GetLastUsedProfileName) {
+  g_browser_process->local_state()->SetString(
+      prefs::kProfileLastUsed,
+      base::FilePath(tor::kTorProfileDir).AsUTF8Unsafe());
+  ProfileManager* profile_manager = g_browser_process->profile_manager();
+  base::FilePath last_used_path =
+      g_browser_process->profile_manager()->GetLastUsedProfileDir(
+          profile_manager->user_data_dir());
+  EXPECT_EQ(last_used_path.BaseName().AsUTF8Unsafe(), chrome::kInitialProfile);
 }

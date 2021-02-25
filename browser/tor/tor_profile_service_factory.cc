@@ -6,25 +6,28 @@
 #include "brave/browser/tor/tor_profile_service_factory.h"
 
 #include <memory>
-#include <set>
 
-#include "brave/browser/tor/tor_profile_service_impl.h"
-#include "brave/browser/tor/buildflags.h"
-#include "brave/common/tor/pref_names.h"
-#include "chrome/browser/profiles/incognito_helpers.h"
-#include "chrome/browser/profiles/profile.h"
+#include "base/path_service.h"
+#include "brave/browser/brave_browser_process_impl.h"
+#include "brave/components/tor/pref_names.h"
+#include "brave/components/tor/tor_profile_service_impl.h"
+#include "chrome/common/chrome_paths.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
 #include "components/prefs/pref_service.h"
+#include "content/public/browser/browser_context.h"
 
-namespace {
-std::set<Profile*> g_profile_set;
+// static
+tor::TorProfileService* TorProfileServiceFactory::GetForContext(
+    content::BrowserContext* context) {
+  return GetForContext(context, true);
 }
 
 // static
-tor::TorProfileService* TorProfileServiceFactory::GetForProfile(
-    Profile* profile) {
+tor::TorProfileService* TorProfileServiceFactory::GetForContext(
+    content::BrowserContext* context,
+    bool create) {
   return static_cast<tor::TorProfileService*>(
-      GetInstance()->GetServiceForBrowserContext(profile, true));
+      GetInstance()->GetServiceForBrowserContext(context, create));
 }
 
 // static
@@ -32,57 +35,48 @@ TorProfileServiceFactory* TorProfileServiceFactory::GetInstance() {
   return base::Singleton<TorProfileServiceFactory>::get();
 }
 
+// static
+void TorProfileServiceFactory::SetTorDisabled(bool disabled) {
+  if (g_brave_browser_process)
+    g_brave_browser_process->local_state()->SetBoolean(tor::prefs::kTorDisabled,
+                                                       disabled);
+}
+
+// static
+bool TorProfileServiceFactory::IsTorDisabled() {
+  if (g_brave_browser_process)
+    return g_brave_browser_process->local_state()->GetBoolean(
+        tor::prefs::kTorDisabled);
+  return false;
+}
+
 TorProfileServiceFactory::TorProfileServiceFactory()
     : BrowserContextKeyedServiceFactory(
           "TorProfileService",
-          BrowserContextDependencyManager::GetInstance()) {
-      g_profile_set.clear();
-}
+          BrowserContextDependencyManager::GetInstance()) {}
 
 TorProfileServiceFactory::~TorProfileServiceFactory() {}
 
 KeyedService* TorProfileServiceFactory::BuildServiceInstanceFor(
     content::BrowserContext* context) const {
-#if BUILDFLAG(ENABLE_TOR)
-  Profile* profile = Profile::FromBrowserContext(context);
+  base::FilePath user_data_dir;
+  base::PathService::Get(chrome::DIR_USER_DATA, &user_data_dir);
+  DCHECK(!user_data_dir.empty());
   std::unique_ptr<tor::TorProfileService> tor_profile_service(
-      new tor::TorProfileServiceImpl(profile));
-  g_profile_set.emplace(profile);
+      new tor::TorProfileServiceImpl(
+          context,
+          g_brave_browser_process
+              ? g_brave_browser_process->tor_client_updater()
+              : nullptr,
+          user_data_dir));
+
   return tor_profile_service.release();
-#else
-  return nullptr;
-#endif
 }
 
 content::BrowserContext* TorProfileServiceFactory::GetBrowserContextToUse(
     content::BrowserContext* context) const {
-  if (context->IsOffTheRecord())
-    return chrome::GetBrowserContextOwnInstanceInIncognito(context);
-
-  // use original profile for session profiles
-  return chrome::GetBrowserContextRedirectedInIncognito(context);
-}
-
-bool TorProfileServiceFactory::ServiceIsNULLWhileTesting() const {
-  return true;
-}
-
-void TorProfileServiceFactory::BrowserContextShutdown(
-    content::BrowserContext* context) {
-#if BUILDFLAG(ENABLE_TOR)
-  if (g_profile_set.size() == 1) {
-    auto* service = static_cast<tor::TorProfileServiceImpl*>(
-      TorProfileServiceFactory::GetForProfile(
-        Profile::FromBrowserContext(context)));
-    service->KillTor();
-  }
-#endif
-  BrowserContextKeyedServiceFactory::BrowserContextShutdown(context);
-}
-
-void TorProfileServiceFactory::BrowserContextDestroyed(
-    content::BrowserContext* context) {
-  Profile* profile = Profile::FromBrowserContext(context);
-  g_profile_set.erase(profile);
-  BrowserContextKeyedServiceFactory::BrowserContextDestroyed(context);
+  // Only grant service for tor context
+  if (!context->IsTor())
+    return nullptr;
+  return context;
 }

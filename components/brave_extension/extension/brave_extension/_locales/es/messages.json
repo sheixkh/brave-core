@@ -8,11 +8,11 @@
     "description": "The Shields feature name"
   },
   "up": {
-    "message": "activados",
+    "message": "activos",
     "description": "Message for when shields is enabled"
   },
   "down": {
-    "message": "desactivados",
+    "message": "inactivos",
     "description": "Message for when shields is disabled"
   },
   "forThisSite": {
@@ -20,12 +20,16 @@
     "description": "Partial string for the phrase `shields is up *for this site*`"
   },
   "enabledMessage": {
-    "message": "Si un sitio web parece roto, prueba a desactivar los escudos",
+    "message": "Si un sitio web no funciona correctamente, prueba a desactivar los escudos",
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Estás navegando en este sitio web sin ninguna protección de privacidad y seguridad.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Estás navegando por este sitio sin las protecciones de privacidad y seguridad de Brave. ¿No funciona bien con los Escudos activados?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Notificar un error...",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Elementos bloqueados",
@@ -48,8 +52,24 @@
     "description": "Message for the main blocked resources text when there is at least one ad/track/script blocked and one connection upgrade (singular)"
   },
   "thirdPartyTrackersBlocked": {
-    "message": "Rastreadores de terceros bloqueados",
+    "message": "Bloquear rastreadores",
     "description": "Message for the scripts blocked row label"
+  },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Rastreadores y anuncios bloqueados",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Rastreadores y anuncios bloqueados (agresivo)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Rastreadores y anuncios bloqueados (estándar)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Permitir todos los rastreadores y anuncios",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
   },
   "connectionsUpgradedHTTPS": {
     "message": "Conexiones mejoradas a HTTPS",
@@ -64,39 +84,43 @@
     "description": "Message for the scripts blocked row label"
   },
   "thirdPartyCookiesBlocked": {
-    "message": "Cookies de terceros bloqueadas.",
+    "message": "Bloquear cookies de terceros",
     "description": "Message for the option in the cookies select field to block all 3rd party cookies"
   },
   "allCookiesBlocked": {
-    "message": "Cookies bloqueadas",
+    "message": "Bloquear todas las cookies",
     "description": "Message for the option in the cookies select field to block all cookies"
   },
   "allCookiesAllowed": {
-    "message": "Todas las cookies permitidas",
+    "message": "Permitir todas las cookies",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Reconocimiento del dispositivo de terceros bloqueado",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Toma de huellas dactilares bloqueada",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Intentos de reconocimiento del dispositivo bloqueados",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Fingerprinting bloqueado (estándar)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Intentos de reconocimiento del dispositivo permitidos.",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Fingerprinting bloqueado (estricto, puede dañar los sitios)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Permitir cualquier fingerprinting",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Intentos de reconocimiento del dispositivo",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Intentos de fingerprinting",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Scripts en este sitio web",
     "description": "Message for the script resources blocked panel"
   },
   "blockedScripts": {
-    "message": "Scripts bloqueados",
+    "message": "Bloquear scripts",
     "description": "Message for the script resources blocked"
   },
   "allowedScripts": {
@@ -152,11 +176,11 @@
     "description": "Message for context menu that adds a filter for the cosmetic filtering"
   },
   "resetSiteFilterSettings": {
-    "message": "Borra las reglas CSS para esta página",
+    "message": "Borra las reglas CSS para este sitio web",
     "description": "Message for context menu that resets the site filters for cosmetic filtering"
   },
   "resetAllFilterSettings": {
-    "message": "Borrar las reglas CSS para todas las páginas",
+    "message": "Borrar las reglas CSS para todas los sitios web",
     "description": "Message for context menu that resets all cosmetic filters"
   },
   "advancedView": {
@@ -164,7 +188,7 @@
     "description": "Message for the advanced view option"
   },
   "simpleView": {
-    "message": "Vista simple",
+    "message": "Vista básica",
     "description": "Message for the simple view option"
   },
   "shieldsExplanation": {
@@ -172,11 +196,11 @@
     "description": "Message in read-only view explaining what Brave Shields do"
   },
   "blockedResoucesExplanation": {
-    "message": "Rastreadores entre páginas y otros elementos amenazadores bloqueados",
+    "message": "Rastreadores y otros elementos amenazantes bloqueados",
     "description": "Message for the main trackers count in Shields simple view"
   },
   "webCompatWarning": {
-    "message": "El cambio de la configuración del escudo es esta vista puede afectar a la compatibilidad de esta página.",
+    "message": "Cambiar la configuración del Escudo en esta vista puede afectar a la compatibilidad de este sitio web.",
     "description": "Message for web compat warning when switching from simple to advanced view"
   },
   "gotIt": {
@@ -184,7 +208,7 @@
     "description": "Message for the button that confirms the advanced view"
   },
   "learnMore": {
-    "message": "Saber más",
+    "message": "Más información",
     "description": "Message inviting the user to learn more about Shields"
   }
 }

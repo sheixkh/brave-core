@@ -4,12 +4,15 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "base/strings/utf_string_conversions.h"
+#include "brave/browser/brave_browser_process_impl.h"
 #include "brave/browser/profiles/brave_profile_manager.h"
 #include "brave/browser/profiles/profile_util.h"
+#include "brave/browser/search_engines/guest_window_search_engine_provider_service.h"
+#include "brave/browser/search_engines/search_engine_provider_service_factory.h"
 #include "brave/browser/search_engines/search_engine_provider_util.h"
-#include "brave/browser/tor/buildflags.h"
 #include "brave/browser/ui/browser_commands.h"
 #include "brave/components/search_engines/brave_prepopulated_engines.h"
+#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_window.h"
 #include "chrome/browser/search_engines/template_url_service_factory.h"
@@ -20,11 +23,8 @@
 #include "components/search_engines/template_url_prepopulate_data.h"
 #include "components/search_engines/template_url_service.h"
 #include "components/search_engines/template_url_service_observer.h"
+#include "content/public/test/browser_test.h"
 #include "content/public/test/test_utils.h"
-
-#if BUILDFLAG(ENABLE_TOR)
-#include "brave/browser/tor/tor_launcher_factory.h"
-#endif
 
 using SearchEngineProviderServiceTest = InProcessBrowserTest;
 
@@ -40,7 +40,7 @@ TemplateURLData CreateTestSearchEngine() {
 IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
                        PrivateWindowPrefTestWithNonQwantRegion) {
   Profile* profile = browser()->profile();
-  Profile* incognito_profile = profile->GetOffTheRecordProfile();
+  Profile* incognito_profile = profile->GetPrimaryOTRProfile();
 
   // This test case is only for non-qwant region.
   if (brave::IsRegionForQwant(profile))
@@ -89,7 +89,7 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
 IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
                        PrivateWindowTestWithQwantRegion) {
   Profile* profile = browser()->profile();
-  Profile* incognito_profile = profile->GetOffTheRecordProfile();
+  Profile* incognito_profile = profile->GetPrimaryOTRProfile();
 
   // This test case is only for qwant region.
   if (!brave::IsRegionForQwant(profile))
@@ -136,13 +136,11 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
 // Checks the default search engine of the tor profile.
 IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
                        PRE_CheckDefaultTorProfileSearchProviderTest) {
-  ScopedTorLaunchPreventerForTest prevent_tor_process;
-
   brave::NewOffTheRecordWindowTor(browser());
   content::RunAllTasksUntilIdle();
 
   Profile* tor_profile = BrowserList::GetInstance()->GetLastActive()->profile();
-  EXPECT_TRUE(brave::IsTorProfile(tor_profile));
+  EXPECT_TRUE(tor_profile->IsTor());
 
   auto* service = TemplateURLServiceFactory::GetForProfile(tor_profile);
 
@@ -162,22 +160,23 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
   service->SetUserSelectedDefaultSearchProvider(&other_url);
 }
 
-// Check changed provider in tor profile is retained across the sessions.
+// Check changed provider in tor profile should not be retained across the
+// sessions.
 IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
                        CheckDefaultTorProfileSearchProviderTest) {
-  ScopedTorLaunchPreventerForTest prevent_tor_process;
-
   brave::NewOffTheRecordWindowTor(browser());
   content::RunAllTasksUntilIdle();
 
   Profile* tor_profile = BrowserList::GetInstance()->GetLastActive()->profile();
-  EXPECT_TRUE(brave::IsTorProfile(tor_profile));
+  EXPECT_TRUE(tor_profile->IsTor());
 
-  int expected_provider_id =
-      TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_BING;
+  int default_provider_id =
+      brave::IsRegionForQwant(tor_profile)
+          ? TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_QWANT
+          : TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_DUCKDUCKGO;
   auto* service = TemplateURLServiceFactory::GetForProfile(tor_profile);
   EXPECT_EQ(service->GetDefaultSearchProvider()->data().prepopulate_id,
-            expected_provider_id);
+            default_provider_id);
 }
 #endif
 
@@ -195,7 +194,8 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
   if (brave::IsRegionForQwant(guest_profile))
     return;
 
-  auto* service = TemplateURLServiceFactory::GetForProfile(guest_profile);
+  auto* template_service =
+      TemplateURLServiceFactory::GetForProfile(guest_profile);
 
   // alternative pref is initially disabled.
   EXPECT_FALSE(brave::UseAlternativeSearchEngineProviderEnabled(guest_profile));
@@ -206,14 +206,20 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
       TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_DUCKDUCKGO;
 
   // Check guest profile's search provider is set to ddg.
-  EXPECT_EQ(service->GetDefaultSearchProvider()->data().prepopulate_id,
+  EXPECT_EQ(template_service->GetDefaultSearchProvider()->data().prepopulate_id,
             provider_id);
 
   auto bing_data = TemplateURLPrepopulateData::GetPrepopulatedEngine(
       guest_profile->GetPrefs(),
       TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_BING);
   TemplateURL bing_url(*bing_data);
-  service->SetUserSelectedDefaultSearchProvider(&bing_url);
+  template_service->SetUserSelectedDefaultSearchProvider(&bing_url);
+
+  auto* search_engine_provider_service =
+      static_cast<GuestWindowSearchEngineProviderService*>(
+          SearchEngineProviderServiceFactory::GetForProfile(guest_profile));
+  search_engine_provider_service->OnTemplateURLServiceChanged();
+
   // Check alternative pref is turned off.
   EXPECT_FALSE(brave::UseAlternativeSearchEngineProviderEnabled(guest_profile));
 
@@ -222,6 +228,7 @@ IN_PROC_BROWSER_TEST_F(SearchEngineProviderServiceTest,
       TemplateURLPrepopulateData::PREPOPULATED_ENGINE_ID_DUCKDUCKGO);
   TemplateURL ddg_url(*ddg_data);
 
-  service->SetUserSelectedDefaultSearchProvider(&ddg_url);
+  template_service->SetUserSelectedDefaultSearchProvider(&ddg_url);
+  search_engine_provider_service->OnTemplateURLServiceChanged();
   EXPECT_TRUE(brave::UseAlternativeSearchEngineProviderEnabled(guest_profile));
 }

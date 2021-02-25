@@ -19,6 +19,12 @@ export const shieldsToggled: actions.ShieldsToggled = (setting = 'allow') => {
   }
 }
 
+export const reportBrokenSite: actions.ReportBrokenSite = () => {
+  return {
+    type: types.REPORT_BROKEN_SITE
+  }
+}
+
 export const resourceBlocked: actions.ResourceBlocked = (details) => {
   return {
     type: types.RESOURCE_BLOCKED,
@@ -123,5 +129,29 @@ export const setFinalScriptsBlockedState: actions.SetFinalScriptsBlockedState = 
 export const setAdvancedViewFirstAccess: actions.SetAdvancedViewFirstAccess = () => {
   return {
     type: types.SET_ADVANCED_VIEW_FIRST_ACCESS
+  }
+}
+
+export const shieldsReady: actions.ShieldsReady = () => {
+  return {
+    type: types.SHIELDS_READY
+  }
+}
+
+export const generateClassIdStylesheet = (tabId: number, classes: string[], ids: string[]) => {
+  return {
+    type: types.GENERATE_CLASS_ID_STYLESHEET,
+    tabId,
+    classes,
+    ids
+  }
+}
+
+export const contentScriptsLoaded: actions.ContentScriptsLoaded = (tabId: number, frameId: number, url: string) => {
+  return {
+    type: types.CONTENT_SCRIPTS_LOADED,
+    tabId,
+    frameId,
+    url
   }
 }

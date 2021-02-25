@@ -15,6 +15,7 @@ NS_ASSUME_NONNULL_BEGIN
 /// Creating a LedgerObserver alone will not respond to any events. Set
 /// each closure that you wish to watch based on the data being displayed on
 /// screen
+OBJC_EXPORT 
 NS_SWIFT_NAME(LedgerObserver)
 @interface BATBraveLedgerObserver : NSObject
 
@@ -22,26 +23,28 @@ NS_SWIFT_NAME(LedgerObserver)
 
 - (instancetype)initWithLedger:(BATBraveLedger *)ledger;
 
-/// Rewards was enabled or disabled globally
-@property (nonatomic, copy, nullable) void (^rewardsEnabledStateUpdated)(BOOL enabled);
-
 /// Executed when the wallet is first initialized
 @property (nonatomic, copy, nullable) void (^walletInitalized)(BATResult result);
 
 /// A publisher was fetched by its URL for a specific tab identified by tabId
 @property (nonatomic, copy, nullable) void (^fetchedPanelPublisher)(BATPublisherInfo *info, uint64_t tabId);
 
+@property (nonatomic, copy, nullable) void (^publisherListUpdated)();
+
+/// 
+@property (nonatomic, copy, nullable) void (^finishedPromotionsAdded)(NSArray<BATPromotion *> *promotions);
+
 /// Eligable grants were added to the wallet
-@property (nonatomic, copy, nullable) void (^grantsAdded)(NSArray<BATGrant *> *grants);
+@property (nonatomic, copy, nullable) void (^promotionsAdded)(NSArray<BATPromotion *> *promotions);
 
 /// A grant was claimed
-@property (nonatomic, copy, nullable) void (^grantClaimed)(BATGrant *grant);
+@property (nonatomic, copy, nullable) void (^promotionClaimed)(BATPromotion *promotion);
 
 /// A reconcile transaction completed and the user may have an updated balance
 /// and likely an updated balance report
 @property (nonatomic, copy, nullable) void (^reconcileCompleted)(BATResult result,
                                                                  NSString *viewingId,
-                                                                 BATRewardsCategory category,
+                                                                 BATRewardsType type,
                                                                  NSString *probi);
 
 /// The users balance report has been updated
@@ -53,13 +56,10 @@ NS_SWIFT_NAME(LedgerObserver)
 /// Called when the ledger removes activity info for a given publisher
 @property (nonatomic, copy, nullable) void (^activityRemoved)(NSString *publisherKey);
 
-/// confirmationsTransactionHistoryDidChange
-@property (nonatomic, copy, nullable) void (^confirmationsTransactionHistoryDidChange)();
-
 /// The publisher list was normalized and saved
 @property (nonatomic, copy, nullable) void (^publisherListNormalized)(NSArray<BATPublisherInfo *> *normalizedList);
 
-@property (nonatomic, copy, nullable) void (^pendingContributionAdded)(NSString *publisherKey);
+@property (nonatomic, copy, nullable) void (^pendingContributionAdded)();
 
 @property (nonatomic, copy, nullable) void (^pendingContributionsRemoved)(NSArray<NSString *> *publisherKeys);
 
@@ -68,13 +68,23 @@ NS_SWIFT_NAME(LedgerObserver)
 @property (nonatomic, copy, nullable) void (^recurringTipRemoved)(NSString *publisherKey);
 
 // A users contribution was added
-@property (nonatomic, copy, nullable) void (^contributionAdded)(BOOL successful, BATRewardsCategory category);
+@property (nonatomic, copy, nullable) void (^contributionAdded)(BOOL successful, BATRewardsType type);
 
 /// A notification was added to the wallet
 @property (nonatomic, copy, nullable) void (^notificationAdded)(BATRewardsNotification *notification);
 
 /// A notification was removed from the wallet
 @property (nonatomic, copy, nullable) void (^notificationsRemoved)(NSArray<BATRewardsNotification *> *notification);
+
+/// Wallet balance was fetched and updated
+@property (nonatomic, copy, nullable) void (^fetchedBalance)();
+
+@property (nonatomic, copy, nullable) void (^externalWalletAuthorized)(BATWalletType type);
+
+@property (nonatomic, copy, nullable) void (^externalWalletDisconnected)(BATWalletType type);
+
+/// The reconcile stamp reset
+@property (nonatomic, copy, nullable) void (^reconcileStampReset)();
 
 @end
 

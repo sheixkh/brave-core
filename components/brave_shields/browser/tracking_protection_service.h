@@ -20,7 +20,7 @@
 #include "brave/components/brave_component_updater/browser/dat_file_util.h"
 #include "brave/components/brave_component_updater/browser/local_data_files_observer.h"
 #include "brave/components/brave_shields/browser/buildflags/buildflags.h"  // For STP
-#include "content/public/common/resource_type.h"
+#include "third_party/blink/public/mojom/loader/resource_load_info.mojom-shared.h"
 #include "url/gurl.h"
 
 class HostContentSettingsMap;
@@ -41,11 +41,9 @@ class TrackingProtectionService : public LocalDataFilesObserver {
   static bool IsSmartTrackingProtectionEnabled();
 
   bool ShouldStartRequest(const GURL& spec,
-                          content::ResourceType resource_type,
+                          blink::mojom::ResourceType resource_type,
                           const std::string& tab_host,
-                          bool* matching_exception_filter,
-                          bool* cancel_request_explicitly,
-                          std::string* redirect);
+                          bool* matching_exception_filter);
 
   // implementation of LocalDataFilesObserver
   void OnComponentReady(const std::string& component_id,
@@ -58,7 +56,6 @@ class TrackingProtectionService : public LocalDataFilesObserver {
   bool ShouldStoreState(HostContentSettingsMap* map,
                         int render_process_id,
                         int render_frame_id,
-                        const GURL& top_origin_url,
                         const GURL& origin_url) const;
 
 #if BUILDFLAG(BRAVE_STP_ENABLED)
@@ -106,7 +103,6 @@ class TrackingProtectionService : public LocalDataFilesObserver {
   std::vector<std::string> third_party_base_hosts_;
   std::map<std::string, std::vector<std::string>> third_party_hosts_cache_;
   base::Lock third_party_hosts_lock_;
-  brave_component_updater::DATFileDataBuffer buffer_;
 
   base::WeakPtrFactory<TrackingProtectionService> weak_factory_;
   base::WeakPtrFactory<TrackingProtectionService> weak_factory_io_thread_;

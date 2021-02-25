@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "أنت تتصفح هذا الموقع بدون أي خصوصية وحماية بيانات.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "إنك تتصفح هذا الموقع دون حماية الخصوصية والأمن من Brave. ألا يعمل بشكل سليم أثناء تشغيل Shields؟",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "الإبلاغ عن موقع إلكتروني معطل",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "العناصر المحجوبة",
@@ -51,6 +55,22 @@
     "message": "تم حظر برامج التتبع عبر الموقع",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "تم حظر أدوات التتبع والإعلانات",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "المتتبعات والإعلانات محجوبة (شديد)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "المتتبعات والإعلانات محجوبة (قياسي)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "السماح بجميع المتتبعات والإعلانات",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "تم تحديث الاتصالات إلى بروتوكول HTTPS المحمي",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "تم السماح بجميع ملفات تعريف الارتباط",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "تم حظر التعرف على الجهاز عبر المواقع",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "تم حظر البصمات",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "تم حظر محاولات التعرف على الجهاز ",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "حظر بصمات الأصابع (قياسي)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "تم السماح بجميع محاولات التعرف على الجهاز",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "حظر بصمات الأصابع (صارم، قد يفصل المواقع)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "السماح بجميع عمليات أخذ البصمات",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "محاولات التعرف على الجهاز",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "محاولات الدخول بالبصمة",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "النصوص في هذا الموقع",

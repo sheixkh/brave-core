@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright (c) 2019 The Brave Authors. All rights reserved.
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -41,12 +42,10 @@ class ChromeImporter : public Importer {
  protected:
   ~ChromeImporter() override;
 
-  static base::nix::DesktopEnvironment GetDesktopEnvironment();
-
-  virtual void ImportBookmarks();
-  virtual void ImportHistory();
-  virtual void ImportPasswords(const base::FilePath& prefs_filename);
-  virtual void ImportCookies();
+  void ImportBookmarks();
+  void ImportHistory();
+  void ImportPasswords();
+  void ImportPayments();
 
   double chromeTimeToDouble(int64_t time);
 

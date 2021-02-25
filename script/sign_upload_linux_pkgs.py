@@ -27,6 +27,10 @@ def main():
     repo_dir = args.repo_dir
     dist_dir = os.path.join(repo_dir, 'dist')
     gpg_full_key_id = args.gpg_full_key_id
+
+    if args.skip_github and args.github_token:
+        exit("Error: --skip_github and --github_token are mutually exclusive, only one allowed")
+
     if args.unmount is not False and channel in ['beta', 'dev', 'nightly']:
         unmount = args.unmount
     if channel in ['release']:
@@ -37,6 +41,12 @@ def main():
             gpg_passphrase = args.gpg_passphrase
     s3_test_buckets = args.s3_test_buckets
 
+    if os.environ.get('BRAVE_CORE_DIR'):
+        brave_core_dir = os.environ.get('BRAVE_CORE_DIR')
+    else:
+        logging.error("Error: Required environment variable \'BRAVE_CORE_DIR\' not set! Exiting...")
+        exit(1)
+
     if args.debug:
         logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
         logging.debug('brave_version: {}'.format(get_raw_version()))
@@ -46,6 +56,7 @@ def main():
         logging.debug('gpg_full_key_id: {}'.format(gpg_full_key_id))
         logging.debug('gpg_passphrase: {}'.format("NOTAREALPASSWORD"))
         logging.debug('s3_test_buckets: {}'.format(s3_test_buckets))
+        logging.debug('brave_core_dir: {}'.format(brave_core_dir))
 
     # verify we have the the GPG key we're expecting in the public keyring
     list_keys_cmd = "/usr/bin/gpg2 --list-keys --with-subkey-fingerprints | grep {}".format(
@@ -85,37 +96,11 @@ def main():
             'Error: could not change directory to {}: {}'.format(dist_dir, ose))
         exit(message)
 
-    logging.info(
-        "Downloading RPM/DEB packages to directory: {}".format(dist_dir))
+    if not args.skip_github:
+        logging.info(
+            "Downloading RPM/DEB packages to directory: {}".format(dist_dir))
 
-    file_list = download_linux_pkgs_from_github(args, logging)
-
-    # Run rpmsign command for rpm
-    for item in file_list:
-        if re.match(r'.*\.rpm$', item):
-            logging.info("Signing RPM: {}".format(item))
-
-            # Currently only the release channel requires the expect script
-            # rpm-resign.exp. Nightly, dev and beta do not, although they will eventually
-            # when we use the same signing key for all channels.
-            if channel in ['release']:
-                rpm_resign_cmd = os.path.join(repo_dir, "rpm-resign.exp")
-                cmd = "{} {} {} {}".format(
-                    rpm_resign_cmd, gpg_full_key_id, item, gpg_passphrase)
-                log_cmd = "{} {} {} {}".format(
-                    rpm_resign_cmd, gpg_full_key_id, item, 'NOTAREALPASSWORD')
-            else:
-                cmd = "rpmsign --resign --key-id={} {}".format(
-                    gpg_full_key_id, item)
-                log_cmd = cmd
-            logging.info("Running command: \"{}\"".format(log_cmd))
-
-            try:
-                subprocess.check_output(cmd, shell=True)
-                logging.info("RPM signing successful!")
-            except subprocess.CalledProcessError as cpe:
-                logging.error("Error running command: \"{}\"".format(log_cmd))
-                exit(1)
+        file_list = download_linux_pkgs_from_github(args, logging)
 
     try:
         os.chdir(repo_dir)
@@ -125,15 +110,43 @@ def main():
             'Error: could not change directory to {}: {}'.format(repo_dir, ose))
         exit(message)
 
-    # remove files older than 120 days from dist_dir
-    delete_age = 120 * 86400
+    # remove files older than 60 days from dist_dir
+    delete_age = 60 * 86400
     # do not remove files that match this pattern
     global exclude_patterns
     exclude_patterns = ['.*keyring.*']
 
-    logging.info("Performing removal of files older than 120 days in directory: {}".format(dist_dir))
+    logging.info("Performing removal of files older than 60 days in directory: {}".format(dist_dir))
 
     remove_files_older_x_days(dist_dir, delete_age, act=True)
+
+    # If release channel, unlock GPG signing key which has a cache timeout of 30
+    # minutes set in the gpg-agent.conf
+    if channel in ['release']:
+        gpgconf_cmd = ['gpgconf', '--kill', 'gpg-agent']
+        logging.info("Running command: \"{}\"".format(gpgconf_cmd))
+        try:
+            subprocess.check_output(gpgconf_cmd, shell=True)
+            logging.info("\"gpgconf --kill gpg-agent\" succeeded")
+        except subprocess.CalledProcessError as cpe:
+            loggint.error("Error: {}".format(cpe))
+            exit(1)
+        cmd = ['gpg2', '--batch', '--pinentry-mode', 'loopback', '--passphrase',
+               gpg_passphrase, '--sign']
+        log_cmd = ['gpg2', '--batch', '--pinentry-mode', 'loopback', '--passphrase',
+                   'NOTAREALPASSWORD', '--sign']
+        logging.info("Running command: \"{}\"".format(log_cmd))
+        try:
+            p1 = subprocess.Popen(['echo'], stdout=subprocess.PIPE)
+            p2 = subprocess.Popen(cmd, stdin=p1.stdout, stdout=subprocess.PIPE)
+            p1.stdout.close()
+            (stdoutdata, stderrdata) = p2.communicate()
+            if stderrdata is not None:
+                logging.error("subprocess.Popen.communicate() error: {}".format(stderrdata))
+            logging.info("gpg2 unlock signing key successful!")
+        except Exception as e:
+            logging.error("Error running command: \"{}\"".format(log_cmd))
+            exit(1)
 
     # Now upload to aptly and rpm repos
 
@@ -144,7 +157,7 @@ def main():
         else:
             bucket = 'brave-browser-apt-staging-'
 
-        upload_script = os.path.join(repo_dir, item)
+        upload_script = os.path.join(brave_core_dir, 'script', item)
 
         TESTCHANNEL = 'test'
 
@@ -269,9 +282,8 @@ def perform_github_download(asset_url, args, logging, filename, file_list):
     # Instantiate new requests session, versus reusing the repo session above.
     # Headers was likely being reused in that session, and not allowing us
     # to set the Accept header to the below.
-    headers = {'Accept': 'application/octet-stream'}
-    asset_auth_url = asset_url + '?access_token=' + \
-        args.github_token
+    headers = {'Accept': 'application/octet-stream',
+               'Authorization': 'token ' + args.github_token}
     if args.debug:
         # disable urllib3 logging for this session to avoid showing
         # access_token in logs
@@ -279,7 +291,7 @@ def perform_github_download(asset_url, args, logging, filename, file_list):
     logging.info("Downloading GitHub release asset: {}".format(
         asset_url + '/' + filename))
     try:
-        r = requests.get(asset_auth_url, headers=headers, stream=True)
+        r = requests.get(asset_url, headers=headers, stream=True)
     except requests.exceptions.ConnectionError as e:
         logging.error(
             "Error: Received requests.exceptions.ConnectionError, Exiting...")
@@ -325,11 +337,14 @@ def parse_args():
     parser.add_argument('-d', '--debug', action='store_true',
                         help='Print debug output')
     parser.add_argument('-g', '--github_token',
-                        help='GitHub token to use for downloading releases', required=True)
+                        help='GitHub token to use for downloading releases(cannot be combined with --skip_github)',
+                        action='store_true')
     parser.add_argument('-k', '--gpg_full_key_id', help='GPG full key id to use for signing '
                         'packages', required=True)
+    parser.add_argument('-n', '--skip_github', help='Skip downloading from GitHub, assume packages are '
+                        'in the repo_dir already(cannot be combined with --github_token)', action='store_true')
     parser.add_argument(
-        '-t', '--tag', help='The branch (actually tag) to download packages from GitHub. (i.e. v0.58.18)',
+        '-t', '--tag', help='The branch (actually tag) to download packages from GitHub. (i.e. v1.5.18)',
         required=True)
     parser.add_argument('-p', '--gpg_passphrase',
                         help='GPG passphrase to unlock signing keychain')

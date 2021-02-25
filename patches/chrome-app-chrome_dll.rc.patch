@@ -1,12 +1,11 @@
 diff --git a/chrome/app/chrome_dll.rc b/chrome/app/chrome_dll.rc
-index 80a15b55d54f55ca13d6d79b3fd75d28ae0d647f..a0aa8fa83a4e93f7689a0ece2e6dbf9d10a4c175 100644
+index d299571ac031f4b3ff964fbf2dd865ba31bdd0bf..06eef7187c1c288d1db668b94ed742d538c6b2bf 100644
 --- a/chrome/app/chrome_dll.rc
 +++ b/chrome/app/chrome_dll.rc
-@@ -164,6 +164,16 @@ END
+@@ -164,6 +164,15 @@ END
  // the icon from the current module). We can perhaps work around this in the
  // future to get the icon from the .exe, which would save a copy.
  
-+#if defined(BRAVE_CHROMIUM_BUILD)
 +#if defined(OFFICIAL_BUILD)
 +IDR_MAINFRAME       ICON                        "theme\brave\win\brave.ico"
 +IDR_SXS             ICON                        "theme\brave\win\brave_canary.ico"
@@ -15,11 +14,11 @@ index 80a15b55d54f55ca13d6d79b3fd75d28ae0d647f..a0aa8fa83a4e93f7689a0ece2e6dbf9d
 +#else
 +IDR_MAINFRAME       ICON                        "theme\brave\win\brave_development.ico"
 +#endif
-+#else
- #if defined(GOOGLE_CHROME_BUILD)
++#if 0
+ #if BUILDFLAG(GOOGLE_CHROME_BRANDING)
  IDR_MAINFRAME       ICON                        "theme\google_chrome\win\chrome.ico"
  IDR_SXS             ICON                        "theme\google_chrome\win\chrome_sxs.ico"
-@@ -172,6 +182,7 @@ IDR_X005_BETA       ICON                        "theme\google_chrome\win\chrome_
+@@ -172,6 +181,7 @@ IDR_X005_BETA       ICON                        "theme\google_chrome\win\chrome_
  #else
  IDR_MAINFRAME       ICON                        "theme\chromium\win\chromium.ico"
  #endif

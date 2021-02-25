@@ -11,7 +11,9 @@
 #include <vector>
 
 #include "base/values.h"
+#include "bat/ledger/mojom_structs.h"
 #include "brave/components/brave_rewards/browser/rewards_notification_service.h"
+#include "brave/components/brave_rewards/browser/rewards_notification_service_observer.h"
 #include "brave/components/brave_rewards/browser/rewards_service_observer.h"
 #include "extensions/buildflags/buildflags.h"
 
@@ -29,38 +31,45 @@ class RewardsNotificationServiceImpl
   explicit RewardsNotificationServiceImpl(Profile* profile);
   ~RewardsNotificationServiceImpl() override;
 
+  void Init(
+      std::unique_ptr<RewardsNotificationServiceObserver> extension_observer);
   void AddNotification(RewardsNotificationType type,
                        RewardsNotificationArgs args,
                        RewardsNotificationID id = "",
                        bool only_once = false) override;
   void DeleteNotification(RewardsNotificationID id) override;
-  void DeleteAllNotifications() override;
+  void DeleteAllNotifications(const bool delete_displayed) override;
   void GetNotification(RewardsNotificationID id) override;
   void GetNotifications() override;
   const RewardsNotificationsMap& GetAllNotifications() const override;
 
   void ReadRewardsNotificationsJSON() override;
-  void ReadRewardsNotifications(const base::Value::ListStorage& root);
+  void ReadRewardsNotifications(base::Value::ConstListView root);
   void StoreRewardsNotifications() override;
 
   bool Exists(RewardsNotificationID id) const override;
 
  private:
-  bool IsUGPGrant(const std::string& grant_type);
-  std::string GetGrantIdPrefix(const std::string& grant_type);
+  bool IsAds(const ledger::type::PromotionType promotion_type);
+  std::string GetPromotionIdPrefix(
+      const ledger::type::PromotionType promotion_type);
 
   // RewardsServiceObserver impl
-  void OnGrant(RewardsService* rewards_service,
-               unsigned int result,
-               Grant properties) override;
-  void OnGrantFinish(RewardsService* rewards_service,
-                     unsigned int result,
-                     brave_rewards::Grant grant) override;
-  void OnReconcileComplete(RewardsService* rewards_service,
-                           unsigned int result,
-                           const std::string& viewing_id,
-                           int32_t category,
-                           const std::string& probi) override;
+  void OnFetchPromotions(
+      RewardsService* rewards_service,
+      const ledger::type::Result result,
+      const ledger::type::PromotionList& list) override;
+  void OnPromotionFinished(
+      RewardsService* rewards_service,
+      const ledger::type::Result result,
+      ledger::type::PromotionPtr promotion) override;
+  void OnReconcileComplete(
+      RewardsService* rewards_service,
+      const ledger::type::Result result,
+      const std::string& contribution_id,
+      const double amount,
+      const ledger::type::RewardsType type,
+      const ledger::type::ContributionProcessor processor) override;
 
   void TriggerOnNotificationAdded(
       const RewardsNotification& rewards_notification);
@@ -85,10 +94,7 @@ class RewardsNotificationServiceImpl
   Profile* profile_;
   RewardsNotificationsMap rewards_notifications_;
   std::vector<RewardsNotificationID> rewards_notifications_displayed_;
-#if BUILDFLAG(ENABLE_EXTENSIONS)
-  std::unique_ptr<ExtensionRewardsNotificationServiceObserver>
-      extension_rewards_notification_service_observer_;
-#endif
+  std::unique_ptr<RewardsNotificationServiceObserver> extension_observer_;
 
   DISALLOW_COPY_AND_ASSIGN(RewardsNotificationServiceImpl);
 };

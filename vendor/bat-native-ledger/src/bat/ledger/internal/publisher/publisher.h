@@ -7,40 +7,33 @@
 #define BRAVELEDGER_PUBLISHER_PUBLISHER_H_
 
 #include <string>
-#include <map>
 #include <memory>
 #include <vector>
 
+#include "base/containers/flat_map.h"
 #include "base/gtest_prod_util.h"
-#include "bat/ledger/internal/bat_helper.h"
 #include "bat/ledger/ledger.h"
-#include "bat/ledger/ledger_callback_handler.h"
-#include "bat/ledger/publisher_info.h"
 
-namespace bat_ledger {
+namespace ledger {
 class LedgerImpl;
-}
 
-namespace braveledger_bat_helper {
-struct PUBLISHER_STATE_ST;
-}
+namespace publisher {
 
-namespace braveledger_publisher {
+class PublisherPrefixListUpdater;
+class ServerPublisherFetcher;
 
-class PublisherServerList;
-
-using ParsePublisherListCallback = std::function<void(const ledger::Result)>;
-using DownloadServerPublisherListCallback =
-    std::function<void(const ledger::Result)>;
-
-class Publisher : public ledger::LedgerCallbackHandler {
+class Publisher {
  public:
-  explicit Publisher(bat_ledger::LedgerImpl* ledger);
+  explicit Publisher(LedgerImpl* ledger);
 
-  ~Publisher() override;
+  ~Publisher();
 
-  // Called when timer is triggered
-  void OnTimer(uint32_t timer_id);
+  bool ShouldFetchServerPublisherInfo(
+      type::ServerPublisherInfo* server_info);
+
+  void FetchServerPublisherInfo(
+      const std::string& publisher_key,
+      client::GetServerPublisherInfoCallback callback);
 
   void RefreshPublisher(
       const std::string& publisher_key,
@@ -48,131 +41,122 @@ class Publisher : public ledger::LedgerCallbackHandler {
 
   void SetPublisherServerListTimer();
 
-  bool loadState(const std::string& data);
-
   void SaveVisit(const std::string& publisher_key,
-                 const ledger::VisitData& visit_data,
-                 const uint64_t& duration,
+                 const type::VisitData& visit_data,
+                 const uint64_t duration,
+                 const bool first_visit,
                  uint64_t window_id,
                  const ledger::PublisherInfoCallback callback);
 
-  void setPublisherMinVisitTime(const uint64_t& duration);  // In seconds
-
-  void setPublisherMinVisits(const unsigned int visits);
+  void SaveVideoVisit(
+      const std::string& publisher_id,
+      const type::VisitData& visit_data,
+      uint64_t duration,
+      const bool first_visit,
+      uint64_t window_id,
+      ledger::PublisherInfoCallback callback);
 
   void SetPublisherExclude(
       const std::string& publisher_id,
-      const ledger::PUBLISHER_EXCLUDE& exclude,
-      ledger::SetPublisherExcludeCallback callback);
+      const type::PublisherExclude& exclude,
+      ledger::ResultCallback callback);
 
-  void setPublisherAllowNonVerified(const bool& allow);
+  void OnPublisherInfoSaved(const type::Result result);
 
-  void setPublisherAllowVideos(const bool& allow);
-
-  void setBalanceReport(ledger::ACTIVITY_MONTH month,
-                        int year,
-                        const ledger::BalanceReportInfo& report_info);
-
-  bool getBalanceReport(ledger::ACTIVITY_MONTH month,
-                        int year,
-                        ledger::BalanceReportInfo* report_info);
-
-  std::map<std::string, ledger::BalanceReportInfoPtr> GetAllBalanceReports();
-
-  uint64_t getPublisherMinVisitTime() const;  // In milliseconds
-
-  unsigned int GetPublisherMinVisits() const;
-
-  bool getPublisherAllowNonVerified() const;
-
-  bool getPublisherAllowVideos() const;
-
-  void OnPublisherInfoSaved(
-      ledger::Result result,
-      ledger::PublisherInfoPtr);
-
-  std::string GetBalanceReportName(ledger::ACTIVITY_MONTH month, int year);
-
-  void ParsePublisherList(
-      const std::string& data,
-      ParsePublisherListCallback callback);
-
-  void getPublisherActivityFromUrl(
+  void GetPublisherActivityFromUrl(
       uint64_t windowId,
-      const ledger::VisitData& visit_data,
+      type::VisitDataPtr visit_data,
       const std::string& publisher_blob);
 
   void GetPublisherBanner(const std::string& publisher_key,
                           ledger::PublisherBannerCallback callback);
 
-  void setBalanceReportItem(ledger::ACTIVITY_MONTH month,
-                            int year,
-                            ledger::ReportType type,
-                            const std::string& probi);
-
-  ledger::ActivityInfoFilterPtr CreateActivityFilter(
+  type::ActivityInfoFilterPtr CreateActivityFilter(
       const std::string& publisher_id,
-      ledger::ExcludeFilter excluded,
+      type::ExcludeFilter excluded,
       bool min_duration,
       const uint64_t& current_reconcile_stamp,
       bool non_verified,
       bool min_visits);
 
-  void clearAllBalanceReports();
-
-  void NormalizeContributeWinners(ledger::PublisherInfoList* newList,
-                                  const ledger::PublisherInfoList* list,
-                                  uint32_t /* next_record */);
-
-  void SavePublisherProcessed(const std::string& publisher_key);
-
-  bool WasPublisherAlreadyProcessed(const std::string& publisher_key) const;
+  void NormalizeContributeWinners(
+      type::PublisherInfoList* newList,
+      const type::PublisherInfoList* list,
+      uint32_t /* next_record */);
 
   void OnRestorePublishers(
-      const ledger::Result result,
-      ledger::RestorePublishersCallback callback);
+      const type::Result result,
+      ledger::ResultCallback callback);
 
-  bool IsConnectedOrVerified(const ledger::PublisherStatus status);
+  bool IsConnectedOrVerified(const type::PublisherStatus status);
+
+  void SynopsisNormalizer();
+
+  void CalcScoreConsts(const int min_duration_seconds);
+
+  void GetServerPublisherInfo(
+      const std::string& publisher_key,
+      client::GetServerPublisherInfoCallback callback);
+
+  void UpdateMediaDuration(
+      const uint64_t window_id,
+      const std::string& publisher_key,
+      const uint64_t duration,
+      const bool first_visit);
+
+  void GetPublisherPanelInfo(
+      const std::string& publisher_key,
+      ledger::GetPublisherInfoCallback callback);
+
+  void SavePublisherInfo(
+      const uint64_t window_id,
+      type::PublisherInfoPtr publisher_info,
+      ledger::ResultCallback callback);
+
+  static std::string GetShareURL(
+      const base::flat_map<std::string, std::string>& args);
 
  private:
-  void OnRefreshPublisher(
-    const ledger::Result result,
-    const std::string& publisher_key,
-    ledger::OnRefreshPublisherCallback callback);
+  void OnGetPublisherInfoForUpdateMediaDuration(
+      type::Result result,
+      type::PublisherInfoPtr info,
+      const uint64_t window_id,
+      const uint64_t duration,
+      const bool first_visit);
 
-  void OnRefreshPublisherServerPublisher(
-    ledger::ServerPublisherInfoPtr info,
-    ledger::OnRefreshPublisherCallback callback);
+  void OnGetPanelPublisherInfo(
+      const type::Result result,
+      type::PublisherInfoPtr info,
+      ledger::GetPublisherInfoCallback callback);
 
-  void onPublisherActivitySave(uint64_t windowId,
-                               const ledger::VisitData& visit_data,
-                               ledger::Result result,
-                               ledger::PublisherInfoPtr info);
+  void onPublisherActivitySave(
+      uint64_t windowId,
+      const type::VisitData& visit_data,
+      type::Result result,
+      type::PublisherInfoPtr info);
 
-  // LedgerCallbackHandler impl
-  void OnPublisherStateSaved(ledger::Result result) override;
-
-  bool IsExcluded(
-      const std::string& publisher_id,
-      const bool server_exclude,
-      const ledger::PUBLISHER_EXCLUDE& excluded);
+  void OnGetActivityInfo(
+      type::PublisherInfoList list,
+      ledger::PublisherInfoCallback callback,
+      const std::string& publisher_key);
 
   void SaveVisitInternal(
-      const ledger::PublisherStatus,
-      bool server_excluded,
+      const type::PublisherStatus,
       const std::string& publisher_key,
-      const ledger::VisitData& visit_data,
-      uint64_t duration,
+      const type::VisitData& visit_data,
+      const uint64_t duration,
+      const bool first_visit,
       uint64_t window_id,
       const ledger::PublisherInfoCallback callback,
-      ledger::Result result,
-      ledger::PublisherInfoPtr publisher_info);
+      type::Result result,
+      type::PublisherInfoPtr publisher_info);
 
   void OnSaveVisitServerPublisher(
-    ledger::ServerPublisherInfoPtr server_info,
+    type::ServerPublisherInfoPtr server_info,
     const std::string& publisher_key,
-    const ledger::VisitData& visit_data,
-    uint64_t duration,
+    const type::VisitData& visit_data,
+    const uint64_t duration,
+    const bool first_visit,
     uint64_t window_id,
     const ledger::PublisherInfoCallback callback);
 
@@ -181,83 +165,71 @@ class Publisher : public ledger::LedgerCallbackHandler {
                       bool success,
                       const std::string& favicon_url);
 
-  void onFetchFavIconDBResponse(ledger::Result result,
-                                ledger::PublisherInfoPtr info,
+  void onFetchFavIconDBResponse(type::Result result,
+                                type::PublisherInfoPtr info,
                                 const std::string& favicon_url,
                                 uint64_t window_id);
 
   void OnSetPublisherExclude(
-    ledger::PUBLISHER_EXCLUDE exclude,
-    ledger::Result result,
-    ledger::PublisherInfoPtr publisher_info,
-    ledger::SetPublisherExcludeCallback callback);
-
-  void calcScoreConsts(const uint64_t& min_duration_seconds);
+    type::PublisherExclude exclude,
+    type::Result result,
+    type::PublisherInfoPtr publisher_info,
+    ledger::ResultCallback callback);
 
   double concaveScore(const uint64_t& duration_seconds);
 
-  void saveState();
+  void SynopsisNormalizerCallback(type::PublisherInfoList list);
 
-  void SynopsisNormalizer();
-
-  void SynopsisNormalizerCallback(ledger::PublisherInfoList list,
+  void synopsisNormalizerInternal(type::PublisherInfoList* newList,
+                                  const type::PublisherInfoList* list,
                                   uint32_t /* next_record */);
-
-  void synopsisNormalizerInternal(ledger::PublisherInfoList* newList,
-                                  const ledger::PublisherInfoList* list,
-                                  uint32_t /* next_record */);
-
-  bool GetMigrateScore() const;
-
-  void SetMigrateScore(bool value);
-
-  bool isPublisherVisible(
-      const braveledger_bat_helper::PUBLISHER_ST& publisher_st);
 
   void OnSaveVisitInternal(
-    ledger::Result result,
-    ledger::PublisherInfoPtr info);
+    type::Result result,
+    type::PublisherInfoPtr info);
 
   void OnPanelPublisherInfo(
-      ledger::Result result,
-      ledger::PublisherInfoPtr publisher_info,
+      type::Result result,
+      type::PublisherInfoPtr publisher_info,
       uint64_t windowId,
-      const ledger::VisitData& visit_data);
+      const type::VisitData& visit_data);
 
   void OnGetPublisherBanner(
-      ledger::ServerPublisherInfoPtr info,
+      type::ServerPublisherInfoPtr info,
       const std::string& publisher_key,
       ledger::PublisherBannerCallback callback);
 
   void OnGetPublisherBannerPublisher(
       ledger::PublisherBannerCallback callback,
-      const ledger::PublisherBanner& banner,
-      ledger::Result result,
-      ledger::PublisherInfoPtr publisher_info);
+      const type::PublisherBanner& banner,
+      type::Result result,
+      type::PublisherInfoPtr publisher_info);
 
-  ledger::PublisherStatus ParsePublisherStatus(const std::string& status);
+  void OnGetPublisherBannerForSavePublisherInfo(
+      type::PublisherBannerPtr banner,
+      const uint64_t window_id,
+      const std::string& publisher_key,
+      const type::VisitData& visit_data,
+      ledger::ResultCallback callback);
 
-  bat_ledger::LedgerImpl* ledger_;  // NOT OWNED
-  std::unique_ptr<braveledger_bat_helper::PUBLISHER_STATE_ST> state_;
-  std::unique_ptr<PublisherServerList> server_list_;
+  type::PublisherStatus ParsePublisherStatus(const std::string& status);
 
-  double a_;
+  void OnServerPublisherInfoLoaded(
+      type::ServerPublisherInfoPtr server_info,
+      const std::string& publisher_key,
+      client::GetServerPublisherInfoCallback callback);
 
-  double a2_;
-
-  double a4_;
-
-  double b_;
-
-  double b2_;
+  LedgerImpl* ledger_;  // NOT OWNED
+  std::unique_ptr<PublisherPrefixListUpdater> prefix_list_updater_;
+  std::unique_ptr<ServerPublisherFetcher> server_publisher_fetcher_;
 
   // For testing purposes
   friend class PublisherTest;
-  FRIEND_TEST_ALL_PREFIXES(PublisherTest, calcScoreConsts);
   FRIEND_TEST_ALL_PREFIXES(PublisherTest, concaveScore);
   FRIEND_TEST_ALL_PREFIXES(PublisherTest, synopsisNormalizerInternal);
 };
 
-}  // namespace braveledger_publisher
+}  // namespace publisher
+}  // namespace ledger
 
 #endif  // BRAVELEDGER_PUBLISHER_PUBLISHER_H_

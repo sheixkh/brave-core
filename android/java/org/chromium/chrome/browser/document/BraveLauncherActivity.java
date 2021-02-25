@@ -8,11 +8,9 @@ package org.chromium.chrome.browser.document;
 import android.app.Activity;
 import android.os.Bundle;
 
-import org.chromium.base.CommandLine;
-import org.chromium.base.Log;
-import org.chromium.chrome.browser.ChromeSwitches;
-import org.chromium.chrome.browser.firstrun.FirstRunStatus;
-import org.chromium.chrome.browser.preferences.ChromePreferenceManager;
+import org.chromium.chrome.browser.BraveHelper;
+import org.chromium.chrome.browser.preferences.SharedPreferencesManager;
+import org.chromium.chrome.browser.toolbar.bottom.BottomToolbarConfiguration;
 
 /**
  * Base class for ChromeLauncherActivity
@@ -22,10 +20,10 @@ public class BraveLauncherActivity extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Disable FTR experience
-        CommandLine.getInstance().appendSwitch(ChromeSwitches.DISABLE_FIRST_RUN_EXPERIENCE);
-        FirstRunStatus.setFirstRunFlowComplete(true);
+        // Disable key checker to avoid asserts on Brave keys in debug
+        SharedPreferencesManager.getInstance().disableKeyCheckerForTesting();
 
-        ChromePreferenceManager.getInstance().isBottomToolbarEnabled();
+        BottomToolbarConfiguration.isBottomToolbarEnabled();
+        BraveHelper.DisableFREDRP();
     }
 }

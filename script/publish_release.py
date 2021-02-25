@@ -7,18 +7,15 @@ import argparse
 import json
 import logging
 import os
+import requests
 import sys
+from argparse import RawTextHelpFormatter
 from lib.github import GitHub
-from lib.config import (PLATFORM, DIST_URL, get_target_arch,
-                        get_env_var,
-                        s3_config, get_zip_name, product_name,
-                        project_name, SOURCE_ROOT, dist_dir,
+from lib.helpers import *
+from lib.config import (PLATFORM, get_env_var, product_name,
+                        project_name, SOURCE_ROOT,
                         output_dir, get_brave_version,
                         get_raw_version)
-from lib.helpers import *
-import requests
-
-from argparse import RawTextHelpFormatter
 
 
 def main():
@@ -38,9 +35,18 @@ def main():
 
     repo = GitHub(get_env_var('GITHUB_TOKEN')).repos(BRAVE_REPO)
 
-    release = get_draft(repo, BRAVE_VERSION)
+    tag = BRAVE_VERSION
+    logging.debug("Tag: {}".format(tag))
+
+    # If we are publishing a prerelease, the release can only be in draft mode. If we
+    # are publishing a full release, it is allowed to already be a published release.
+    if args.prerelease:
+        release = get_draft(repo, tag)
+    else:
+        release = get_release(repo, tag, allow_published_release_updates=True)
 
     tag_name = release['tag_name']
+    logging.debug("release[id]: {}".format(release['id']))
 
     logging.info("Releasing {}".format(tag_name))
     publish_release(repo, release['id'], tag_name, args.prerelease, logging)
@@ -74,7 +80,8 @@ def publish_release(repo, release_id, tag, prerelease, logging):
 def parse_args():
     desc = "Publish GitHub draft release" \
         "\n\nRequires the following ENVIRONMENT VARIABLES be set:" \
-        "\n\nCHANNEL: The Brave channel, i.e. \'nightly\', \'dev\', \'beta\', \'release\'"
+        "\n\nCHANNEL: The Brave channel, i.e. \'nightly\', \'dev\', \'beta\', \'release\'" \
+        "\n\nBRAVE_GITHUB_TOKEN: Github token to publish release. "
 
     parser = argparse.ArgumentParser(
         description=desc, formatter_class=RawTextHelpFormatter)

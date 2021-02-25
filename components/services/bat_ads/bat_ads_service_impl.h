@@ -10,42 +10,52 @@
 #include <memory>
 
 #include "base/memory/ref_counted.h"
+#include "bat/ads/ads.h"
 #include "brave/components/services/bat_ads/public/interfaces/bat_ads.mojom.h"
-#include "mojo/public/cpp/bindings/binding_set.h"
-#include "services/service_manager/public/cpp/service_context_ref.h"
+#include "mojo/public/cpp/bindings/pending_associated_receiver.h"
+#include "mojo/public/cpp/bindings/pending_associated_remote.h"
+#include "mojo/public/cpp/bindings/pending_receiver.h"
+#include "mojo/public/cpp/bindings/receiver.h"
+#include "mojo/public/cpp/bindings/unique_associated_receiver_set.h"
 
 namespace bat_ads {
 
 class BatAdsServiceImpl : public mojom::BatAdsService {
  public:
   explicit BatAdsServiceImpl(
-      std::unique_ptr<service_manager::ServiceContextRef> service_ref);
+      mojo::PendingReceiver<mojom::BatAdsService> receiver);
 
   ~BatAdsServiceImpl() override;
 
+  BatAdsServiceImpl(const BatAdsServiceImpl&) = delete;
+  BatAdsServiceImpl& operator=(const BatAdsServiceImpl&) = delete;
+
   // Overridden from BatAdsService:
   void Create(
-      mojom::BatAdsClientAssociatedPtrInfo client_info,
-      mojom::BatAdsAssociatedRequest bat_ads,
+      mojo::PendingAssociatedRemote<mojom::BatAdsClient> client_info,
+      mojo::PendingAssociatedReceiver<mojom::BatAds> bat_ads,
       CreateCallback callback) override;
 
-  void SetProduction(
-      const bool is_production,
-      SetProductionCallback callback) override;
+  void SetEnvironment(
+      const ads::Environment environment,
+      SetEnvironmentCallback callback) override;
 
-  void SetTesting(
-      const bool is_testing,
-      SetTestingCallback callback) override;
+  void SetSysInfo(
+      ads::SysInfoPtr sys_info,
+      SetSysInfoCallback callback) override;
+
+  void SetBuildChannel(
+      ads::BuildChannelPtr build_channel,
+      SetBuildChannelCallback callback) override;
 
   void SetDebug(
       const bool is_debug,
       SetDebugCallback callback) override;
 
  private:
-  const std::unique_ptr<service_manager::ServiceContextRef> service_ref_;
+  mojo::Receiver<mojom::BatAdsService> receiver_;
   bool is_initialized_;
-
-  DISALLOW_COPY_AND_ASSIGN(BatAdsServiceImpl);
+  mojo::UniqueAssociatedReceiverSet<mojom::BatAds> associated_receivers_;
 };
 
 }  // namespace bat_ads

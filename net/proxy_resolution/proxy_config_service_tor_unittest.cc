@@ -11,16 +11,16 @@
 #include "base/macros.h"
 #include "base/threading/thread_task_runner_handle.h"
 #include "net/base/proxy_server.h"
+#include "net/proxy_resolution/configured_proxy_resolution_service.h"
 #include "net/proxy_resolution/mock_proxy_resolver.h"
 #include "net/proxy_resolution/proxy_config_with_annotation.h"
-#include "net/proxy_resolution/proxy_resolution_service.h"
-#include "net/test/test_with_scoped_task_environment.h"
+#include "net/test/test_with_task_environment.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "url/gurl.h"
 
 namespace net {
 
-class ProxyConfigServiceTorTest : public TestWithScopedTaskEnvironment {
+class ProxyConfigServiceTorTest : public TestWithTaskEnvironment {
  public:
   ProxyConfigServiceTorTest() {}
   ~ProxyConfigServiceTorTest() override {}
@@ -133,13 +133,14 @@ TEST_F(ProxyConfigServiceTorTest, SetProxyAuthorization) {
   const std::string isolation_key2 =
       ProxyConfigServiceTor::CircuitIsolationKey(site_url2);
 
-  auto config_service = ProxyResolutionService::CreateSystemProxyConfigService(
-      base::ThreadTaskRunnerHandle::Get());
+  auto config_service =
+      ConfiguredProxyResolutionService::CreateSystemProxyConfigService(
+          base::ThreadTaskRunnerHandle::Get());
 
-  auto* service = new ProxyResolutionService(
-        std::move(config_service),
-        std::make_unique<MockAsyncProxyResolverFactory>(false),
-        nullptr);
+  auto* service = new ConfiguredProxyResolutionService(
+      std::move(config_service),
+      std::make_unique<MockAsyncProxyResolverFactory>(false), nullptr,
+      /*quick_check_enabled=*/true);
 
   ProxyConfigServiceTor proxy_config_service(proxy_uri);
   ProxyConfigWithAnnotation config;

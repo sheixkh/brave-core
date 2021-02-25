@@ -8,67 +8,106 @@
 
 #include <stdint.h>
 
-#include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include "base/containers/flat_map.h"
 #include "bat/ledger/export.h"
-#include "bat/ledger/auto_contribute_props.h"
-#include "bat/ledger/balance.h"
+#include "bat/ledger/mojom_structs.h"
 #include "bat/ledger/ledger_client.h"
-#include "bat/ledger/publisher_info.h"
-#include "bat/ledger/media_event_info.h"
-#include "bat/ledger/transactions_info.h"
-#include "bat/ledger/rewards_internals_info.h"
-#include "bat/ledger/pending_contribution.h"
 
 namespace ledger {
 
-using VisitData = ledger::mojom::VisitData;
-using VisitDataPtr = ledger::mojom::VisitDataPtr;
-
-extern bool is_production;
+extern type::Environment _environment;
 extern bool is_debug;
 extern bool is_testing;
-extern int reconcile_time;  // minutes
+extern int reconcile_interval;  // minutes
 extern bool short_retries;
 
-using PublisherBannerCallback =
-    std::function<void(ledger::PublisherBannerPtr banner)>;
-using GetTransactionHistoryCallback =
-    std::function<void(std::unique_ptr<ledger::TransactionsInfo> info)>;
-using OnWalletPropertiesCallback = std::function<void(const ledger::Result,
-                                  ledger::WalletPropertiesPtr)>;
-using OnRefreshPublisherCallback =
-    std::function<void(ledger::PublisherStatus)>;
+using PublisherBannerCallback = std::function<void(type::PublisherBannerPtr)>;
+
+using GetRewardsParametersCallback =
+    std::function<void(type::RewardsParametersPtr)>;
+
+using OnRefreshPublisherCallback = std::function<void(type::PublisherStatus)>;
+
 using HasSufficientBalanceToReconcileCallback = std::function<void(bool)>;
-using FetchBalanceCallback = std::function<void(ledger::Result,
-                                                ledger::BalancePtr)>;
-using ExternalWalletCallback = std::function<void(
-    ledger::Result,
-    ledger::ExternalWalletPtr)>;
+
+using FetchBalanceCallback =
+    std::function<void(type::Result, type::BalancePtr)>;
+
+using UpholdWalletCallback =
+    std::function<void(type::Result, type::UpholdWalletPtr)>;
+
 using ExternalWalletAuthorizationCallback =
-    std::function<void(ledger::Result, std::map<std::string, std::string>)>;
-using DisconnectWalletCallback = std::function<void(ledger::Result)>;
-using TransferAnonToExternalWalletCallback =
-    std::function<void(ledger::Result)>;
-using DoDirectTipCallback = std::function<void(ledger::Result)>;
-using FetchGrantsCallback =
-    std::function<void(ledger::Result, std::vector<ledger::GrantPtr>)>;
-using SetPublisherExcludeCallback = std::function<void(ledger::Result)>;
-using GetGrantCaptchaCallback = std::function<void(const std::string&,
-                                                   const std::string&)>;
+    std::function<void(type::Result, base::flat_map<std::string, std::string>)>;
+
+using FetchPromotionCallback =
+    std::function<void(type::Result, type::PromotionList)>;
+
+using ClaimPromotionCallback =
+    std::function<void(const type::Result, const std::string&)>;
+
 using RewardsInternalsInfoCallback =
-    std::function<void(ledger::RewardsInternalsInfoPtr)>;
-using CreateWalletCallback = std::function<void(ledger::Result)>;
-using InitializeCallback = std::function<void(ledger::Result)>;
+    std::function<void(type::RewardsInternalsInfoPtr)>;
+
+using AttestPromotionCallback =
+    std::function<void(const type::Result, type::PromotionPtr)>;
+
+using GetBalanceReportCallback =
+    std::function<void(const type::Result, type::BalanceReportInfoPtr)>;
+
+using GetBalanceReportListCallback =
+    std::function<void(type::BalanceReportInfoList)>;
+
+using ContributionInfoListCallback =
+    std::function<void(type::ContributionInfoList)>;
+
+using GetMonthlyReportCallback =
+    std::function<void(const type::Result, type::MonthlyReportInfoPtr)>;
+
+using GetAllMonthlyReportIdsCallback =
+    std::function<void(const std::vector<std::string>&)>;
+
+using GetEventLogsCallback = std::function<void(type::EventLogs)>;
+
+using SKUOrderCallback =
+    std::function<void(const type::Result, const std::string&)>;
+
+using GetContributionReportCallback =
+    std::function<void(type::ContributionReportInfoList)>;
+
+using GetTransactionReportCallback =
+    std::function<void(type::TransactionReportInfoList)>;
+
+using GetAllPromotionsCallback = std::function<void(type::PromotionMap)>;
+
+using ResultCallback = std::function<void(const type::Result)>;
+
+using PendingContributionsTotalCallback = std::function<void(double)>;
+
+using PendingContributionInfoListCallback =
+    std::function<void(type::PendingContributionInfoList)>;
+
+using PublisherInfoListCallback = std::function<void(type::PublisherInfoList)>;
+
+using PublisherInfoCallback =
+    std::function<void(const type::Result, type::PublisherInfoPtr)>;
+
+using GetPublisherInfoCallback =
+    std::function<void(const type::Result, type::PublisherInfoPtr)>;
+
+using GetBraveWalletCallback = std::function<void(type::BraveWalletPtr)>;
+
+using GetTransferableAmountCallback = std::function<void(double)>;
 
 class LEDGER_EXPORT Ledger {
  public:
-  static bool IsMediaLink(const std::string& url,
-                          const std::string& first_party_url,
-                          const std::string& referrer);
+  static bool IsMediaLink(
+      const std::string& url,
+      const std::string& first_party_url,
+      const std::string& referrer);
 
   Ledger() = default;
   virtual ~Ledger() = default;
@@ -79,18 +118,20 @@ class LEDGER_EXPORT Ledger {
 
   static Ledger* CreateInstance(LedgerClient* client);
 
-  virtual void Initialize(InitializeCallback) = 0;
+  virtual void Initialize(
+      const bool execute_create_script,
+      ResultCallback) = 0;
 
-  // returns false if wallet initialization is already in progress
-  virtual void CreateWallet(CreateWalletCallback callback) = 0;
+  virtual void CreateWallet(ResultCallback callback) = 0;
 
-  virtual void DoDirectTip(const std::string& publisher_key,
-                           int amount,
-                           const std::string& currency,
-                           ledger::DoDirectTipCallback callback) = 0;
+  virtual void OneTimeTip(
+      const std::string& publisher_key,
+      const double amount,
+      ResultCallback callback) = 0;
 
-  virtual void OnLoad(VisitDataPtr visit_data,
-                      const uint64_t& current_time) = 0;
+  virtual void OnLoad(
+      type::VisitDataPtr visit_data,
+      const uint64_t& current_time) = 0;
 
   virtual void OnUnload(uint32_t tab_id, const uint64_t& current_time) = 0;
 
@@ -105,10 +146,10 @@ class LEDGER_EXPORT Ledger {
   virtual void OnXHRLoad(
       uint32_t tab_id,
       const std::string& url,
-      const std::map<std::string, std::string>& parts,
+      const base::flat_map<std::string, std::string>& parts,
       const std::string& first_party_url,
       const std::string& referrer,
-      VisitDataPtr visit_data) = 0;
+      type::VisitDataPtr visit_data) = 0;
 
 
   virtual void OnPostData(
@@ -116,189 +157,244 @@ class LEDGER_EXPORT Ledger {
       const std::string& first_party_url,
       const std::string& referrer,
       const std::string& post_data,
-      VisitDataPtr visit_data) = 0;
-
-  virtual void OnTimer(uint32_t timer_id) = 0;
+      type::VisitDataPtr visit_data) = 0;
 
   virtual std::string URIEncode(const std::string& value) = 0;
 
-  virtual void GetPublisherInfo(const std::string& publisher_key,
-                                PublisherInfoCallback callback) = 0;
+  virtual void GetActivityInfoList(
+      uint32_t start, uint32_t limit,
+      type::ActivityInfoFilterPtr filter,
+      PublisherInfoListCallback callback) = 0;
 
-  virtual void GetActivityInfoList(uint32_t start, uint32_t limit,
-                                    ledger::ActivityInfoFilterPtr filter,
-                                    PublisherInfoListCallback callback) = 0;
+  virtual void GetExcludedList(PublisherInfoListCallback callback) = 0;
 
-  virtual void SetRewardsMainEnabled(bool enabled) = 0;
+  virtual void SetPublisherMinVisitTime(int duration_in_seconds) = 0;
 
-  virtual void SetPublisherMinVisitTime(uint64_t duration_in_seconds) = 0;
-
-  virtual void SetPublisherMinVisits(unsigned int visits) = 0;
+  virtual void SetPublisherMinVisits(int visits) = 0;
 
   virtual void SetPublisherAllowNonVerified(bool allow) = 0;
 
   virtual void SetPublisherAllowVideos(bool allow) = 0;
 
-  virtual void SetContributionAmount(double amount) = 0;
+  virtual void SetAutoContributionAmount(double amount) = 0;
 
-  virtual void SetUserChangedContribution() = 0;
+  virtual void SetAutoContributeEnabled(bool enabled) = 0;
 
-  virtual void SetAutoContribute(bool enabled) = 0;
+  virtual uint64_t GetReconcileStamp() = 0;
 
-  virtual void UpdateAdsRewards() = 0;
+  virtual int GetPublisherMinVisitTime() = 0;  // In milliseconds
 
-  virtual uint64_t GetReconcileStamp() const = 0;
+  virtual int GetPublisherMinVisits() = 0;
 
-  virtual bool GetRewardsMainEnabled() const = 0;
+  virtual bool GetPublisherAllowNonVerified() = 0;
 
-  virtual uint64_t GetPublisherMinVisitTime() const = 0;  // In milliseconds
+  virtual bool GetPublisherAllowVideos() = 0;
 
-  virtual unsigned int GetPublisherMinVisits() const = 0;
+  virtual double GetAutoContributionAmount() = 0;
 
-  virtual bool GetPublisherAllowNonVerified() const = 0;
+  virtual bool GetAutoContributeEnabled() = 0;
 
-  virtual bool GetPublisherAllowVideos() const = 0;
+  virtual void GetRewardsParameters(GetRewardsParametersCallback callback) = 0;
 
-  virtual double GetContributionAmount() const = 0;
+  virtual void FetchPromotions(FetchPromotionCallback callback) const = 0;
 
-  virtual bool GetAutoContribute() const = 0;
+  // |payload|:
+  // desktop and Android: empty
+  // iOS: { "publicKey": "{{publicKey}}" }
+  // =====================================
+  // |callback| returns result as json
+  // desktop: { "captchaImage": "{{captchaImage}}", "hint": "{{hint}}" }
+  // iOS and Android: { "nonce": "{{nonce}}" }
+  virtual void ClaimPromotion(
+      const std::string& promotion_id,
+      const std::string& payload,
+      ClaimPromotionCallback callback) const = 0;
 
-  virtual void FetchWalletProperties(
-      OnWalletPropertiesCallback callback) const = 0;
+  // |solution|:
+  // desktop:
+  //  {
+  //    "captchaId": "{{captchaId}}",
+  //    "x": "{{x}}",
+  //    "y": "{{y}}"
+  //  }
+  // iOS:
+  //  {
+  //    "nonce": "{{nonce}}",
+  //    "blob": "{{blob}}",
+  //    "signature": "{{signature}}"
+  //  }
+  // android:
+  //  {
+  //    "nonce": "{{nonce}}",
+  //    "token": "{{token}}"
+  //  }
+  virtual void AttestPromotion(
+      const std::string& promotion_id,
+      const std::string& solution,
+      AttestPromotionCallback callback) const = 0;
 
-  virtual void FetchGrants(const std::string& lang,
-                           const std::string& paymentId,
-                           ledger::FetchGrantsCallback callback) const = 0;
+  virtual void GetBalanceReport(
+      type::ActivityMonth month,
+      int year,
+      GetBalanceReportCallback callback) const = 0;
 
-  virtual void SolveGrantCaptcha(const std::string& solution,
-                                 const std::string& promotionId) const = 0;
+  virtual void GetAllBalanceReports(
+      GetBalanceReportListCallback callback) const = 0;
 
-  virtual void GetGrantCaptcha(
-      const std::vector<std::string>& headers,
-      GetGrantCaptchaCallback callback) const = 0;
+  virtual type::AutoContributePropertiesPtr GetAutoContributeProperties() = 0;
 
-  virtual std::string GetWalletPassphrase() const = 0;
-
-  virtual bool GetBalanceReport(ACTIVITY_MONTH month,
-                              int year,
-                              ledger::BalanceReportInfo* report_info) const = 0;
-
-  virtual std::map<std::string, ledger::BalanceReportInfoPtr>
-  GetAllBalanceReports() const = 0;
-
-  virtual ledger::AutoContributePropsPtr GetAutoContributeProps() = 0;
-
-  virtual void RecoverWallet(const std::string& passPhrase) const = 0;
+  virtual void RecoverWallet(
+      const std::string& pass_phrase,
+      ResultCallback callback)  = 0;
 
   virtual void SetPublisherExclude(
       const std::string& publisher_id,
-      const ledger::PUBLISHER_EXCLUDE& exclude,
-      SetPublisherExcludeCallback callback) = 0;
+      const type::PublisherExclude& exclude,
+      ResultCallback callback) = 0;
 
-  virtual void RestorePublishers(
-    ledger::RestorePublishersCallback callback) = 0;
-
-  virtual bool IsWalletCreated() const = 0;
+  virtual void RestorePublishers(ResultCallback callback) = 0;
 
   virtual void GetPublisherActivityFromUrl(
       uint64_t windowId,
-      ledger::VisitDataPtr visit_data,
+      type::VisitDataPtr visit_data,
       const std::string& publisher_blob) = 0;
-
-  virtual void SetBalanceReportItem(ACTIVITY_MONTH month,
-                                    int year,
-                                    ledger::ReportType type,
-                                    const std::string& probi) = 0;
 
   virtual void GetPublisherBanner(
       const std::string& publisher_id,
-      ledger::PublisherBannerCallback callback) = 0;
-
-  virtual void OnReconcileCompleteSuccess(
-      const std::string& viewing_id,
-      const ledger::REWARDS_CATEGORY category,
-      const std::string& probi,
-      const ledger::ACTIVITY_MONTH month,
-      const int year,
-      const uint32_t date) = 0;
+      PublisherBannerCallback callback) = 0;
 
   virtual void RemoveRecurringTip(
-    const std::string& publisher_key,
-    RemoveRecurringTipCallback callback) = 0;
+      const std::string& publisher_key,
+      ResultCallback callback) = 0;
 
-  virtual double GetDefaultContributionAmount() = 0;
-
-  virtual uint64_t GetBootStamp() const = 0;
+  virtual uint64_t GetCreationStamp() = 0;
 
   virtual void HasSufficientBalanceToReconcile(
       HasSufficientBalanceToReconcileCallback callback) = 0;
 
-  virtual void SetCatalogIssuers(const std::string& info) = 0;
-
-  virtual void ConfirmAd(const std::string& info) = 0;
-  virtual void ConfirmAction(const std::string& uuid,
-                             const std::string& creative_set_id,
-                             const std::string& type) = 0;
-  virtual void GetTransactionHistory(
-      GetTransactionHistoryCallback callback) = 0;
-
-  // This uses a callback instead of returning directly so that
-  // GetCurrentReconciles() can be moved to the database later.
   virtual void GetRewardsInternalsInfo(
-      ledger::RewardsInternalsInfoCallback callback) = 0;
+      RewardsInternalsInfoCallback callback) = 0;
 
   virtual void SaveRecurringTip(
-      ledger::ContributionInfoPtr info,
-      ledger::SaveRecurringTipCallback callback) = 0;
-  virtual void GetRecurringTips(ledger::PublisherInfoListCallback callback) = 0;
+      type::RecurringTipPtr info,
+      ResultCallback callback) = 0;
 
-  virtual void GetOneTimeTips(ledger::PublisherInfoListCallback callback) = 0;
+  virtual void GetRecurringTips(PublisherInfoListCallback callback) = 0;
+
+  virtual void GetOneTimeTips(PublisherInfoListCallback callback) = 0;
+
   virtual void RefreshPublisher(
       const std::string& publisher_key,
-      ledger::OnRefreshPublisherCallback callback) = 0;
+      OnRefreshPublisherCallback callback) = 0;
 
   virtual void StartMonthlyContribution() = 0;
 
-  virtual void SaveMediaInfo(const std::string& type,
-                             const std::map<std::string, std::string>& data,
-                             ledger::PublisherInfoCallback callback) = 0;
+  virtual void SaveMediaInfo(
+      const std::string& type,
+      const base::flat_map<std::string, std::string>& data,
+      PublisherInfoCallback callback) = 0;
 
-  virtual void SetInlineTipSetting(const std::string& key, bool enabled) = 0;
+  virtual void UpdateMediaDuration(
+      const uint64_t window_id,
+      const std::string& publisher_key,
+      const uint64_t duration,
+      const bool first_visit) = 0;
 
-  virtual bool GetInlineTipSetting(const std::string& key) = 0;
+  virtual void GetPublisherInfo(
+      const std::string& publisher_key,
+      GetPublisherInfoCallback callback) = 0;
+
+  virtual void GetPublisherPanelInfo(
+      const std::string& publisher_key,
+      GetPublisherInfoCallback callback) = 0;
+
+  virtual void SavePublisherInfo(
+      const uint64_t window_id,
+      type::PublisherInfoPtr publisher_info,
+      ResultCallback callback) = 0;
+
+  virtual void SetInlineTippingPlatformEnabled(
+      const type::InlineTipsPlatforms platform,
+      bool enabled) = 0;
+
+  virtual bool GetInlineTippingPlatformEnabled(
+      const type::InlineTipsPlatforms platform) = 0;
 
   virtual std::string GetShareURL(
-      const std::string& type,
-      const std::map<std::string, std::string>& args) = 0;
+      const base::flat_map<std::string, std::string>& args) = 0;
 
   virtual void GetPendingContributions(
-      ledger::PendingContributionInfoListCallback callback) = 0;
+      PendingContributionInfoListCallback callback) = 0;
 
   virtual void RemovePendingContribution(
-      const std::string& publisher_key,
-      const std::string& viewing_id,
-      uint64_t added_date,
-      ledger::RemovePendingContributionCallback callback) = 0;
+      const uint64_t id,
+      ResultCallback callback) = 0;
 
-  virtual void RemoveAllPendingContributions(
-      ledger::RemovePendingContributionCallback callback) = 0;
+  virtual void RemoveAllPendingContributions(ResultCallback callback) = 0;
 
   virtual void GetPendingContributionsTotal(
-      ledger::PendingContributionsTotalCallback callback) = 0;
+      PendingContributionsTotalCallback callback) = 0;
 
-  virtual void FetchBalance(ledger::FetchBalanceCallback callback) = 0;
+  virtual void FetchBalance(FetchBalanceCallback callback) = 0;
 
-  virtual void GetExternalWallet(const std::string& wallet_type,
-                                 ledger::ExternalWalletCallback callback) = 0;
+  virtual void GetUpholdWallet(UpholdWalletCallback callback) = 0;
 
   virtual void ExternalWalletAuthorization(
       const std::string& wallet_type,
-      const std::map<std::string, std::string>& args,
-      ledger::ExternalWalletAuthorizationCallback callback) = 0;
+      const base::flat_map<std::string, std::string>& args,
+      ExternalWalletAuthorizationCallback callback) = 0;
 
   virtual void DisconnectWallet(
       const std::string& wallet_type,
-      ledger::DisconnectWalletCallback callback) = 0;
+      ResultCallback callback) = 0;
+
+  virtual void GetAllPromotions(GetAllPromotionsCallback callback) = 0;
+
+  virtual void GetAnonWalletStatus(ResultCallback callback) = 0;
+
+  virtual void GetTransactionReport(
+      const type::ActivityMonth month,
+      const int year,
+      GetTransactionReportCallback callback) = 0;
+
+  virtual void GetContributionReport(
+      const type::ActivityMonth month,
+      const int year,
+      GetContributionReportCallback callback) = 0;
+
+  virtual void GetAllContributions(ContributionInfoListCallback callback) = 0;
+
+  virtual void SavePublisherInfoForTip(
+      type::PublisherInfoPtr info,
+      ResultCallback callback) = 0;
+
+  virtual void GetMonthlyReport(
+      const type::ActivityMonth month,
+      const int year,
+      GetMonthlyReportCallback callback) = 0;
+
+  virtual void GetAllMonthlyReportIds(
+      GetAllMonthlyReportIdsCallback callback) = 0;
+
+  virtual void ProcessSKU(
+      const std::vector<type::SKUOrderItem>& items,
+      const std::string& wallet_type,
+      SKUOrderCallback callback) = 0;
+
+  virtual void Shutdown(ResultCallback callback) = 0;
+
+  virtual void GetEventLogs(GetEventLogsCallback callback) = 0;
+
+  virtual void GetBraveWallet(GetBraveWalletCallback callback) = 0;
+
+  virtual std::string GetWalletPassphrase() const = 0;
+
+  virtual void LinkBraveWallet(
+      const std::string& destination_payment_id,
+      ResultCallback callback) = 0;
+
+  virtual void GetTransferableAmount(
+      GetTransferableAmountCallback callback) = 0;
 };
 
 }  // namespace ledger

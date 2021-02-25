@@ -1,199 +1,140 @@
 pipeline {
-    agent {
-        node { label "master" }
-    }
+    agent none
     options {
-        timeout(time: 6, unit: "HOURS")
+        ansiColor('xterm')
+        timeout(time: 6, unit: 'HOURS')
         timestamps()
     }
     parameters {
-        choice(name: "BUILD_TYPE", choices: ["Release", "Debug"], description: "")
-        choice(name: "CHANNEL", choices: ["nightly", "dev", "beta", "release", "development"], description: "")
-        booleanParam(name: "OFFICIAL_BUILD", defaultValue: true, description: "")
-        booleanParam(name: "SKIP_SIGNING", defaultValue: true, description: "")
-        booleanParam(name: "WIPE_WORKSPACE", defaultValue: false, description: "")
-        booleanParam(name: "SKIP_INIT", defaultValue: false, description: "")
-        booleanParam(name: "DISABLE_SCCACHE", defaultValue: false, description: "")
-        booleanParam(name: "DEBUG", defaultValue: false, description: "")
-    }
-    environment {
-        GITHUB_API = "https://api.github.com/repos/brave"
-        GITHUB_CREDENTIAL_ID = "brave-builds-github-token-for-pr-builder"
-        GITHUB_AUTH = credentials("${GITHUB_CREDENTIAL_ID}")
-        BB_REPO = "https://${GITHUB_AUTH}@github.com/brave/brave-browser"
+        choice(name: 'CHANNEL', choices: ['nightly', 'dev', 'beta', 'release', 'development'])
+        choice(name: 'BUILD_TYPE', choices: ['Release', 'Debug'])
+        choice(name: 'BUILD_STATUS', choices: ['', 'SUCCESS', 'FAILURE', 'UNSTABLE', 'ABORTED'])
+        booleanParam(name: 'TERMINATE_NODE', defaultValue: false)
+        booleanParam(name: 'WIPE_WORKSPACE', defaultValue: false)
+        booleanParam(name: 'SKIP_INIT', defaultValue: false)
+        booleanParam(name: 'DISABLE_SCCACHE', defaultValue: false)
+        booleanParam(name: 'SKIP_SIGNING', defaultValue: true)
+        booleanParam(name: 'DCHECK_ALWAYS_ON', defaultValue: true)
+        string(name: 'NODE_LABEL', defaultValue: '')
+        string(name: 'SLACK_NOTIFY', defaultValue: '')
     }
     stages {
-        stage("env") {
+        stage('build') {
+            agent { label 'master' }
             steps {
                 script {
-                    BUILD_TYPE = params.BUILD_TYPE
-                    CHANNEL = params.CHANNEL
-                    OFFICIAL_BUILD = params.OFFICIAL_BUILD
-                    SKIP_SIGNING = params.SKIP_SIGNING
-                    WIPE_WORKSPACE = params.WIPE_WORKSPACE
-                    SKIP_INIT = params.SKIP_INIT
-                    DISABLE_SCCACHE = params.DISABLE_SCCACHE
-                    DEBUG = params.DEBUG
-                    SKIP = false
-                    BRANCH = env.BRANCH_NAME
-                    TARGET_BRANCH = "master"
-                    if (env.CHANGE_BRANCH) {
-                        BRANCH = env.CHANGE_BRANCH
-                        TARGET_BRANCH = env.CHANGE_TARGET
-                        def prNumber = readJSON(text: httpRequest(url: GITHUB_API + "/brave-core/pulls?head=brave:" + BRANCH, authentication: GITHUB_CREDENTIAL_ID, quiet: !DEBUG).content)[0].number
-                        def prDetails = readJSON(text: httpRequest(url: GITHUB_API + "/brave-core/pulls/" + prNumber, authentication: GITHUB_CREDENTIAL_ID, quiet: !DEBUG).content)
-                        SKIP = prDetails.mergeable_state.equals("draft") or prDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip") }.equals(1)
-                    }
-                    BRANCH_EXISTS_IN_BB = httpRequest(url: GITHUB_API + "/brave-browser/branches/" + BRANCH, validResponseCodes: "100:499", authentication: GITHUB_CREDENTIAL_ID, quiet: !DEBUG).status.equals(200)
-                }
-            }
-        }
-        stage("abort") {
-            steps {
-                script {
-                    if (SKIP) {
-                        echo "Aborting build as PR is in draft or has \"CI/skip\" label"
-                        stopCurrentBuild()
-                    }
-                    for (build in getBuilds()) {
-                        if (build.isBuilding() && build.getNumber() < env.BUILD_NUMBER.toInteger()) {
-                            echo "Aborting older running build " + build
-                            build.doStop()
-                            // build.finish(hudson.model.Result.ABORTED, new java.io.IOException("Aborting build"))
+                    REPO = JOB_NAME.substring(0, JOB_NAME.indexOf('-build-pr'))
+                    OTHER_REPO = REPO.equals('brave-browser') ? 'brave-core' : 'brave-browser'
+                    PLATFORM = JOB_NAME.substring(JOB_NAME.indexOf('-build-pr') + 10, JOB_NAME.indexOf('/PR-'))
+                    PIPELINE_NAME = 'pr-brave-browser-' + CHANGE_BRANCH.replace('/', '-') + '-' + PLATFORM
+
+                    if (params.BUILD_STATUS) {
+                        if (Jenkins.instance.getItemByFullName(JOB_NAME).getLastBuild().getCause(hudson.model.Cause$UpstreamCause) == null) {
+                            echo 'Aborting build as it has been started manually with BUILD_STATUS set'
+                            currentBuild.result = 'ABORTED'
+                            return
+                        }
+                        else {
+                            echo "Setting other PR build status to ${params.BUILD_STATUS}"
+                            currentBuild.result = params.BUILD_STATUS
+                            return
                         }
                     }
-                }
-            }
-        }
-        stage("checkout") {
-            when {
-                expression { !SKIP }
-            }
-            steps {
-                sh """
-                    set -e
 
-                    if [ -d brave-browser ]; then
-                        rm -rf brave-browser
-                    fi
-
-                    git clone --branch ${TARGET_BRANCH} ${BB_REPO} || git clone ${BB_REPO}
-
-                    cd brave-browser
-                    git config user.name brave-builds
-                    git config user.email devops@brave.com
-                    git config push.default simple
-                """
-            }
-        }
-        stage("branch-create") {
-            when {
-                allOf {
-                    expression { !SKIP }
-                    expression { !BRANCH_EXISTS_IN_BB }
-                }
-            }
-            steps {
-                sh """
-                    set -e
-
-                    cd brave-browser
-                    git checkout -b ${BRANCH}
-
-                    echo "Creating CI branch"
-                    git commit --allow-empty -m "created CI branch"
-
-                    echo "Pushing"
-                    git push ${BB_REPO}
-                """
-            }
-        }
-        stage("branch-rebase") {
-            when {
-                allOf {
-                    expression { !SKIP }
-                    expression { BRANCH_EXISTS_IN_BB }
-                }
-            }
-            steps {
-                sh """
-                    set -e
-
-                    cd brave-browser
-                    git checkout ${BRANCH}
-
-                    if [ "`jq -r .version package.json`" != "`jq -r .version ../package.json`" ]; then
-                        set +e
-
-                        echo "Version mismatch between brave-browser and brave-core in package.json, attempting rebase on brave-browser"
-
-                        echo "Fetching latest changes and pruning refs"
-                        git fetch --prune
-
-                        echo "Rebasing ${BRANCH} branch on brave-browser against ${TARGET_BRANCH}"
-                        git rebase origin/${TARGET_BRANCH}
-
-                        if [ \$? -ne 0 ]; then
-                            echo "Failed to rebase (conflicts), will need to be manually rebased"
-                            git rebase --abort
-                        else
-                            echo "Rebased, force pushing to brave-browser"
-                            git push --force ${BB_REPO}
-                        fi
-
-                        if [ "`jq -r .version package.json`" != "`jq -r .version ../package.json`" ]; then
-                            echo "Version mismatch between brave-browser and brave-core in package.json, please try rebasing this branch in brave-core as well"
-                            exit 1
-                        fi
-
-                        set -e
-                    fi
-                """
-            }
-        }
-        stage("build") {
-            when {
-                expression { !SKIP }
-            }
-            steps {
-                script {
-                    try {
-                        startBraveBrowserBuild()
+                    withCredentials([usernamePassword(credentialsId: 'brave-builds-github-token-for-pr-builder', usernameVariable: 'PR_BUILDER_USER', passwordVariable: 'PR_BUILDER_TOKEN')]) {
+                        GITHUB_API = 'https://api.github.com/repos/brave'
+                        GITHUB_AUTH_HEADERS = [[name: 'Authorization', value: 'token ' + PR_BUILDER_TOKEN]]
+                        def prDetails = readJSON(text: httpRequest(url: GITHUB_API + '/' + REPO + '/pulls?head=brave:' + CHANGE_BRANCH, customHeaders: GITHUB_AUTH_HEADERS, quiet: true).content)[0]
+                        SKIP = prDetails.draft.equals(true) || prDetails.labels.count { label -> label.name.equalsIgnoreCase('CI/skip') }.equals(1) || prDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-${PLATFORM}") }.equals(1)
+                        RUN_NETWORK_AUDIT = prDetails.labels.count { label -> label.name.equalsIgnoreCase('CI/run-network-audit') }.equals(1)
+                        def branchExistsInOtherRepo = httpRequest(url: GITHUB_API + '/' + OTHER_REPO + '/branches/' + CHANGE_BRANCH, validResponseCodes: '100:499', customHeaders: GITHUB_AUTH_HEADERS, quiet: true).status.equals(200)
+                        if (branchExistsInOtherRepo) {
+                            def otherPrDetails = readJSON(text: httpRequest(url: GITHUB_API + '/' + OTHER_REPO + '/pulls?head=brave:' + CHANGE_BRANCH, customHeaders: GITHUB_AUTH_HEADERS, quiet: true).content)[0]
+                            if (otherPrDetails) {
+                                env.OTHER_PR_NUMBER = otherPrDetails.number
+                                SKIP = SKIP || otherPrDetails.draft.equals(true) || otherPrDetails.labels.count { label -> label.name.equalsIgnoreCase('CI/skip') }.equals(1) || otherPrDetails.labels.count { label -> label.name.equalsIgnoreCase("CI/skip-${PLATFORM}") }.equals(1)
+                                RUN_NETWORK_AUDIT = RUN_NETWORK_AUDIT || otherPrDetails.labels.count { label -> label.name.equalsIgnoreCase('CI/run-network-audit') }.equals(1)
+                            }
+                        }
                     }
-                    catch (hudson.AbortException ex) {
-                        echo "Sleeping 6m so new branch is discovered or associated PR created in brave-browser"
-                        sleep(time: 6, unit: "MINUTES")
-                        startBraveBrowserBuild()
+
+                    if (SKIP) {
+                        echo "Aborting build as PRs are either in draft or have a skip label (CI/skip or CI/skip-${PLATFORM})"
+                        currentBuild.result = 'ABORTED'
+                        return
+                    }
+
+                    for (build in Jenkins.instance.getItemByFullName(JOB_NAME).builds) {
+                        if (build.isBuilding() && build.getNumber() < BUILD_NUMBER.toInteger()) {
+                            echo 'Aborting older running build ' + build
+                            build.doStop()
+                        }
+                    }
+
+                    jobDsl(scriptText: """
+                        pipelineJob('${PIPELINE_NAME}') {
+                            // this list has to match the parameters in the Jenkinsfile from devops repo
+                            parameters {
+                                choiceParam('CHANNEL', ['nightly', 'dev', 'beta', 'release', 'development'])
+                                choiceParam('BUILD_TYPE', ['Release', 'Debug'])
+                                booleanParam('TERMINATE_NODE', false)
+                                booleanParam('WIPE_WORKSPACE', false)
+                                booleanParam('SKIP_INIT', false)
+                                booleanParam('DISABLE_SCCACHE', false)
+                                booleanParam('SKIP_SIGNING', true)
+                                booleanParam('DCHECK_ALWAYS_ON', true)
+                                booleanParam('RUN_NETWORK_AUDIT', false)
+                                stringParam('BRANCH', '${CHANGE_BRANCH}')
+                                stringParam('NODE_LABEL', '')
+                                stringParam('SLACK_NOTIFY', '')
+                            }
+                            definition {
+                                cpsScm {
+                                    scm {
+                                        git {
+                                            remote {
+                                                credentials('brave-builds-github-token-for-pr-builder')
+                                                github('brave/devops', 'https')
+                                            }
+                                            branch('master')
+                                        }
+                                    }
+                                    scriptPath("jenkins/jobs/browser/pr-brave-browser-${PLATFORM}.Jenkinsfile")
+                                }
+                            }
+                        }
+                    """)
+
+                    params = [
+                        string(name: 'CHANNEL', value: params.CHANNEL),
+                        string(name: 'BUILD_TYPE', value: params.BUILD_TYPE),
+                        booleanParam(name: "TERMINATE_NODE", value: params.TERMINATE_NODE),
+                        booleanParam(name: 'WIPE_WORKSPACE', value: params.WIPE_WORKSPACE),
+                        booleanParam(name: 'SKIP_INIT', value: params.SKIP_INIT),
+                        booleanParam(name: 'DISABLE_SCCACHE', value: params.DISABLE_SCCACHE),
+                        booleanParam(name: 'SKIP_SIGNING', value: params.SKIP_SIGNING),
+                        booleanParam(name: 'DCHECK_ALWAYS_ON', value: params.DCHECK_ALWAYS_ON),
+                        booleanParam(name: 'RUN_NETWORK_AUDIT', value: RUN_NETWORK_AUDIT),
+                        string(name: 'BRANCH', value: CHANGE_BRANCH),
+                        string(name: 'NODE_LABEL', value: params.NODE_LABEL),
+                        string(name: 'SLACK_NOTIFY', value: params.SLACK_NOTIFY)
+                    ]
+
+                    currentBuild.result = build(job: PIPELINE_NAME, parameters: params, propagate: false).result
+                    if (env.OTHER_PR_NUMBER) {
+                        build(job: OTHER_REPO + '-build-pr-' + PLATFORM + '/PR-' + env.OTHER_PR_NUMBER, parameters: [string(name: 'BUILD_STATUS', value: currentBuild.result)], propagate: false)
                     }
                 }
             }
         }
     }
-}
-
-@NonCPS
-def stopCurrentBuild() {
-    Jenkins.instance.getItemByFullName(env.JOB_NAME).getLastBuild().doStop()
-}
-
-@NonCPS
-def getBuilds() {
-    return Jenkins.instance.getItemByFullName(env.JOB_NAME).builds
-}
-
-def startBraveBrowserBuild() {
-    def prDetails = readJSON(text: httpRequest(url: GITHUB_API + "/brave-browser/pulls?head=brave:" + BRANCH, authentication: GITHUB_CREDENTIAL_ID, quiet: !DEBUG).content)[0]
-    def prNumber = prDetails ? prDetails.number : ""
-    def refToBuild = prNumber ? "PR-" + prNumber : URLEncoder.encode(BRANCH, "UTF-8")
-    params = [
-        string(name: "BUILD_TYPE", value: BUILD_TYPE),
-        string(name: "CHANNEL", value: CHANNEL),
-        booleanParam(name: "OFFICIAL_BUILD", value: OFFICIAL_BUILD),
-        booleanParam(name: "SKIP_SIGNING", value: SKIP_SIGNING),
-        booleanParam(name: "WIPE_WORKSPACE", value: WIPE_WORKSPACE),
-        booleanParam(name: "SKIP_INIT", value: SKIP_INIT),
-        booleanParam(name: "DISABLE_SCCACHE", value: DISABLE_SCCACHE),
-        booleanParam(name: "DEBUG", value: DEBUG)
-    ]
-    currentBuild.result = build(job: "brave-browser-build-pr/" + refToBuild, parameters: params, propagate: false).result
+    post {
+        always {
+            node('master') {
+                script {
+                    sh 'rm -rf .git/index.lock'
+                }
+            }
+        }
+    }
 }

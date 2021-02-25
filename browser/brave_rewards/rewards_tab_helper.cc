@@ -6,31 +6,22 @@
 #include "brave/browser/brave_rewards/rewards_tab_helper.h"
 
 #include "brave/components/brave_rewards/browser/rewards_service.h"
-#include "brave/components/brave_rewards/browser/rewards_service_factory.h"
+#include "brave/browser/brave_rewards/rewards_service_factory.h"
 #include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/sessions/session_tab_helper.h"
+#if !defined(OS_ANDROID)
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_list.h"
 #include "chrome/browser/ui/tabs/tab_strip_model.h"
+#endif
+#include "components/sessions/content/session_tab_helper.h"
 #include "content/public/browser/navigation_entry.h"
 #include "content/public/browser/navigation_handle.h"
 #include "content/public/browser/render_frame_host.h"
 #include "content/public/browser/web_contents.h"
 #include "content/public/browser/web_contents_user_data.h"
-#include "content/public/common/resource_load_info.mojom.h"
-#include "content/public/common/resource_type.h"
+#include "third_party/blink/public/mojom/loader/resource_load_info.mojom.h"
 
-#if BUILDFLAG(ENABLE_GREASELION)
-#include "brave/browser/greaselion/greaselion_service_factory.h"
-#include "brave/components/greaselion/browser/greaselion_service.h"
-#endif
-
-using content::ResourceType;
-
-#if BUILDFLAG(ENABLE_GREASELION)
-using greaselion::GreaselionService;
-using greaselion::GreaselionServiceFactory;
-#endif
+using blink::mojom::ResourceType;
 
 // DEFINE_WEB_CONTENTS_USER_DATA_KEY(brave_rewards::RewardsTabHelper);
 
@@ -38,11 +29,13 @@ namespace brave_rewards {
 
 RewardsTabHelper::RewardsTabHelper(content::WebContents* web_contents)
     : WebContentsObserver(web_contents),
-      tab_id_(SessionTabHelper::IdForTab(web_contents)) {
+      tab_id_(sessions::SessionTabHelper::IdForTab(web_contents)) {
   if (!tab_id_.is_valid())
     return;
 
+#if !defined(OS_ANDROID)
   BrowserList::AddObserver(this);
+#endif
   Profile* profile =
       Profile::FromBrowserContext(web_contents->GetBrowserContext());
   rewards_service_ = RewardsServiceFactory::GetForProfile(profile);
@@ -53,7 +46,9 @@ RewardsTabHelper::RewardsTabHelper(content::WebContents* web_contents)
 RewardsTabHelper::~RewardsTabHelper() {
   if (rewards_service_)
     rewards_service_->RemoveObserver(this);
+#if !defined(OS_ANDROID)
   BrowserList::RemoveObserver(this);
+#endif
 }
 
 void RewardsTabHelper::DidFinishLoad(
@@ -76,24 +71,28 @@ void RewardsTabHelper::DidFinishNavigation(content::NavigationHandle* handle) {
 void RewardsTabHelper::ResourceLoadComplete(
     content::RenderFrameHost* render_frame_host,
     const content::GlobalRequestID& request_id,
-    const content::mojom::ResourceLoadInfo& resource_load_info) {
+    const blink::mojom::ResourceLoadInfo& resource_load_info) {
   if (!rewards_service_ || !render_frame_host)
     return;
 
   // TODO(nejczdovc): do we need to get anyother type then XHR??
-  if (resource_load_info.resource_type == content::ResourceType::kMedia ||
-      resource_load_info.resource_type == content::ResourceType::kXhr ||
-      resource_load_info.resource_type == content::ResourceType::kImage ||
-      resource_load_info.resource_type == content::ResourceType::kScript) {
-    rewards_service_->OnXHRLoad(tab_id_, GURL(resource_load_info.url),
-                                web_contents()->GetURL(),
-                                resource_load_info.referrer);
+  switch (resource_load_info.request_destination) {
+    // Formerly ResourceType::kMedia
+    case network::mojom::RequestDestination::kAudio:
+    case network::mojom::RequestDestination::kTrack:
+    case network::mojom::RequestDestination::kVideo:
+    // Best match for ResourceType::kXhr (though, not limited to kXhr)
+    case network::mojom::RequestDestination::kEmpty:
+    // Formerly ResourceType::kImage
+    case network::mojom::RequestDestination::kImage:
+    case network::mojom::RequestDestination::kScript:
+      rewards_service_->OnXHRLoad(tab_id_, GURL(resource_load_info.final_url),
+                                  web_contents()->GetURL(),
+                                  resource_load_info.referrer);
+      break;
+    default:
+      break;
   }
-}
-
-void RewardsTabHelper::DidAttachInterstitialPage() {
-  if (rewards_service_)
-    rewards_service_->OnUnload(tab_id_);
 }
 
 void RewardsTabHelper::OnVisibilityChanged(content::Visibility visibility) {
@@ -114,6 +113,7 @@ void RewardsTabHelper::WebContentsDestroyed() {
     rewards_service_->OnUnload(tab_id_);
 }
 
+#if !defined(OS_ANDROID)
 void RewardsTabHelper::OnBrowserSetLastActive(Browser* browser) {
   if (!rewards_service_)
     return;
@@ -123,7 +123,9 @@ void RewardsTabHelper::OnBrowserSetLastActive(Browser* browser) {
     rewards_service_->OnForeground(tab_id_);
   }
 }
+#endif
 
+#if !defined(OS_ANDROID)
 void RewardsTabHelper::OnBrowserNoLongerActive(Browser* browser) {
   if (!rewards_service_)
     return;
@@ -132,20 +134,6 @@ void RewardsTabHelper::OnBrowserNoLongerActive(Browser* browser) {
       TabStripModel::kNoTab) {
     rewards_service_->OnBackground(tab_id_);
   }
-}
-
-#if BUILDFLAG(ENABLE_GREASELION)
-void RewardsTabHelper::OnRewardsMainEnabled(RewardsService* rewards_service,
-                                            bool rewards_main_enabled) {
-  GreaselionService* greaselion_service =
-      GreaselionServiceFactory::GetForBrowserContext(
-          web_contents()->GetBrowserContext());
-  if (!greaselion_service)
-    return;
-  greaselion_service->SetFeatureEnabled(greaselion::REWARDS,
-                                        rewards_main_enabled);
-  greaselion_service->SetFeatureEnabled(greaselion::TWITTER_TIPS,
-                                        rewards_main_enabled);
 }
 #endif
 

@@ -26,27 +26,25 @@ class BraveRewardsSource : public content::URLDataSource {
   // content::URLDataSource implementation.
   std::string GetSource() override;
   void StartDataRequest(
-      const std::string& path,
-      const content::ResourceRequestInfo::WebContentsGetter& wc_getter,
-      const content::URLDataSource::GotDataCallback& got_data_callback)
+      const GURL& url,
+      const content::WebContents::Getter& wc_getter,
+      content::URLDataSource::GotDataCallback got_data_callback)
       override;
   std::string GetMimeType(const std::string&) override;
   bool AllowCaching() override;
   bool ShouldReplaceExistingSource() override;
   bool ShouldServiceRequest(const GURL& url,
-                            content::ResourceContext* resource_context,
+                            content::BrowserContext* browser_context,
                             int render_process_id) override;
 
  private:
   void OnBitmapFetched(
-      const content::URLDataSource::GotDataCallback& got_data_callback,
-      BitmapFetcherService::RequestId request_id,
+      content::URLDataSource::GotDataCallback got_data_callback,
       const GURL& url,
       const SkBitmap& bitmap);
 
   Profile* profile_;
-  std::vector<std::string> resource_fetchers_;
-  std::vector<BitmapFetcherService::RequestId> request_ids_;
+  std::vector<GURL> resource_fetchers_;
 
   DISALLOW_COPY_AND_ASSIGN(BraveRewardsSource);
 };

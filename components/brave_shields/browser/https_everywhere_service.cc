@@ -105,14 +105,7 @@ HTTPSEverywhereService::HTTPSEverywhereService(
 }
 
 HTTPSEverywhereService::~HTTPSEverywhereService() {
-  Cleanup();
-}
-
-void HTTPSEverywhereService::Cleanup() {
-  GetTaskRunner()->PostTask(
-      FROM_HERE,
-      base::Bind(&HTTPSEverywhereService::CloseDatabase,
-                 AsWeakPtr()));
+  GetTaskRunner()->DeleteSoon(FROM_HERE, level_db_);
 }
 
 bool HTTPSEverywhereService::Init() {
@@ -142,7 +135,6 @@ void HTTPSEverywhereService::InitDB(const base::FilePath& install_dir) {
                         unzipped_level_db_path.AsUTF8Unsafe(),
                         &level_db_);
   if (!status.ok() || !level_db_) {
-    level_db_ = nullptr;
     LOG(ERROR) << "Level db open error "
                << unzipped_level_db_path.value().c_str()
                << ", error: " << status.ToString();
@@ -278,7 +270,7 @@ std::string HTTPSEverywhereService::ApplyHTTPSRule(
     return "";
   }
 
-  const base::Value::ListStorage& topValues = json_object->GetList();
+  base::Value::ConstListView topValues = json_object->GetList();
   for (auto it = topValues.cbegin(); it != topValues.cend(); ++it) {
     if (!it->is_dict()) {
       continue;

@@ -8,6 +8,10 @@
     </message>
   </if>
 
+  <message name="IDS_UTILITY_PROCESS_PRINT_BACKEND_SERVICE_NAME" desc="The name of the utility process used for backend interactions with printer drivers.">
+    Print Backend Service
+  </message>
+
   <message name="IDS_PRINT_INVALID_PRINTER_SETTINGS" desc="Message to display when selected printer is not reachable or its settings are invalid.">
     The selected printer is not available or not installed correctly. Check your printer or try selecting another printer.
   </message>
@@ -16,6 +20,9 @@
   <if expr="enable_print_preview">
     <message name="IDS_PRINT_PREVIEW_TITLE" desc="Fallback title for print preview page.">
       Print
+    </message>
+    <message name="IDS_PRINT_PREVIEW_DESCRIPTION" desc="Accessibility text: title/description of the Print Preview dialog Web Contents, read by screenreaders.">
+      Print preview dialog
     </message>
     <message name="IDS_PRINT_PREVIEW_LOADING" desc="Message to display while the print preview is still loading.">
       Loading preview
@@ -27,7 +34,7 @@
       The selected printer is not available or not installed correctly. <ph name="BR">&lt;br&gt;</ph> Check your printer or try selecting another printer.
     </message>
     <message name="IDS_PRINT_PREVIEW_UNSUPPORTED_CLOUD_PRINTER" desc="Message to display when an unsupported cloud printer is selected.">
-      The selected Brave Cloud Print device is no longer supported. <ph name="BR">&lt;br&gt;</ph> Try setting up the printer in your computer's system settings.
+      The selected Google Cloud Print device is no longer supported. <ph name="BR">&lt;br&gt;</ph> Try setting up the printer in your computer's system settings.
     </message>
     <message name="IDS_PRINT_PREVIEW_PRINT_BUTTON" desc="Print button.">
       Print
@@ -89,10 +96,10 @@
     <message name="IDS_PRINT_PREVIEW_SCALING_LABEL" desc="Scaling option label.">
       Scale
     </message>
-    <message name="IDS_PRINT_PREVIEW_OPTION_DEFAULT_SCALING" desc="Option to print with default (100%) scaling.">
+    <message name="IDS_PRINT_PREVIEW_OPTION_DEFAULT_SCALING" desc="Dropdown option to print with default (100%) scaling.">
       Default
     </message>
-    <message name="IDS_PRINT_PREVIEW_OPTION_CUSTOM_SCALING" desc="Option to print with custom scaling.">
+    <message name="IDS_PRINT_PREVIEW_OPTION_CUSTOM_SCALING" desc="Dropdown option to print with custom scaling.">
       Custom
     </message>
     <message name="IDS_PRINT_PREVIEW_PAGES_PER_SHEET_LABEL" desc="Pages per sheet option label.">
@@ -104,26 +111,18 @@
     <message name="IDS_PRINT_PREVIEW_PRINT_TO_PDF" desc="Option shown on printer drop-down list for saving previewed document as a PDF.">
       Save as PDF
     </message>
-    <message name="IDS_PRINT_PREVIEW_PRINT_TO_GOOGLE_DRIVE" desc="Option shown on printer drop-down list for saving previewed document to Brave Drive.">
-      Save to Brave Drive
+    <message name="IDS_PRINT_PREVIEW_PRINT_TO_GOOGLE_DRIVE" desc="Option shown on printer drop-down list for saving previewed document to Google Drive.">
+      Save to Google Drive
     </message>
-    <message name="IDS_PRINT_PREVIEW_SUMMARY_FORMAT_SHORT" desc="Print summary, explaining to the user how many pages will be printed.">
-      Total: <ph name="NUMBER_OF_SHEETS">$1<ex>10</ex></ph> <ph name="SHEETS_LABEL">$2<ex>sheets of paper</ex></ph>
+    <message name="IDS_PRINT_PREVIEW_SHEET_SUMMARY_LABEL" desc="Print summary, explaining to the user how many pages will be printed.">
+    {COUNT, plural,
+      =1 {1 sheet of paper}
+      other {{COUNT} sheets of paper}}
     </message>
-    <message name="IDS_PRINT_PREVIEW_NEW_SUMMARY_FORMAT_SHORT" desc="Print summary, explaining to the user how many pages will be printed. Same use as above, but omits the 'Total: '.">
-      <ph name="NUMBER_OF_SHEETS">$1<ex>10</ex></ph> <ph name="SHEETS_LABEL">$2<ex>sheets of paper</ex></ph>
-    </message>
-    <message name="IDS_PRINT_PREVIEW_SHEETS_LABEL_PLURAL" desc="Label shown in the print preview summary.">
-      sheets of paper
-    </message>
-    <message name="IDS_PRINT_PREVIEW_SHEETS_LABEL_SINGULAR" desc="Label shown in the print preview summary.">
-      sheet of paper
-    </message>
-    <message name="IDS_PRINT_PREVIEW_PAGE_LABEL_SINGULAR" desc="Label shown in the print preview summary.">
-      page
-    </message>
-    <message name="IDS_PRINT_PREVIEW_PAGE_LABEL_PLURAL" desc="Label shown in the print preview summary.">
-      pages
+    <message name="IDS_PRINT_PREVIEW_PAGE_SUMMARY_LABEL" desc="Print summary, explaining to the user how many pages will be saved.">
+    {COUNT, plural,
+      =1 {1 page}
+      other {{COUNT} pages}}
     </message>
     <message name="IDS_PRINT_PREVIEW_PAGE_RANGE_SYNTAX_INSTRUCTION" desc="Instruction shown when the user enters an invalid page range.">
       Invalid page range, use <ph name="EXAMPLE_PAGE_RANGE">$1<ex>e.g. 1-5, 8, 11-13</ex></ph>
@@ -132,7 +131,7 @@
       Out of bounds page reference, limit is <ph name="MAXIMUM_PAGE">$1<ex>1</ex></ph>
     </message>
     <message name="IDS_PRINT_PREVIEW_COPIES_INSTRUCTION" desc="Instruction shown when the user enters an invalid number of copies.">
-      Use a number to indicate how many copies to print (1 to 999).
+      Use a number to indicate how many copies to print (1 to <ph name="MAX_COPIES">$1<ex>1</ex></ph>).
     </message>
     <message name="IDS_PRINT_PREVIEW_SCALING_INSTRUCTION" desc="Instruction shown when the user enters an invalid scaling value.">
       Scale amount must be a number between 10 and 200.
@@ -146,8 +145,11 @@
     <message name="IDS_PRINT_PREVIEW_OPTION_HEADER_FOOTER" desc="Checkbox label that provides a choice to print the headers and footers.">
       Headers and footers
     </message>
-    <message name="IDS_PRINT_PREVIEW_OPTION_FIT_TO_PAGE" desc="Checkbox label shown in print preview page to auto fit the PDF page.">
-      Fit to page
+    <message name="IDS_PRINT_PREVIEW_OPTION_FIT_TO_PAGE" desc="Dropdown option shown in print preview page to auto fit the PDF page to the paper's printable area.">
+      Fit to printable area
+    </message>
+    <message name="IDS_PRINT_PREVIEW_OPTION_FIT_TO_PAPER" desc="Dropdown option shown in print preview page to auto fit the PDF page to the paper size.">
+      Fit to paper
     </message>
     <message name="IDS_PRINT_PREVIEW_OPTION_BACKGROUND_COLORS_AND_IMAGES" desc="Checkbox label shown in print preview page to print webpage backgrounds.">
       Background graphics
@@ -161,16 +163,16 @@
     <message name="IDS_PRINT_PREVIEW_MARGINS_LABEL" desc="Margins option label. Provides user the option to change the margins of the printed page.">
       Margins
     </message>
-    <message name="IDS_PRINT_PREVIEW_DEFAULT_MARGINS" desc="Option that specifies the page be printed with default margins.">
+    <message name="IDS_PRINT_PREVIEW_DEFAULT_MARGINS" desc="Option that specifies the page be printed with default margins." meaning="Default print margins">
       Default
     </message>
-    <message name="IDS_PRINT_PREVIEW_NO_MARGINS" desc="Option that specifies the page be printed with no margins.">
+    <message name="IDS_PRINT_PREVIEW_NO_MARGINS" desc="Option that specifies the page be printed with no margins." meaning="No print margins">
       None
     </message>
-    <message name="IDS_PRINT_PREVIEW_CUSTOM_MARGINS" desc="Option that specifies the page be printed with user-specified custom margins.">
+    <message name="IDS_PRINT_PREVIEW_CUSTOM_MARGINS" desc="Option that specifies the page be printed with user-specified custom margins." meaning="Custom print margins">
       Custom
     </message>
-    <message name="IDS_PRINT_PREVIEW_MINIMUM_MARGINS" desc="Option that specifies the page be printed with the minimum allowed margins by the printer.">
+    <message name="IDS_PRINT_PREVIEW_MINIMUM_MARGINS" desc="Option that specifies the page be printed with the minimum allowed margins by the printer." meaning="Minimum print margins">
       Minimum
     </message>
     <message name="IDS_PRINT_PREVIEW_TOP_MARGIN_LABEL" desc="ARIA label used by screen reader to explain the purpose of the top margin textbox.">
@@ -205,9 +207,6 @@
     </message>
     <message name="IDS_PRINT_PREVIEW_ADD_ACCOUNT_TITLE" desc="Title of the selection control item to let user to sign into another account.">
       Add account...
-    </message>
-    <message name="IDS_PRINT_PREVIEW_CLOUD_PRINT_PROMOTION" desc="Message describing features of Brave Cloud Print.">
-      Print to Brave Docs and other cloud destinations. <ph name="BEGIN_LINK">$1<ex>&lt;span&gt;</ex></ph>Sign in<ph name="END_LINK">$2<ex>&lt;/span&gt;</ex></ph> to print to Brave Cloud Print.
     </message>
     <message name="IDS_PRINT_PREVIEW_SEARCH_BOX_PLACEHOLDER" desc="Text to put in a search box when user has not entered a search query.">
       Search destinations
@@ -306,6 +305,9 @@
       These settings are enforced by your administrator
     </message>
     <if expr="chromeos">
+      <message name="IDS_PRINT_PREVIEW_SERVER_SEARCH_BOX_PLACEHOLDER" desc="Text to put in a print server search box when user has not entered a search query.">
+        Print servers
+      </message>
       <message name="IDS_PRINT_PREVIEW_OPTION_PIN" desc="Option to print with pin.">
         Enable user pin
       </message>
@@ -315,11 +317,61 @@
       <message name="IDS_PRINT_PREVIEW_PIN_PLACEHOLDER" desc="Text to put in a pin textfield when user has not entered any pin value.">
         Enter 4 digit pin (0000-9999)
       </message>
-      <message name="IDS_PRINT_CONFIGURING_IN_PROGRESS_TEXT" desc="Message shown to user while their printer is being setup in Brave OS.">
+      <message name="IDS_PRINT_CONFIGURING_IN_PROGRESS_TEXT" desc="Message shown to user while their printer is being setup in Chrome OS.">
         Setting up
       </message>
-      <message name="IDS_PRINT_CONFIGURING_FAILED_TEXT" desc="Message shown to user when their printer is failed to set up in Brave OS.">
+      <message name="IDS_PRINT_CONFIGURING_FAILED_TEXT" desc="Message shown to user when their printer is failed to set up in Chrome OS.">
         Error setting up printer
+      </message>
+      <message name="IDS_PRINT_PREVIEW_EULA_URL" desc="Message shown to user when their printer has a EULA associated with its PPD. This message is hyperlinked to the EULA.">
+        End User License Agreement
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_DEVICE_ERROR" desc="Error label to show under the destination dropdown when there is a mechanical error inside the printer.">
+         Mechanical issue. Check printer
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_DOOR_OPEN" desc="Error label to show under the destination dropdown when the printer has an open cover or door.">
+         Printer door is open
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_LOW_ON_INK" desc="Error label to show under the destination dropdown when the printer is low on ink.">
+         Low on ink
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_LOW_ON_PAPER" desc="Error label to show under the destination dropdown when the printer is low on paper">
+         Low on paper
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_OUT_OF_INK" desc="Error label to show under the destination dropdown when the printer is out of ink.">
+         Out of ink
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_OUT_OF_PAPER" desc="Error label to show under the destination dropdown when the printer is out of paper.">
+         Out of paper
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_OUPUT_ALMOST_FULL" desc="Error label to show under the destination dropdown when the printer's output tray is almost full.">
+         Output tray is almost full
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_OUPUT_FULL" desc="Error label to show under the destination dropdown when the printer's output tray is full.">
+         Output tray is full
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_PAPER_JAM" desc="Error label to show under the destination dropdown when the printer has a paper jam.">
+         Paper is jammed
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_PAUSED" desc="Error label to show under the destination dropdown when someone has put the printer into a paused state.">
+         Printer is paused
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_PRINTER_QUEUE_FULL" desc="Error label to show under the destination dropdown when the printer's job queue is full and is temporarily unable to accept more print jobs.">
+         Printer queue is full
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_PRINTER_UNREACHABLE" desc="Error label to show under the destination dropdown when the device is attempting to schedule a print job on the printer but can't get a connection to the printer">
+         Can’t connect to printer
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_STOPPED" desc="Error label to show under the destination dropdown when the printer is in the process of stopping or the printer is powered down.">
+         Printer has stopped
+      </message>
+      <message name="IDS_PRINT_PREVIEW_PRINTER_STATUS_TRAY_MISSING" desc="Error label to show under the destination dropdown when the printer is missing a tray.">
+         Tray is missing
+      </message>
+      <message name="IDS_PRINT_PREVIEW_SHEETS_LIMIT_ERROR_MESSAGE" desc="Sheets limit error message, explaining to the user why printing is blocked.">
+      {COUNT, plural,
+        =1 {Exceeds limit of 1 sheet of paper}
+        other {Exceeds limit of {COUNT} sheets of paper}}
       </message>
     </if>
     <if expr="not chromeos">
@@ -351,16 +403,16 @@
   <!-- Cloud Print proxy strings -->
   <if expr="not is_android">
     <message name="IDS_CLOUD_PRINT_REGISTER_PRINTER_FAILED" desc="Status message to be sent to the server when we failed to retrieve information about a printer to register.">
-      An error occurred while retrieving printer capabilities for printer <ph name="PRINTER_NAME">$1<ex>HP Laserjet 7900</ex></ph>. This printer could not be registered with <ph name="CLOUD_PRINT_NAME">$2<ex>Brave Cloud Print</ex></ph>.
+      An error occurred while retrieving printer capabilities for printer <ph name="PRINTER_NAME">$1<ex>HP Laserjet 7900</ex></ph>. This printer could not be registered with <ph name="CLOUD_PRINT_NAME">$2<ex>Google Cloud Print</ex></ph>.
     </message>
     <message name="IDS_CLOUD_PRINT_ZOMBIE_PRINTER" desc="Status message to be sent to the server when we get a notification for a printer that we can't find locally.">
       Received a notification for an unknown printer.
     </message>
     <message name="IDS_CLOUD_PRINT_ENUM_FAILED" desc="Status message to be sent to the Cloud Print server when enumerating printers failed.">
-      There was a problem listing printers. Some of your printers may not have registered successfully with <ph name="CLOUD_PRINT_NAME">$1<ex>Brave Cloud Print</ex></ph>.
+      There was a problem listing printers. Some of your printers may not have registered successfully with <ph name="CLOUD_PRINT_NAME">$1<ex>Google Cloud Print</ex></ph>.
     </message>
     <message name="IDS_SERVICE_CRASH_RECOVERY_CONTENT" desc="Text content telling the user the service process has crashed.">
-      The <ph name="CLOUD_PRINT_NAME">$1<ex>Brave Cloud Print</ex></ph> connector process has crashed. Restart?
+      The <ph name="CLOUD_PRINT_NAME">$1<ex>Google Cloud Print</ex></ph> connector process has crashed. Restart?
     </message>
   </if>
 </grit-part>

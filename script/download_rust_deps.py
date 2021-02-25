@@ -7,11 +7,13 @@
 
 import argparse
 import os
-import re
 import subprocess
 import sys
-import urllib2
-import pipes
+
+try:
+    from urllib2 import URLError
+except ImportError:  # For Py3 compatibility
+    from urllib.error import URLError
 
 import deps
 from rust_deps_config import RUST_DEPS_PACKAGES_URL, RUST_DEPS_PACKAGE_VERSION
@@ -31,6 +33,8 @@ def get_url(platform):
         filename = "rust_deps_win_" + RUST_DEPS_PACKAGE_VERSION + ".zip"
     elif platform == 'darwin':
         filename = "rust_deps_mac_" + RUST_DEPS_PACKAGE_VERSION + ".gz"
+    elif platform == 'ios':
+        filename = "rust_deps_ios_" + RUST_DEPS_PACKAGE_VERSION + ".gz"
     elif platform.startswith('linux'):
         filename = "rust_deps_linux_" + RUST_DEPS_PACKAGE_VERSION + ".gz"
     else:
@@ -56,7 +60,7 @@ def download_and_unpack_rust_deps(platform):
 
     try:
         deps.DownloadAndUnpack(url, RUSTUP_PATH)
-    except urllib2.URLError:
+    except URLError:
         print('Failed to download Rust deps: %s' % url)
         print('Exiting.')
         sys.exit(1)
@@ -129,12 +133,57 @@ def parse_args():
     return args
 
 
-def main():
-    download_and_unpack_rust_deps(sys.platform)
+def cargo_install(tool):
+    # Set environment variables for rustup
+    env = os.environ.copy()
+    env['RUSTUP_HOME'] = RUSTUP_HOME
+    env['CARGO_HOME'] = RUSTUP_HOME
 
+    rustup_bin = os.path.abspath(os.path.join(RUSTUP_HOME, 'bin'))
+    cargo_bin = os.path.join(rustup_bin, "cargo" if sys.platform != "win32" else "cargo.exe")
+
+    # Install the tool
+    cargo_args = []
+    cargo_args.append(cargo_bin)
+    cargo_args.append("install")
+    cargo_args.append(tool["name"])
+    if "version" in tool:
+        cargo_args.append("--version")
+        cargo_args.append(tool["version"])
+    if "features" in tool:
+        cargo_args.append("--features")
+        cargo_args.append(tool["features"])
+
+    try:
+        subprocess.check_call(cargo_args, env=env)
+    except subprocess.CalledProcessError as e:
+        print(e.output)
+        raise e
+
+
+def main():
     args = parse_args()
+
+    if args.platform == 'ios':
+        download_and_unpack_rust_deps('ios')
+    else:
+        download_and_unpack_rust_deps(sys.platform)
+
     if args.platform == 'android':
         make_standalone_toolchain_for_android()
+
+    tools = [
+        {
+            "name": "cbindgen",
+            "version": "0.14.2",
+        },
+        {
+            "name": "cargo-audit",
+            "features": "vendored-openssl",
+        }
+    ]
+    for tool in tools:
+        cargo_install(tool)
 
     return 0
 

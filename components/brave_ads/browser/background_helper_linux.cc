@@ -13,6 +13,9 @@
 #include "ui/aura/window.h"
 #include "ui/aura/window_tree_host.h"
 #include "ui/base/x/x11_util.h"
+#include "ui/base/x/x11_window.h"
+#include "ui/gfx/x/x11_atom_cache.h"
+#include "ui/gfx/x/xproto_util.h"
 
 namespace brave_ads {
 
@@ -26,13 +29,14 @@ BackgroundHelperLinux::~BackgroundHelperLinux() {
 }
 
 bool BackgroundHelperLinux::IsForeground() const {
-  XID xid = 0;
-  ui::GetXIDProperty(ui::GetX11RootWindow(), "_NET_ACTIVE_WINDOW", &xid);
+  x11::Window x11_window = x11::Window::None;
+  x11::GetProperty(ui::GetX11RootWindow(), x11::GetAtom("_NET_ACTIVE_WINDOW"),
+                   &x11_window);
 
   for (auto* browser : *BrowserList::GetInstance()) {
     auto window =
         browser->window()->GetNativeWindow()->GetHost()->GetAcceleratedWidget();
-    if (xid == window)
+    if (x11_window == static_cast<x11::Window>(window))
       return true;
   }
 

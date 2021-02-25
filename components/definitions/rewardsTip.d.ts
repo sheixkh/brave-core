@@ -1,7 +1,7 @@
 declare namespace RewardsTip {
   interface State {
     publishers: Record<string, Publisher>
-    walletInfo: WalletProperties
+    parameters: RewardsParameters
     finished: boolean
     error: boolean
     currentTipAmount?: string
@@ -9,6 +9,8 @@ declare namespace RewardsTip {
     recurringDonations?: RecurringTips[]  // TODO(nejczdovc): migrate to tips
     reconcileStamp: number
     balance: Balance
+    externalWallet?: ExternalWallet
+    onlyAnonWallet?: boolean
   }
 
   interface ApplicationState {
@@ -33,43 +35,26 @@ declare namespace RewardsTip {
     description: string
     background: string
     logo: string
-    amounts: number[],
+    amounts: number[]
     provider: string
     links: Record<string, string>
     status: PublisherStatus
   }
 
   type MediaMetaData = {
-    mediaType: 'twitter',
-    twitterName: string
-    screenName: string
-    userId: string
-    tweetId: string
-    tweetTimestamp: number
-    tweetText: string
-  } | {
-    mediaType: 'reddit'
-    userName: string
+    mediaType: 'github' | 'reddit' | 'twitter'
+    publisherKey: string
+    publisherName: string
+    publisherScreenName: string
+    postId: string
+    postTimestamp: string
     postText: string
-    postRelDate: string
-  } | {
-    mediaType: 'github'
-    userName: string
   }
 
-  interface GitHubMetaData {
-    userName: string
-  }
-
-  interface RedditMetaData {
-    userName: string
-    postText: string
-    postRelDate: string
-  }
-
-  export interface WalletProperties {
-    choices: number[]
-    grants?: Grant[]
+  export interface RewardsParameters {
+    rate: number
+    tipChoices: number[]
+    monthlyTipChoices: number[]
   }
 
   export interface Grant {
@@ -89,7 +74,29 @@ declare namespace RewardsTip {
 
   export interface Balance {
     total: number
-    rates: Record<string, number>
     wallets: Record<string, number>
+  }
+
+  export type WalletType = 'anonymous' | 'uphold'
+
+  export enum ExternalWalletStatus {
+    NOT_CONNECTED = 0,
+    CONNECTED = 1,
+    VERIFIED = 2,
+    DISCONNECTED_NOT_VERIFIED = 3,
+    DISCONNECTED_VERIFIED = 4
+  }
+
+  export interface ExternalWallet {
+    token: string
+    address: string
+    status: ExternalWalletStatus
+    type: WalletType
+    verifyUrl: string
+    addUrl: string
+    withdrawUrl: string
+    userName: string
+    accountUrl: string
+    loginUrl: string
   }
 }

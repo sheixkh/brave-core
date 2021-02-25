@@ -3,38 +3,44 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <memory>
-
 #include "brave/components/brave_ads/browser/ads_service_factory.h"
 
+#include <memory>
+
 #include "base/time/time.h"
-#include "brave/components/brave_ads/browser/buildflags/buildflags.h"
+#include "brave/browser/profiles/profile_util.h"
 #include "brave/components/brave_ads/browser/ads_service.h"
-#include "brave/components/brave_ads/common/pref_names.h"
+#include "brave/components/brave_ads/browser/buildflags/buildflags.h"
 #include "chrome/browser/profiles/incognito_helpers.h"
 #include "chrome/browser/profiles/profile.h"
 #include "components/keyed_service/content/browser_context_dependency_manager.h"
-#include "components/pref_registry/pref_registry_syncable.h"
-#include "components/prefs/pref_store.h"
 
 #if BUILDFLAG(BRAVE_ADS_ENABLED)
+#include "brave/browser/brave_rewards/rewards_service_factory.h"
 #include "brave/components/brave_ads/browser/ads_service_impl.h"
 #include "chrome/browser/dom_distiller/dom_distiller_service_factory.h"
 #include "chrome/browser/notifications/notification_display_service_factory.h"
-#include "brave/components/brave_rewards/browser/rewards_service_factory.h"
 #endif
-
-class PrefStore;
 
 namespace brave_ads {
 
 // static
-AdsService* AdsServiceFactory::GetForProfile(
-    Profile* profile) {
-  if (profile->IsOffTheRecord())
-    return NULL;
+AdsService* AdsServiceFactory::GetForProfile(Profile* profile) {
+  if (!brave::IsRegularProfile(profile)) {
+    return nullptr;
+  }
 
   return static_cast<AdsService*>(
+      GetInstance()->GetServiceForBrowserContext(profile, true));
+}
+
+// static
+AdsServiceImpl* AdsServiceFactory::GetImplForProfile(Profile* profile) {
+  if (!brave::IsRegularProfile(profile)) {
+    return nullptr;
+  }
+
+  return static_cast<AdsServiceImpl*>(
       GetInstance()->GetServiceForBrowserContext(profile, true));
 }
 
@@ -54,8 +60,7 @@ AdsServiceFactory::AdsServiceFactory()
 #endif
 }
 
-AdsServiceFactory::~AdsServiceFactory() {
-}
+AdsServiceFactory::~AdsServiceFactory() {}
 
 KeyedService* AdsServiceFactory::BuildServiceInstanceFor(
     content::BrowserContext* context) const {
@@ -64,43 +69,12 @@ KeyedService* AdsServiceFactory::BuildServiceInstanceFor(
       new AdsServiceImpl(Profile::FromBrowserContext(context)));
   return ads_service.release();
 #else
-  return NULL;
+  return nullptr;
 #endif
-}
-
-content::BrowserContext* AdsServiceFactory::GetBrowserContextToUse(
-    content::BrowserContext* context) const {
-  if (context->IsOffTheRecord())
-    return chrome::GetBrowserContextOwnInstanceInIncognito(context);
-
-  // use original profile for session profiles
-  return chrome::GetBrowserContextRedirectedInIncognito(context);
 }
 
 bool AdsServiceFactory::ServiceIsNULLWhileTesting() const {
   return false;
-}
-
-void AdsServiceFactory::RegisterProfilePrefs(
-    user_prefs::PrefRegistrySyncable* registry) {
-  registry->RegisterIntegerPref(prefs::kVersion, prefs::kCurrentVersionNumber);
-
-  registry->RegisterBooleanPref(prefs::kEnabled, false);
-
-  registry->RegisterUint64Pref(prefs::kAdsPerHour, 2);
-
-  #if defined(OS_ANDROID)
-    registry->RegisterUint64Pref(prefs::kAdsPerDay, 12);
-  #else
-    registry->RegisterUint64Pref(prefs::kAdsPerDay, 20);
-  #endif
-
-  registry->RegisterIntegerPref(prefs::kIdleThreshold, 15);
-
-  registry->RegisterBooleanPref(prefs::kShouldShowMyFirstAdNotification, true);
-
-  registry->RegisterBooleanPref(prefs::kShouldShowOnboarding, true);
-  registry->RegisterUint64Pref(prefs::kOnboardingTimestamp, 0);
 }
 
 }  // namespace brave_ads

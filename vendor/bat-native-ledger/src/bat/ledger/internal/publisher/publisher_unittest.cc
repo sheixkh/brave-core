@@ -4,22 +4,35 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <utility>
+#include <iostream>
 
+#include "base/containers/flat_map.h"
+#include "base/test/task_environment.h"
+#include "bat/ledger/internal/database/database_mock.h"
+#include "bat/ledger/internal/ledger_client_mock.h"
+#include "bat/ledger/internal/ledger_impl_mock.h"
 #include "bat/ledger/internal/publisher/publisher.h"
+#include "bat/ledger/internal/state/state_keys.h"
 #include "bat/ledger/ledger.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
+using ::testing::_;
+using ::testing::Invoke;
+
 // npm run test -- brave_unit_tests --filter=PublisherTest.*
 
-namespace braveledger_publisher {
+namespace ledger {
+namespace publisher {
 
 class PublisherTest : public testing::Test {
+ private:
+  base::test::TaskEnvironment scoped_task_environment_;
+
  protected:
-  void CreatePublisherInfoList(
-      ledger::PublisherInfoList* list) {
+  void CreatePublisherInfoList(type::PublisherInfoList* list) {
     double prev_score;
     for (int ix = 0; ix < 50; ix++) {
-      ledger::PublisherInfoPtr info = ledger::PublisherInfo::New();
+      type::PublisherInfoPtr info = type::PublisherInfo::New();
       info->id = "example" + std::to_string(ix) + ".com";
       info->duration = 50;
       if (ix == 0) {
@@ -33,116 +46,132 @@ class PublisherTest : public testing::Test {
       list->push_back(std::move(info));
     }
   }
+
+  std::unique_ptr<ledger::MockLedgerClient> mock_ledger_client_;
+  std::unique_ptr<ledger::MockLedgerImpl> mock_ledger_impl_;
+  std::unique_ptr<Publisher> publisher_;
+  std::unique_ptr<database::MockDatabase> mock_database_;
+
+  PublisherTest() {
+    mock_ledger_client_ = std::make_unique<ledger::MockLedgerClient>();
+    mock_ledger_impl_ =
+        std::make_unique<ledger::MockLedgerImpl>(mock_ledger_client_.get());
+    publisher_ = std::make_unique<Publisher>(mock_ledger_impl_.get());
+    mock_database_ = std::make_unique<database::MockDatabase>(
+        mock_ledger_impl_.get());
+  }
+
+  void SetUp() override {
+    ON_CALL(*mock_ledger_impl_, database())
+      .WillByDefault(testing::Return(mock_database_.get()));
+
+    ON_CALL(*mock_ledger_client_, GetDoubleState(state::kScoreA))
+      .WillByDefault(
+          Invoke([this](const std::string& key) {
+            return a_;
+          }));
+
+    ON_CALL(*mock_ledger_client_, GetDoubleState(state::kScoreB))
+      .WillByDefault(
+          Invoke([this](const std::string& key) {
+            return b_;
+          }));
+
+    ON_CALL(*mock_ledger_client_, SetDoubleState(_, _))
+      .WillByDefault(
+        Invoke([this](
+            const std::string& key,
+            double value) {
+          if (key == state::kScoreA) {
+            a_ = value;
+            return;
+          }
+
+          if (key == state::kScoreB) {
+            b_ = value;
+            return;
+          }
+        }));
+  }
+
+  double a_ = 0;
+  double b_ = 0;
 };
 
-TEST_F(PublisherTest, calcScoreConsts) {
-  braveledger_publisher::Publisher* publishers =
-      new braveledger_publisher::Publisher(nullptr);
+TEST_F(PublisherTest, CalcScoreConsts5) {
+  publisher_->CalcScoreConsts(5);
 
-  /*
-   * Test 5 seconds
-   */
-  publishers->calcScoreConsts(5);
+  ASSERT_EQ(a_, 14500);
+  ASSERT_EQ(b_, -14000);
+}
 
-  EXPECT_EQ(publishers->a_, 14500);
-  EXPECT_EQ(publishers->a2_, 29000);
-  EXPECT_EQ(publishers->a4_, 58000);
-  EXPECT_EQ(publishers->b_, -14000);
-  EXPECT_EQ(publishers->b2_, 196000000);
+TEST_F(PublisherTest, CalcScoreConsts8) {
+  publisher_->CalcScoreConsts(8);
 
-  /*
-   * Test 8 seconds
-   */
-  publishers->calcScoreConsts(8);
+  ASSERT_EQ(a_, 14200);
+  ASSERT_EQ(b_, -13400);
+}
 
-  EXPECT_EQ(publishers->a_, 14200);
-  EXPECT_EQ(publishers->a2_, 28400);
-  EXPECT_EQ(publishers->a4_, 56800);
-  EXPECT_EQ(publishers->b_, -13400);
-  EXPECT_EQ(publishers->b2_, 179560000);
+TEST_F(PublisherTest, CalcScoreConsts60) {
+  publisher_->CalcScoreConsts(60);
 
-  /*
-   * Test 1min (60 seconds)
-   */
-  publishers->calcScoreConsts(60);
-
-  EXPECT_EQ(publishers->a_, 9000);
-  EXPECT_EQ(publishers->a2_, 18000);
-  EXPECT_EQ(publishers->a4_, 36000);
-  EXPECT_EQ(publishers->b_, -3000);
-  EXPECT_EQ(publishers->b2_, 9000000);
+  ASSERT_EQ(a_, 9000);
+  ASSERT_EQ(b_, -3000);
 }
 
 TEST_F(PublisherTest, concaveScore) {
-  braveledger_publisher::Publisher* publishers =
-      new braveledger_publisher::Publisher(nullptr);
+  publisher_->CalcScoreConsts(5);
+  EXPECT_NEAR(publisher_->concaveScore(5), 1, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(15), 1.06285, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(60), 1.28703, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(1000), 3.15289, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(10000), 8.80133, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(150000), 32.6498, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(500000), 59.2068, 0.001f);
 
-  /*
-   * min duration: 5 seconds
-   * duration: 5, 15, 60, 1000, 10000, 150000, 500000
-   */
-  publishers->calcScoreConsts(5);
-  EXPECT_NEAR(publishers->concaveScore(5), 1, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(15), 1.06285, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(60), 1.28703, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(1000), 3.15289, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(10000), 8.80133, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(150000), 32.6498, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(500000), 59.2068, 0.001f);
+  publisher_->CalcScoreConsts(8);
+  EXPECT_NEAR(publisher_->concaveScore(5), 0.979606, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(15), 1.04477, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(60), 1.27505, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(1000), 3.16717, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(10000), 8.8769, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(150000), 32.9766, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(500000), 59.8128, 0.001f);
 
-  /*
-   * min duration: 8 seconds
-   * duration: 5, 15, 60, 1000, 10000, 150000, 500000
-   */
-  publishers->calcScoreConsts(8);
-  EXPECT_NEAR(publishers->concaveScore(5), 0.979606, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(15), 1.04477, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(60), 1.27505, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(1000), 3.16717, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(10000), 8.8769, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(150000), 32.9766, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(500000), 59.8128, 0.001f);
-
-  /*
-   * min duration: 60 seconds
-   * duration: 5, 15, 60, 1000, 10000, 150000, 500000
-   */
-  publishers->calcScoreConsts(60);
-  EXPECT_NEAR(publishers->concaveScore(5), 0.455342, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(15), 0.607625, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(60), 1, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(1000), 3.50416, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(10000), 10.7089, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(150000), 40.9918, 0.001f);
-  EXPECT_NEAR(publishers->concaveScore(500000), 74.7025, 0.001f);
+  publisher_->CalcScoreConsts(60);
+  EXPECT_NEAR(publisher_->concaveScore(5), 0.455342, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(15), 0.607625, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(60), 1, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(1000), 3.50416, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(10000), 10.7089, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(150000), 40.9918, 0.001f);
+  EXPECT_NEAR(publisher_->concaveScore(500000), 74.7025, 0.001f);
 }
 
 TEST_F(PublisherTest, synopsisNormalizerInternal) {
-  std::unique_ptr<braveledger_publisher::Publisher> bat_publishers =
-      std::make_unique<braveledger_publisher::Publisher>(nullptr);
   // create test PublisherInfo list
-  ledger::PublisherInfoList new_list;
-  ledger::PublisherInfoList list;
+  type::PublisherInfoList new_list;
+  type::PublisherInfoList list;
   CreatePublisherInfoList(&list);
-  bat_publishers->synopsisNormalizerInternal(
+  publisher_->synopsisNormalizerInternal(
       &new_list, &list, 0);
 
   // simulate exclude and re-normalize
   new_list.erase(new_list.begin() + 3);
-  ledger::PublisherInfoList new_list2;
-  bat_publishers->synopsisNormalizerInternal(
+  type::PublisherInfoList new_list2;
+  publisher_->synopsisNormalizerInternal(
       &new_list2, &new_list, 0);
   new_list2.erase(new_list2.begin() + 4);
-  ledger::PublisherInfoList new_list3;
-  bat_publishers->synopsisNormalizerInternal(
+  type::PublisherInfoList new_list3;
+  publisher_->synopsisNormalizerInternal(
       &new_list3, &new_list2, 0);
   new_list3.erase(new_list3.begin() + 5);
-  ledger::PublisherInfoList new_list4;
-  bat_publishers->synopsisNormalizerInternal(
+  type::PublisherInfoList new_list4;
+  publisher_->synopsisNormalizerInternal(
       &new_list4, &new_list3, 0);
   new_list4.erase(new_list4.begin() + 6);
-  ledger::PublisherInfoList new_list5;
-  bat_publishers->synopsisNormalizerInternal(
+  type::PublisherInfoList new_list5;
+  publisher_->synopsisNormalizerInternal(
       &new_list5, &new_list4, 0);
   for (const auto& element : new_list5) {
     ASSERT_GE((int32_t)element->percent, 0);
@@ -150,4 +179,28 @@ TEST_F(PublisherTest, synopsisNormalizerInternal) {
   }
 }
 
-}  // namespace braveledger_publisher
+TEST_F(PublisherTest, GetShareURL) {
+  base::flat_map<std::string, std::string> args;
+
+  // Ensure that missing args results in no output
+  EXPECT_EQ(Publisher::GetShareURL(args), "");
+
+  // Ensure that intent looks correct when no tweet ID is specified
+  args.insert({"name", "brave"});
+  args.insert({"comment", "I just tipped someone using the Brave browser."});
+  args.insert({"hashtag", "TipWithBrave"});
+  EXPECT_EQ(Publisher::GetShareURL(args),
+            "https://twitter.com/intent/tweet?text=I just tipped someone using "
+            "the Brave browser.%20%23TipWithBrave");
+
+  // Ensure that intent includes quoted tweet when tweet ID is
+  // specified
+  args.insert({"tweet_id", "794221010484502528"});
+  EXPECT_EQ(Publisher::GetShareURL(args),
+            "https://twitter.com/intent/tweet?text=I just tipped someone using "
+            "the Brave browser.%20%23TipWithBrave"
+            "&url=https://twitter.com/brave/status/794221010484502528");
+}
+
+}  // namespace publisher
+}  // namespace ledger

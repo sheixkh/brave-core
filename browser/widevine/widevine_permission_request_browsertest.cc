@@ -3,14 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <memory>
+
 #include "base/path_service.h"
 #include "brave/browser/brave_drm_tab_helper.h"
+#include "brave/browser/widevine/widevine_permission_request.h"
 #include "brave/browser/widevine/widevine_utils.h"
 #include "brave/common/brave_paths.h"
 #include "brave/common/pref_names.h"
-#include "chrome/browser/permissions/permission_request_manager.h"
-#include "chrome/browser/profiles/profile.h"
-#include "chrome/browser/profiles/profile_manager.h"
 #include "chrome/browser/ssl/cert_verifier_browser_test.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/browser_commands.h"
@@ -18,26 +18,24 @@
 #include "chrome/common/chrome_paths.h"
 #include "chrome/test/base/in_process_browser_test.h"
 #include "chrome/test/base/ui_test_utils.h"
+#include "chrome/test/permissions/permission_request_manager_test_api.h"
 #include "components/prefs/pref_service.h"
 #include "content/public/browser/web_contents.h"
+#include "content/public/test/browser_test.h"
 #include "content/public/test/browser_test_utils.h"
 #include "content/public/test/test_navigation_observer.h"
 #include "content/public/test/test_utils.h"
 #include "net/dns/mock_host_resolver.h"
-#include "third_party/widevine/cdm/buildflags.h"
 #include "ui/views/bubble/bubble_dialog_delegate_view.h"
 #include "ui/views/widget/widget.h"
 #include "url/gurl.h"
 
-#if BUILDFLAG(BUNDLE_WIDEVINE_CDM)
-#include <string>
-
-#include "brave/browser/brave_browser_process_impl.h"
-#include "brave/browser/widevine/brave_widevine_bundle_manager.h"
+#if defined(OS_LINUX)
+#include "components/component_updater/component_updater_service.h"
 #endif
 
 namespace {
-class TestObserver : public PermissionRequestManager::Observer {
+class TestObserver : public permissions::PermissionRequestManager::Observer {
  public:
   void OnBubbleAdded() override {
     added_count_++;
@@ -53,8 +51,10 @@ class WidevinePermissionRequestBrowserTest
  public:
   void SetUpOnMainThread() override {
     InProcessBrowserTest::SetUpOnMainThread();
-
     GetPermissionRequestManager()->AddObserver(&observer);
+    test_api_ =
+        std::make_unique<test::PermissionRequestManagerTestApi>(browser());
+    EXPECT_TRUE(test_api_->manager());
   }
 
   void TearDownOnMainThread() override {
@@ -66,8 +66,9 @@ class WidevinePermissionRequestBrowserTest
     return browser()->tab_strip_model()->GetActiveWebContents();
   }
 
-  PermissionRequestManager* GetPermissionRequestManager() {
-    return PermissionRequestManager::FromWebContents(GetActiveWebContents());
+  permissions::PermissionRequestManager* GetPermissionRequestManager() {
+    return permissions::PermissionRequestManager::FromWebContents(
+        GetActiveWebContents());
   }
 
   BraveDrmTabHelper* GetBraveDrmTabHelper() {
@@ -75,11 +76,12 @@ class WidevinePermissionRequestBrowserTest
   }
 
   TestObserver observer;
+  std::unique_ptr<test::PermissionRequestManagerTestApi> test_api_;
 };
 
 IN_PROC_BROWSER_TEST_F(WidevinePermissionRequestBrowserTest, VisibilityTest) {
   GetPermissionRequestManager()->set_auto_response_for_test(
-      PermissionRequestManager::DISMISS);
+      permissions::PermissionRequestManager::DISMISS);
   auto* drm_tab_helper = GetBraveDrmTabHelper();
 
   // Check permission bubble is visible.
@@ -124,14 +126,12 @@ IN_PROC_BROWSER_TEST_F(WidevinePermissionRequestBrowserTest, VisibilityTest) {
 IN_PROC_BROWSER_TEST_F(WidevinePermissionRequestBrowserTest, BubbleTest) {
   auto* permission_request_manager =
       GetPermissionRequestManager();
-  EXPECT_FALSE(permission_request_manager->IsBubbleVisible());
+  EXPECT_FALSE(permission_request_manager->IsRequestInProgress());
   GetBraveDrmTabHelper()->OnWidevineKeySystemAccessRequest();
   content::RunAllTasksUntilIdle();
-  EXPECT_TRUE(permission_request_manager->IsBubbleVisible());
+  EXPECT_TRUE(permission_request_manager->IsRequestInProgress());
 
-  gfx::NativeWindow window =
-      permission_request_manager->GetBubbleWindow();
-  auto* widget = views::Widget::GetWidgetForNativeWindow(window);
+  views::Widget* widget = test_api_->GetPromptWindow();
   DCHECK(widget);
 
   auto* delegate_view =
@@ -145,23 +145,19 @@ IN_PROC_BROWSER_TEST_F(WidevinePermissionRequestBrowserTest, BubbleTest) {
   EXPECT_EQ(3ul, delegate_view->children().size());
 }
 
-// OptedInPref of bundling tests are done by
-// BraveWidevineBundleManagerBrowserTest.
-#if BUILDFLAG(ENABLE_WIDEVINE_CDM_COMPONENT)
 IN_PROC_BROWSER_TEST_F(WidevinePermissionRequestBrowserTest,
                        CheckOptedInPrefStateForComponent) {
-  PrefService* prefs = ProfileManager::GetActiveUserProfile()->GetPrefs();
   // Before we allow, opted in should be false
-  EXPECT_FALSE(prefs->GetBoolean(kWidevineOptedIn));
+  EXPECT_FALSE(IsWidevineOptedIn());
 
   GetPermissionRequestManager()->set_auto_response_for_test(
-      PermissionRequestManager::ACCEPT_ALL);
+      permissions::PermissionRequestManager::ACCEPT_ALL);
   auto* drm_tab_helper = GetBraveDrmTabHelper();
   drm_tab_helper->OnWidevineKeySystemAccessRequest();
   content::RunAllTasksUntilIdle();
 
   // After we allow, opted in pref should be true
-  EXPECT_TRUE(prefs->GetBoolean(kWidevineOptedIn));
+  EXPECT_TRUE(IsWidevineOptedIn());
   EXPECT_TRUE(observer.bubble_added_);
 
   // Reset observer and check permission bubble isn't created again.
@@ -170,34 +166,32 @@ IN_PROC_BROWSER_TEST_F(WidevinePermissionRequestBrowserTest,
   content::RunAllTasksUntilIdle();
   EXPECT_FALSE(observer.bubble_added_);
 }
-#endif
 
-#if BUILDFLAG(BUNDLE_WIDEVINE_CDM)
-// For bundling, PermissionRequest for browser restart is added after finishing
-// installis done. Check seconds permission request is also added.
+#if defined(OS_LINUX)
+// On linux, additional permission request is used to ask restarting.
 IN_PROC_BROWSER_TEST_F(WidevinePermissionRequestBrowserTest,
                        TriggerTwoPermissionTest) {
-  auto* bundle_manager =
-      g_brave_browser_process->brave_widevine_bundle_manager();
-  bundle_manager->startup_checked_ = true;
-  bundle_manager->is_test_ = true;
-
   TestObserver observer;
   auto* permission_request_manager = GetPermissionRequestManager();
   permission_request_manager->AddObserver(&observer);
   permission_request_manager->set_auto_response_for_test(
-      PermissionRequestManager::ACCEPT_ALL);
+      permissions::PermissionRequestManager::ACCEPT_ALL);
 
   GetBraveDrmTabHelper()->OnWidevineKeySystemAccessRequest();
   content::RunAllTasksUntilIdle();
-  bundle_manager->InstallDone(std::string());
+
+  WidevinePermissionRequest::is_test_ = true;
+  GetBraveDrmTabHelper()->OnEvent(
+      component_updater::ComponentUpdateService::Observer
+          ::Events::COMPONENT_UPDATED,
+      BraveDrmTabHelper::kWidevineComponentId);
   content::RunAllTasksUntilIdle();
 
   // Check two permission bubble are created.
   EXPECT_EQ(2, observer.added_count_);
   permission_request_manager->RemoveObserver(&observer);
 }
-#endif
+#endif  // OS_LINUX
 
 class ScriptTriggerWidevinePermissionRequestBrowserTest
     : public CertVerifierBrowserTest {
@@ -233,8 +227,9 @@ class ScriptTriggerWidevinePermissionRequestBrowserTest
     return browser()->tab_strip_model()->GetActiveWebContents();
   }
 
-  PermissionRequestManager* GetPermissionRequestManager() {
-    return PermissionRequestManager::FromWebContents(active_contents());
+  permissions::PermissionRequestManager* GetPermissionRequestManager() {
+    return permissions::PermissionRequestManager::FromWebContents(
+        active_contents());
   }
 
   bool IsPermissionBubbleShown() {

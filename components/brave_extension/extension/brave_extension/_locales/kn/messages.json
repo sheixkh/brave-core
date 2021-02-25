@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "ನೀವು ಯಾವುದೇ ಗೌಪ್ಯತೆ ಮತ್ತು ಸುರಕ್ಷತೆ ಸಂರಕ್ಷಣೆಗಳಿಲ್ಲದೆಯೇ ನೀವು ಈ ಸೈಟ್‌ಗೆ ಭೇಟಿ ನೀಡಿರುತ್ತಿರುವಿರಿ.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Brave ನ ಗೌಪ್ಯತೆ ಮತ್ತು ಸುರಕ್ಷತಾ ರಕ್ಷಣೆಗಳಿಲ್ಲದೆ ನೀವು ಈ ಸೈಟ್‌ ಅನ್ನು ಬ್ರೌಸ್ ಮಾಡುತ್ತಿದ್ದೀರಿ. ಇದು ಶಿಲ್ಡ್ಸ್ಅಪ್ ಜೊತೆಗೆ ಸರಿಯಾಗಿ ಕಾರ್ಯನಿರ್ವಹಿಸುವುದಿಲ್ಲವೇ?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "ಬ್ರೋಕನ್ ಸೈಟ್ ಅನ್ನು ವರದಿ ಮಾಡಿ",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "ಐಟಂಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ",
@@ -51,6 +55,22 @@
     "message": "ಕ್ರಾಸ್‌-ಸೈಟ್ ಟ್ರ್ಯಾಕರ್‌‌ಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "ಟ್ರ್ಯಾಕರ್‌ಗಳು ಮತ್ತು ಜಾಹೀರಾತುಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "ಟ್ರ್ಯಾಕರ್‌ಗಳು & ಜಾಹೀರಾತುಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ (ಪ್ರತಿಕೂಲ)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "ಟ್ರ್ಯಾಕರ್‌ಗಳು & ಜಾಹೀರಾತುಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ (ಪ್ರಮಾಣಿತ)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "ಎಲ್ಲಾ ಟ್ರ್ಯಾಕರ್‌ಗಳು & ಜಾಹೀರಾತುಗಳನ್ನು ಅನುಮತಿಸಿ",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "ಎಚ್‌ಟಿಟಿಪಿಎಸ್‌ಗೆ ಸಂಪರ್ಕ ಅಪ್‌ಗ್ರೇಡ್ ಮಾಡಲಾಗಿದೆ",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "ಎಲ್ಲಾ ಕುಕೀಗಳನ್ನು ಅನುಮತಿಸಲಾಗಿದೆ",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "ಕ್ರಾಸ್‌-ಸೈಟ್ ಸಾಧನ ಗುರುತಿಸುವಿಕೆಯನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "ಫಿಂಗರ್‌ಪ್ರಿಂಟ್ ಅನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "ಸಾಧನ ಗುರುತಿಸುವಿಕೆಯ ಪ್ರಯತ್ನಗಳನ್ನು ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "ಫಿಂಗರ್‌ಪ್ರಿಂಟಿಂಗ್ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ (ಪ್ರಮಾಣಿತ)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "ಎಲ್ಲ ಸಾಧನ ಗುರುತಿಸುವಿಕೆ ಪ್ರಯತ್ನಗಳನ್ನು ಅನುಮತಿಸಲಾಗಿದೆ",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "ಫಿಂಗರ್‌ಪ್ರಿಂಟಿಂಗ್ ನಿರ್ಬಂಧಿಸಲಾಗಿದೆ (ಕಟ್ಟುನಿಟ್ಟಾದ, ಸೈಟ್‌ಗಳನ್ನು ವಿಂಗಡಿಸಬಹುದು)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "ಎಲ್ಲಾ ಫಿಂಗರ್‌ಪ್ರಿಂಟಿಂಗ್‌ ಅನುಮತಿಸಿ",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "ಸಾಧನ ಗುರುತಿಸುವಿಕೆ ಪ್ರಯತ್ನಗಳು",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "ಫಿಂಗರ್‌ಪ್ರಿಂಟ್ ಮಾಡುವ ಪ್ರಯತ್ನಗಳು",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "ಸೈಟ್‌ನಲ್ಲಿರುವ ಲಿಪಿಗಳು",

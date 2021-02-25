@@ -6,38 +6,61 @@
 #include "bat/ads/ads.h"
 
 #include "bat/ads/internal/ads_impl.h"
-#include "bat/ads/internal/locale_helper.h"
-#include "bat/ads/internal/static_values.h"
+#include "bat/ads/internal/locale/supported_country_codes.h"
+#include "brave/components/l10n/common/locale_util.h"
 
 namespace ads {
 
-bool _is_debug = false;
-bool _is_testing = false;
-bool _is_production = false;
+Environment g_environment = Environment::DEVELOPMENT;
 
-const char _bundle_schema_resource_name[] = "bundle-schema.json";
-const char _catalog_schema_resource_name[] = "catalog-schema.json";
-const char _catalog_resource_name[] = "catalog.json";
-const char _client_resource_name[] = "client.json";
+SysInfo g_sys_info;
+
+BuildChannel g_build_channel;
+
+bool g_is_debug = false;
+
+const char g_catalog_schema_resource_id[] = "catalog-schema.json";
+
+bool IsSupportedLocale(const std::string& locale) {
+  const std::string country_code = brave_l10n::GetCountryCode(locale);
+
+  for (const auto& schema : kSupportedCountryCodes) {
+    const SupportedCountryCodesSet country_codes = schema.second;
+    const auto iter =
+        std::find(country_codes.begin(), country_codes.end(), country_code);
+    if (iter != country_codes.end()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool IsNewlySupportedLocale(const std::string& locale,
+                            const int last_schema_version) {
+  const std::string country_code = brave_l10n::GetCountryCode(locale);
+
+  for (const auto& schema : kSupportedCountryCodes) {
+    const int schema_version = schema.first;
+    if (schema_version < last_schema_version) {
+      continue;
+    }
+
+    const SupportedCountryCodesSet country_codes = schema.second;
+    const auto iter =
+        std::find(country_codes.begin(), country_codes.end(), country_code);
+    if (iter != country_codes.end()) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 // static
 Ads* Ads::CreateInstance(AdsClient* ads_client) {
+  DCHECK(ads_client);
   return new AdsImpl(ads_client);
-}
-
-bool Ads::IsSupportedRegion(const std::string& locale) {
-  auto region = GetRegion(locale);
-
-  auto it = kSupportedRegions.find(region);
-  if (it == kSupportedRegions.end()) {
-    return false;
-  }
-
-  return true;
-}
-
-std::string Ads::GetRegion(const std::string& locale) {
-  return helper::Locale::GetRegionCode(locale);
 }
 
 }  // namespace ads

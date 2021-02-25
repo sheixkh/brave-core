@@ -8,11 +8,11 @@
 
 #include "base/scoped_observer.h"
 #include "chrome/browser/extensions/extension_management.h"
+#include "components/prefs/pref_change_registrar.h"
+#include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_registry_observer.h"
 
 namespace extensions {
-
-class ExtensionRegistry;
 
 class BraveExtensionManagement : public ExtensionManagement,
                                  public ExtensionRegistryObserver {
@@ -21,8 +21,6 @@ class BraveExtensionManagement : public ExtensionManagement,
   ~BraveExtensionManagement() override;
 
  private:
-  void RegisterBraveExtensions();
-
   // ExtensionRegistryObserver implementation.
   void OnExtensionLoaded(
       content::BrowserContext* browser_context,
@@ -31,6 +29,11 @@ class BraveExtensionManagement : public ExtensionManagement,
       content::BrowserContext* browser_context,
       const Extension* extension,
       UnloadedExtensionReason reason) override;
+
+  void OnTorDisabledChanged();
+  void Cleanup(content::BrowserContext* browser_context);
+
+  PrefChangeRegistrar local_state_pref_change_registrar_;
 
   ScopedObserver<ExtensionRegistry, ExtensionRegistryObserver>
     extension_registry_observer_;

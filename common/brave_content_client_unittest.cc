@@ -9,11 +9,13 @@
 #include "content/public/common/url_constants.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "url/gurl.h"
+#include "url/url_util.h"
 
 TEST(BraveContentClientTest, AdditionalSchemesTest) {
+  url::ScopedSchemeRegistryForTests scoped_registry;
   BraveContentClient content_client;
   content::SetContentClient(&content_client);
-  content::RegisterContentSchemes(true);
+  content::ReRegisterContentSchemesForTests();
 
   const GURL sync_url("brave://sync");
   EXPECT_TRUE(sync_url.is_valid());

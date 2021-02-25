@@ -1,5 +1,10 @@
-import cosmeticFilterActions from '../actions/cosmeticFilterActions'
 import { getLocale } from '../api/localeAPI'
+import {
+  addSiteCosmeticFilter,
+  removeSiteFilter,
+  removeAllFilters
+} from '../api/cosmeticFilterAPI'
+import shieldsPanelActions from '../actions/shieldsPanelActions'
 
 export let rule = {
   host: '',
@@ -37,13 +42,44 @@ chrome.contextMenus.onClicked.addListener((info: chrome.contextMenus.OnClickData
   onContextMenuClicked(info, tab)
 })
 
-// content script listener for right click DOM selection event
+// content script listener for events from the cosmetic filtering content script
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   const action = typeof msg === 'string' ? msg : msg.type
   switch (action) {
     case 'contextMenuOpened': {
       rule.host = msg.baseURI
       break
+    }
+    case 'hiddenClassIdSelectors': {
+      const tab = sender.tab
+      if (tab === undefined) {
+        break
+      }
+      const tabId = tab.id
+      if (tabId === undefined) {
+        break
+      }
+      shieldsPanelActions.generateClassIdStylesheet(tabId, msg.classes, msg.ids)
+      break
+    }
+    case 'contentScriptsLoaded': {
+      const tab = sender.tab
+      if (tab === undefined) {
+        break
+      }
+      const tabId = tab.id
+      if (tabId === undefined) {
+        break
+      }
+      const url = msg.location.href
+      if (url === undefined) {
+        break
+      }
+      const frameId = sender.frameId
+      if (frameId === undefined) {
+        break
+      }
+      shieldsPanelActions.contentScriptsLoaded(tabId, frameId, url)
     }
   }
 })
@@ -54,11 +90,11 @@ export function onContextMenuClicked (info: chrome.contextMenus.OnClickData, tab
       query()
       break
     case 'resetSiteFilterSettings': {
-      cosmeticFilterActions.siteCosmeticFilterRemoved(rule.host)
+      removeSiteFilter(rule.host)
       break
     }
     case 'resetAllFilterSettings': {
-      cosmeticFilterActions.allCosmeticFiltersRemoved()
+      removeAllFilters()
       break
     }
     default: {
@@ -77,7 +113,7 @@ export function tabsCallback (tabs: any) {
   chrome.tabs.sendMessage(tabs[0].id, { type: 'getTargetSelector' }, onSelectorReturned)
 }
 
-export function onSelectorReturned (response: any) {
+export async function onSelectorReturned (response: any) {
   if (!response) {
     rule.selector = window.prompt('We were unable to automatically populate a correct CSS selector for you. Please manually enter a CSS selector to block:') || ''
   } else {
@@ -89,6 +125,7 @@ export function onSelectorReturned (response: any) {
       code: `${rule.selector} {display: none !important;}`,
       cssOrigin: 'user'
     })
-    cosmeticFilterActions.siteCosmeticFilterAdded(rule.host, rule.selector)
   }
+
+  await addSiteCosmeticFilter(rule.host, rule.selector)
 }

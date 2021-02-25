@@ -1,5 +1,5 @@
 diff --git a/extensions/renderer/native_extension_bindings_system.h b/extensions/renderer/native_extension_bindings_system.h
-index ab7927b0a396d0a4d842119f05b1a4c52d706f95..82aa794eabc9f89109589d5bce4c74985be9552a 100644
+index 05a6a2b91e39f57a49a29f54d10b5df983dc02a7..9ea765e3dfaab24ffb738e8c6ea54249a4c6a35e 100644
 --- a/extensions/renderer/native_extension_bindings_system.h
 +++ b/extensions/renderer/native_extension_bindings_system.h
 @@ -34,7 +34,7 @@ class NativeExtensionBindingsSystem {
@@ -10,4 +10,4 @@ index ab7927b0a396d0a4d842119f05b1a4c52d706f95..82aa794eabc9f89109589d5bce4c7498
 +  virtual ~NativeExtensionBindingsSystem();
  
    // Called when a new ScriptContext is created.
-   void DidCreateScriptContext(ScriptContext* context);
+   // Initializes the bindings for a newly created |context|.

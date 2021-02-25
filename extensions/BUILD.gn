@@ -12,13 +12,24 @@ if (is_android) {
     deps = [
       "//base",
       "//components/url_pattern_index",
+      "//content/public/common",
       "//extensions/buildflags",
-      "//extensions/common:common_constants",
+      "//net:net",
       "//url",
+    ]
+
+    public_deps = [
+      "//extensions/common:common_constants",
+      # Upstream bug: common_constants (above) has a dep on
+      # //components/services/app_service/public/mojom, which should have a dep
+      # on //ui/gfx/image/mojom, but doesn't, so we have to include it directly.
+      "//ui/gfx/image/mojom",
     ]
   }
 } else {
   group("common") {
-    deps = [ "//extensions/common" ]
+   if (!is_ios) {
+      deps = [ "//extensions/common" ]
+    }
   }
 }

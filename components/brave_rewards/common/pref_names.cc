@@ -8,26 +8,65 @@
 namespace brave_rewards {
 namespace prefs {
 
-const char kBraveRewardsEnabled[] = "brave.rewards.enabled";
-const char kBraveRewardsEnabledMigrated[] = "brave.rewards.enabled_migrated";
-const char kRewardsNotifications[] = "brave.rewards.notifications";
-const char kRewardsNotificationTimerInterval[]=
+const char kHideButton[] = "brave.hide_brave_rewards_button";
+const char kEnabled[] = "brave.rewards.enabled";
+const char kNotifications[] = "brave.rewards.notifications";
+const char kNotificationTimerInterval[]=
     "brave.rewards.notification_timer_interval";
-const char kRewardsBackupNotificationFrequency[] =
-    "brave.rewards.backup_notification_frequency";
-const char kRewardsBackupNotificationInterval[] =
+const char kBackupNotificationInterval[] =
     "brave.rewards.backup_notification_interval";
-const char kRewardsBackupSucceeded[] = "brave.rewards.backup_succeeded";
-const char kRewardsUserHasFunded[] = "brave.rewards.user_has_funded";
-const char kRewardsAddFundsNotification[] =
+const char kBackupSucceeded[] = "brave.rewards.backup_succeeded";
+const char kUserHasFunded[] = "brave.rewards.user_has_funded";
+const char kAddFundsNotification[] =
     "brave.rewards.add_funds_notification";
-const char kRewardsNotificationStartupDelay[] =
+const char kNotificationStartupDelay[] =
     "brave.rewards.notification_startup_delay";
-const char kRewardsExternalWallets[] = "brave.rewards.external_wallets";
-const char kStateServerPublisherListStamp[] =
-    "brave.rewards.server_publisher_list_stamp";
-const char kStateUpholdAnonAddress[] =
+const char kExternalWallets[] = "brave.rewards.external_wallets";
+const char kServerPublisherListStamp[] =
+    "brave.rewards.publisher_prefix_list_stamp";
+const char kUpholdAnonAddress[] =
     "brave.rewards.uphold_anon_address";
-
+const char kBadgeText[] = "brave.rewards.badge_text";
+const char kUseRewardsStagingServer[] = "brave.rewards.use_staging_server";
+const char kOnboarded[] = "brave.rewards.onboarded";
+const char kPromotionLastFetchStamp[] =
+    "brave.rewards.promotion_last_fetch_stamp";
+const char kPromotionCorruptedMigrated[] =
+    "brave.rewards.promotion_corrupted_migrated2";
+const char kAnonTransferChecked[] =  "brave.rewards.anon_transfer_checked";
+const char kVersion[] =  "brave.rewards.version";
+const char kMinVisitTime[] =  "brave.rewards.ac.min_visit_time";
+const char kMinVisits[] =  "brave.rewards.ac.min_visits";
+const char kAllowNonVerified[] =  "brave.rewards.ac.allow_non_verified";
+const char kAllowVideoContribution[] =
+    "brave.rewards.ac.allow_video_contributions";
+const char kScoreA[] = "brave.rewards.ac.score.a";
+const char kScoreB[] = "brave.rewards.ac.score.b";
+const char kAutoContributeEnabled[] = "brave.rewards.ac.enabled";
+const char kAutoContributeAmount[] = "brave.rewards.ac.amount";
+const char kNextReconcileStamp[] = "brave.rewards.ac.next_reconcile_stamp";
+const char kCreationStamp[] = "brave.rewards.creation_stamp";
+const char kRecoverySeed[] = "brave.rewards.wallet.seed";
+const char kPaymentId[] = "brave.rewards.wallet.payment_id";
+const char kInlineTipRedditEnabled[] = "brave.rewards.inline_tip.reddit";
+const char kInlineTipTwitterEnabled[] = "brave.rewards.inline_tip.twitter";
+const char kInlineTipGithubEnabled[] = "brave.rewards.inline_tip.github";
+const char kParametersRate[] = "brave.rewards.parameters.rate";
+const char kParametersAutoContributeChoice[] =
+    "brave.rewards.parameters.ac.choice";
+const char kParametersAutoContributeChoices[] =
+    "brave.rewards.parameters.ac.choices";
+const char kParametersTipChoices[] =
+    "brave.rewards.parameters.tip.choices";
+const char kParametersMonthlyTipChoices[] =
+    "brave.rewards.parameters.tip.monthly_choices";
+const char kFetchOldBalance[] =
+    "brave.rewards.fetch_old_balance";
+const char kEmptyBalanceChecked[] =
+    "brave.rewards.empty_balance_checked";
+const char kWalletBrave[] =
+    "brave.rewards.wallets.brave";
+const char kWalletUphold[] =
+    "brave.rewards.wallets.uphold";
 }  // namespace prefs
 }  // namespace brave_rewards

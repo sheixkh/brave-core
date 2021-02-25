@@ -12,8 +12,24 @@ type loadTimeData = {
   data_: Record<string, string>
 }
 
+type RequestIdleCallbackHandle = any
+type RequestIdleCallbackOptions = {
+  timeout: number
+}
+type RequestIdleCallbackDeadline = {
+  readonly didTimeout: boolean;
+  timeRemaining: (() => number)
+}
+
 declare global {
   interface Window {
+    // Typescript doesn't include requestIdleCallback as it's non-standard.
+    // Since it's supported in Chromium, we can include it here.
+    requestIdleCallback: ((
+      callback: ((deadline: RequestIdleCallbackDeadline) => void),
+      opts?: RequestIdleCallbackOptions
+    ) => RequestIdleCallbackHandle)
+    cancelIdleCallback: ((handle: RequestIdleCallbackHandle) => void)
     loadTimeData: loadTimeData
     cr: {
       define: (name: string, init: () => void) => void
@@ -32,18 +48,12 @@ declare global {
     }
     brave_rewards: {
       initialize: () => void
-      walletCreated: chrome.events.Event<() => void>
-      walletCreateFailed: chrome.events.Event<() => void>
-      walletProperties: chrome.events.Event<(properties: {status: number, wallet: Rewards.WalletProperties}) => void>
-      grant: chrome.events.Event<(properties: Rewards.Grant) => void>
-      grantCaptcha: chrome.events.Event<(image: string) => void>
-      walletPassphrase: chrome.events.Event<(pass: string) => void>
-      recoverWalletData: chrome.events.Event<(properties: Rewards.RecoverWallet) => void>
-      grantFinish: chrome.events.Event<(properties: Rewards.GrantFinish) => void>
+      parameters: chrome.events.Event<(properties: Rewards.RewardsParameters) => void>
+      recoverWalletData: chrome.events.Event<(result: number) => void>
       reconcileStamp: chrome.events.Event<(stamp: number) => void>
       addresses: chrome.events.Event<(addresses: Record<string, string>) => void>
       contributeList: chrome.events.Event<(list: Rewards.Publisher[]) => void>
-      balanceReports: chrome.events.Event<(reports: Record<string, Rewards.Report>) => void>
+      balanceReports: chrome.events.Event<(reports: Record<string, Rewards.BalanceReport>) => void>
     }
     brave_welcome: {
       initialize: () => void
@@ -54,10 +64,32 @@ declare global {
     brave_rewards_internals: {
       initialize: () => void
     }
+    ipfs: {
+      initialize: () => void
+    }
     sync_ui_exports: {
+      initialize: () => void
+    }
+    tor_internals: {
       initialize: () => void
     }
     alreadyInserted: boolean
     web3: any
+    content_cosmetic: {
+      cosmeticStyleSheet: CSSStyleSheet
+      allSelectorsToRules: Map<string, number>
+      observingHasStarted: boolean
+      hide1pContent: boolean
+      generichide: boolean
+      firstRunQueue: Set<string>
+      secondRunQueue: Set<string>
+      finalRunQueue: Set<string>
+      allQueues: Set<string>[]
+      numQueues: any
+      alreadyUnhiddenSelectors: Set<string>
+      alreadyKnownFirstPartySubtrees: WeakSet
+      _hasDelayOcurred: boolean
+      _startCheckingId: number | undefined
+    }
   }
 }

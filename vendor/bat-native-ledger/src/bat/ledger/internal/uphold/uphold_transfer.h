@@ -7,54 +7,49 @@
 #define BRAVELEDGER_UPHOLD_UPHOLD_TRANSFER_H_
 
 #include <map>
+#include <memory>
 #include <string>
 
 #include "bat/ledger/ledger.h"
-#include "bat/ledger/internal/uphold/uphold.h"
 
-namespace bat_ledger {
+namespace ledger {
 class LedgerImpl;
+
+namespace endpoint {
+class UpholdServer;
 }
 
-namespace braveledger_uphold {
+namespace uphold {
 
 class UpholdTransfer {
  public:
-  explicit UpholdTransfer(bat_ledger::LedgerImpl* ledger, Uphold* uphold);
+  explicit UpholdTransfer(LedgerImpl* ledger);
 
   ~UpholdTransfer();
 
-  void Start(double amount,
-             const std::string& address,
-             ledger::ExternalWalletPtr wallet,
-             TransactionCallback callback);
+  void Start(
+      const Transaction& transaction,
+      client::TransactionCallback callback);
 
  private:
-  void CreateTransaction(double amount,
-                         const std::string& address,
-                         ledger::ExternalWalletPtr wallet,
-                         TransactionCallback callback);
-
   void OnCreateTransaction(
-    int response_status_code,
-    const std::string& response,
-    const std::map<std::string, std::string>& headers,
-    const ledger::ExternalWallet& wallet,
-    TransactionCallback callback);
+      const type::Result result,
+      const std::string& id,
+      client::TransactionCallback callback);
 
-  void CommitTransaction(const std::string& transaction_id,
-                         const ledger::ExternalWallet& wallet,
-                         TransactionCallback callback);
+  void CommitTransaction(
+      const std::string& transaction_id,
+      client::TransactionCallback callback);
 
   void OnCommitTransaction(
-    int response_status_code,
-    const std::string& response,
-    const std::map<std::string, std::string>& headers,
-    TransactionCallback callback);
+      const type::Result result,
+      const std::string& transaction_id,
+      client::TransactionCallback callback);
 
-  bat_ledger::LedgerImpl* ledger_;  // NOT OWNED
-  Uphold* uphold_;  // NOT OWNED
+  LedgerImpl* ledger_;  // NOT OWNED
+  std::unique_ptr<endpoint::UpholdServer> uphold_server_;
 };
 
-}  // namespace braveledger_uphold
+}  // namespace uphold
+}  // namespace ledger
 #endif  // BRAVELEDGER_UPHOLD_UPHOLD_TRANSFER_H_

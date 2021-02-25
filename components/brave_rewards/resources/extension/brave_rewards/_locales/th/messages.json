@@ -4,20 +4,24 @@
     "description": "Title in welcome screen for the panel"
   },
   "welcomeButtonTextOne": {
-    "message": "เริ่มรับเงินได้ตอนนี้!",
+    "message": "เริ่มรับเงินตอนนี้!",
     "description": "CTA on welcome screen in the panel, existing users"
   },
   "welcomeButtonTextTwo": {
-    "message": "รางวัลการเข้าร่วม",
+    "message": "รางวัลเข้าร่วม",
     "description": "CTA on welcome screen in the panel, new users"
   },
   "welcomeDescOne": {
-    "message": "ได้รับเงินจากการเข้าไปดูโฆษณาและใช้เพื่อช่วยสนับสนุนผู้สร้างสรรค์ข้อความที่คุณชื่นชอบ",
+    "message": "ได้รับเงินเป็นค่าตอบแทนการดูโฆษณา แล้วสามารถจ่ายมันต่อไปเพื่อสนับสนุนผู้สร้างสรรค์เนื้อหาที่คุณชื่นชอบ",
     "description": "Entry text for welcome screen in the panel, existing user"
   },
   "welcomeDescTwo": {
     "message": "เดี๋ยวนี้คุณสามารถได้รับโทเค็นจากการชมโฆษณาที่เคารพความเป็นส่วนตัวแล้ว",
     "description": "Entry text for welcome screen in the panel, new user"
+  },
+  "welcomeDescPoints": {
+    "message": "รับคะแนนจากการชมโฆษณาที่เกี่ยวข้องกับความเป็นส่วนตัวได้แล้วตอนนี้",
+    "description": "Entry text for welcome screen in the panel, points"
   },
   "welcomeFooterTextOne": {
     "message": "มาดูว่ามีอะไรปรับปรุงเปลี่ยนแปลงไปแล้วบ้าง",
@@ -43,6 +47,22 @@
     "message": "Grants",
     "description": "Title for grant section in wallet summary"
   },
+  "details": {
+    "message": "รายละเอียด",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "ยอดของคุณ",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "คะแนน BAT",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "สามารถใช้ใน Brave Rewards เพื่อส่งรายได้ให้แก่ผู้สร้างสรรค์เนื้อหาคนโปรดของคุณ แต้ม BAT ไม่สามารถแลกเปลี่ยนเป็น BAT ได้",
+    "description": "Text for BAT Point helper message"
+  },
   "on": {
     "message": "เปิด",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -56,7 +76,7 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "เคล็ดลับประจำเดือนในเว็บไซต์นี้",
+    "message": "การสนับสนุนรายเดือน",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
@@ -100,7 +120,7 @@
     "description": "Month"
   },
   "monthJul": {
-    "message": "กรกฏาคม",
+    "message": "กรกฎาคม",
     "description": "Month"
   },
   "monthJun": {
@@ -128,19 +148,29 @@
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "จำนวนโทเคนที่ให้",
-    "description": "Title for grant notification"
+    "message": "เงินสนับสนุน $currency$",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
     "message": "โทเค็นเงินบริจาคที่เบิกแล้ว",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "ขอรับคะแนนที่แจกแล้ว",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "ได้รายได้จากโฆษณา",
     "description": "Title for ads section in wallet summary"
   },
   "rewardsContribute": {
-    "message": "Auto-Contribute",
+    "message": "มีส่วนร่วมอัตโนมัติ",
     "description": "Title for auto contribute section in wallet summary"
   },
   "oneTimeDonation": {
@@ -148,12 +178,12 @@
     "description": "Title for one time tips section in wallet summary"
   },
   "expiresOn": {
-    "message": "หมดอายุใน",
+    "message": "หมดอายุวันที่",
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "การให้ทิปรายเดือน",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "การสนับสนุนรายเดือน",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
     "message": "ปิด",
@@ -164,12 +194,8 @@
     "description": "Used in notification to dismiss notification"
   },
   "braveAdsLaunchMsg": {
-    "message": "รับรางวัลด้วยการชมโฆษณาได้แล้วตอนนี้",
+    "message": "คุณสามารถรับรายได้ผ่านการชมโฆษณาได้แล้วตอนนี้",
     "description": "Message for ads launch notification"
-  },
-  "braveAdsLaunchTitle": {
-    "message": "Brave Ads มาแล้ว!",
-    "description": "Message used in notification to let users know Ads is available"
   },
   "braveAdsTitle": {
     "message": "เบรฟ แอดส์ (Brave Ads)",
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "คุณได้บริจาค $amount$ BAT",
+    "message": "บริจาคเงิน $amount$ $currency$ แล้ว",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "ไม่สามารถดำเนินการชำระเงินรายเดือนตามกำหนดเวลาของคุณสำหรับการบริจาคอัตโนมัติและการให้ทิปรายเดือนเนื่องจากมีเงินไม่เพียงพอ เราจะลองใหม่ใน 30 วัน",
+    "message": "การชำระเงินรายเดือนตามกำหนดของคุณสำหรับการให้เงินสนับสนุนอัตโนมัติและเงินสนับสนุนรายเดือนนั้นดำเนินการไม่สำเร็จเนื่องจากมีเงินไม่เพียงพอ เราจะทำรายการอีกครั้งในอีก 30 วัน",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -261,10 +291,6 @@
     "message": "วันที่เงินบริจาคหมดอายุ",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "ขออภัย ดูเหมือนว่าเงินบริจาคนี้จะได้รับการเบิกไปแล้ว",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
     "message": "ตกลง",
     "description": "Button text for clearing the error."
@@ -276,18 +302,6 @@
   "grantGeneralErrorTitle": {
     "message": "อุ๊ย มีบางอย่างผิดปกติ โปรดลองใหม่ภายหลัง",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "ตกลง",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "ขออภัย ดูเหมือนว่าเงินบริจาคนี้จะหมดอายุแล้ว",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "เงินบริจาคนี้ใช้ไม่ได้แล้ว",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "รีเฟรชสถานะ",
@@ -306,7 +320,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "คุณได้มอบ {{reservedAmount}} BAT ให้กับผู้สร้างที่ยังไม่ได้ลงทะเบียนรับเงินสนับสนุน เบราว์เซอร์ของคุณจะพยายามส่งเงินสนับสนุนไปเรื่อย ๆ จนกว่าผู้สร้างจะยืนยัน หรือจนกระทั่งเวลาผ่านไป 90 วัน",
+    "message": "คุณได้กำหนดจำนวนเงิน {{reservedAmount}} {{currency}} ไว้ให้แก่ผู้สร้างสรรค์ที่ยังไม่ได้สมัครรับรายได้ เบราว์เซอร์ของคุณจะพยายามส่งรายได้ให้จนกว่าพวกเขาจะยืนยัน หรือจนกว่าจะครบ 90 วัน",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
@@ -366,7 +380,7 @@
     "description": "Subtitle for wallet disabled panel"
   },
   "privacyPolicy": {
-    "message": "นโยบายความเป็นส่วนตัว",
+    "message": "นโยบายสความเป็นส่วนตัว",
     "description": "Privacy Policy"
   },
   "serviceText": {
@@ -378,16 +392,16 @@
     "description": "Terms of Service"
   },
   "welcomeBack": {
-    "message": "ยินดีต้อนรับกลับมา!",
+    "message": "Welcome Back!",
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "ทิปประจำเดือนได้รับการดำเนินการแล้ว!",
-    "description": "Message for monthly tips processed notification"
+    "message": "เงินสนับสนุนรายเดือนของคุณดำเนินการเรียบร้อยแล้ว!",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "การบริจาคและทิป",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "การคลิก 'ร่วมรับรางวัล' จะถือเป็นการระบุว่าคุณได้อ่านและยอมรับใน",
@@ -397,8 +411,12 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
+  },
   "turnOnAds": {
-    "message": "เปิดโฆษณา",
+    "message": "เปิดใช้งาน Ads",
     "description": "Prompt to turn on Ads via notification"
   },
   "adsEarnings": {
@@ -444,7 +462,7 @@
     "description": "Notification text that tells user his wallet is under funded for pending contribution to complete"
   },
   "pendingContributionTitle": {
-    "message": "รอการสนับสนุน",
+    "message": "เงินสนับสนุนที่รอดำเนินการ",
     "description": "Notification title for pending contribution type"
   },
   "grantFinishTitleUGP": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "โทเค็นเงินบริจาคกำลังจะไปถึงคุณแล้ว",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "เงินสนับสนุน $currency$ กำลังเดินทาง",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "โทเค็นเงินบริจาคฟรี",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "แจกคะแนนฟรี",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Brave Ads Rewards!",
+    "message": "คุณได้รับรางวัลโฆษณา!",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "การจัดสรรรางวัลของคุณจาก Brave Ads กำลังมาถึง",
+    "message": "รางวัลของคุณกำลังอยู่ระหว่างทางไปสู่กระเป๋าสตางค์ Brave Rewards ของคุณ",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "การจัดสรรโทเค็น Brave Ads ของคุณ",
+    "message": "ปริมาณรางวัลของคุณ",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "ผู้สร้างที่ยืนยันแล้วนี้ยังไม่ได้ยืนยัน (KYC) บัญชีของตนเองเพื่อรับทิปจากวอลเล็ตที่ยืนยันแล้วของคุณ ทิปจะอยู่ในวอลเล็ตของคุณจะกว่าเขาจะยืนยันเสร็จสิ้น",
+    "message": "ครีเอเตอร์ Brave รายนี้ได้ผ่านการรับรองแล้ว แต่ยังไม่กำหนดค่าบัญชีของตนเพื่อรับเงินสนับสนุนจากผู้ใช้ Brave ทิปที่คุณส่งให้จะยังคงอยู่ในกระเป๋าสตางค์ของคุณจนกว่าขั้นตอนนี้จะเสร็จสมบูรณ์",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "ยืนยันวอลเล็ตให้เสร็จสิ้น",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "ตั้งค่า...",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "เหรียญ",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "คะแนน",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "Token",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "คะแนน",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "จำนวนโทเคนที่ให้",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "คะแนนแจกฟรี",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "สวัสดี $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "ยกเลิก",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "เปลี่ยนจำนวน",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "ลงชื่อเข้าใช้",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "การยืนยันวอลเล็ตให้คุณจัดการเงินทุนได้อย่างมีประสิทธิภาพมากขึ้น",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "คุณจำเป็นต้องมีอย่างน้อย 25 BAT เพื่อสร้างบัญชี Uphold โปรดลองใหม่อีกครั้งภายหลัง\nหากคุณมีบัญชี Uphold ที่ได้รับการยืนยันตัวตนแล้ว ไปที่เข้าสู่ระบบต่อไป",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "เชื่อมต่อแล้ว",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "รอดำเนินการ",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "หมายเหตุ: ธุรกรรมของคุณจะปรากฏแก่ Uphold เมื่อคุณอนุญาต ยกตัวอย่างเช่น พวกเขาจะสามารถเห็นจำนวนและผู้รับทิปได้",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "รับโทเค็นเพื่อนำไปตอบแทน",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "รับโทเค็นผ่านการดูโฆษณาที่เกี่ยวข้องกับความเป็นส่วนตัวเพื่อนำไปสนับสนุนเว็บไซต์และผู้สร้างเนื้อหาที่คุณชื่นชอบโดยอัตโนมัติ",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "เริ่มต้นใช้ Brave Reward",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "ดูการแนะนำสั้นๆ",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "การดำเนินการต่อจะถือว่าคุณยอมรับ$tos_link_begin$ข้อตกลงในการใช้บริการ$tos_link_end$และ$pp_link_begin$นโยบายความเป็นส่วนตัว$pp_link_end$",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "ย้อนกลับ",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "มาดูรายละเอียดคร่าวๆ กัน",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "ดำเนินการต่อ",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "เสร็จ",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "ข้าม",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "ข้ามไปก่อน",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "ยินดีต้อนรับสู่ Brave Reward",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "โฆษณาส่วนตัวของ Brave ให้ Reward เป็นโทเค็นสำหรับนำไปสนับสนุนผู้สร้างคอนเทนต์ ซึ่งจะต่างจากโฆษณาทั่วไป แต่ยังคงรักษาความเป็นส่วนตัวให้กับข้อมูลส่วนตัวของคุณไว้ในทุกๆ ส่วน",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "โฆษณาจะปรากฏที่ใด",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "โฆษณาส่วนตัวของ Brave จะปรากฏในรูปการแจ้งเตือนตามปกติ คุณสามารถควบคุมความถี่ในการเห็นโฆษณาเหล่านี้ได้ในการตั้งค่า",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "คุณจะได้รับ Reward เมื่อใด",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "โทเค็นที่คุณได้รับจากโฆษณาส่วนตัวของ Brave ตลอดทั้งเดือนนี้จะเข้าบัญชีในวันที่ 5 ของเดือนถัดไป",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "การตอบแทนจะกลายเป็นเรื่องง่าย",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "ครีเอเตอร์จะได้รับโทเค็นบริจาคจากคุณโดยอัตโนมัติตามระดับการมีส่วนร่วมที่เราวัดได้ในรูป 'ความสนใจ' ของคุณ",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "ให้ทิปเป็นการขอบคุณ",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "การให้ทิปเป็นวิธีส่งกำลังใจและให้การสนับสนุนเนื้อหาหรือผู้สร้างที่คุณชื่นชอบ ไปให้ทิปกัน!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "ใช้โทเค็นทำอะไรได้บ้าง",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "สามารถใช้โทเค็นในกิจกรรมอื่นๆ นอกเหนือจากการสนับสนุนครีเอเตอร์ โดยสามารถนำไปซื้อเนื้อหาดิจิตอลและสินค้าอื่นๆ เมื่อมีผู้ค้ามาเข้าร่วม",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "ไชโย คุณพร้อมแล้วละ!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "การใช้งาน Brave Reward จะช่วยส่งเสริมให้เว็บนี้เป็นพื้นที่ที่ดีขึ้นสำหรับทุกคน ซึ่งนับว่าเยี่ยมยอดไปเลย!",
+    "description": ""
   }
 }

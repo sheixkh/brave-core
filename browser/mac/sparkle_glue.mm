@@ -45,10 +45,11 @@ class PerformBridge : public base::RefCountedThreadSafe<PerformBridge> {
     DCHECK(sel);
 
     scoped_refptr<PerformBridge> op = new PerformBridge(target, sel, arg);
-    base::PostTaskWithTraits(FROM_HERE,
-                             {base::MayBlock(), base::TaskPriority::BEST_EFFORT,
-                              base::TaskShutdownBehavior::CONTINUE_ON_SHUTDOWN},
-                             base::Bind(&PerformBridge::Run, op.get()));
+    base::PostTask(
+        FROM_HERE,
+        {base::ThreadPool(), base::MayBlock(), base::TaskPriority::BEST_EFFORT,
+        base::TaskShutdownBehavior::CONTINUE_ON_SHUTDOWN},
+        base::Bind(&PerformBridge::Run, op.get()));
   }
 
   // Convenience for the no-argument case.
@@ -372,7 +373,7 @@ class PerformBridge : public base::RefCountedThreadSafe<PerformBridge> {
 
   // Caching update candidate version.
   // See the comments of |currentlyInstalledVersion|.
-  new_version_ = GetVersionFromAppcastItem(item);
+  new_version_ = [GetVersionFromAppcastItem(item) retain];
 
   [self updateStatus:kAutoupdateAvailable
              version:GetVersionFromAppcastItem(item)

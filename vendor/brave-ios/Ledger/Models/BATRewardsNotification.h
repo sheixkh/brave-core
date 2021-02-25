@@ -18,8 +18,10 @@ typedef NS_ENUM(NSInteger, BATRewardsNotificationKind) {
   BATRewardsNotificationKindAdsLaunch, // Unused
   BATRewardsNotificationKindVerifiedPublisher,
   BATRewardsNotificationKindPendingNotEnoughFunds,
+  BATRewardsNotificationKindGeneralLedger // Comes from ledger
 } NS_SWIFT_NAME(RewardsNotification.Kind);
 
+OBJC_EXPORT
 NS_SWIFT_NAME(RewardsNotification)
 @interface BATRewardsNotification : NSObject <NSSecureCoding>
 

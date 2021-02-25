@@ -1,12 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright (c) 2019 The Brave Authors. All rights reserved.
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#ifndef BRAVE_COMPONENTS_BRAVE_WEBTORRENT_BROWSER_CONTENT_BROWSER_CLIENT_HELPER_H_
+#define BRAVE_COMPONENTS_BRAVE_WEBTORRENT_BROWSER_CONTENT_BROWSER_CLIENT_HELPER_H_
+
+#include <string>
+#include <utility>
 
 #include "base/strings/strcat.h"
 #include "base/strings/string_util.h"
 #include "base/task/post_task.h"
 #include "brave/common/url_constants.h"
-#include "brave/common/extensions/extension_constants.h"
 #include "brave/components/brave_webtorrent/browser/webtorrent_util.h"
 #include "chrome/browser/external_protocol/external_protocol_handler.h"
 #include "content/public/browser/browser_task_traits.h"
@@ -34,8 +40,8 @@ static GURL TranslateMagnetURL(const GURL& url) {
 
 static GURL TranslateTorrentUIURLReversed(const GURL& url) {
   GURL translatedURL(net::UnescapeURLComponent(
-        url.query(), net::UnescapeRule::URL_SPECIAL_CHARS_EXCEPT_PATH_SEPARATORS |
-        net::UnescapeRule::PATH_SEPARATORS));
+      url.query(), net::UnescapeRule::URL_SPECIAL_CHARS_EXCEPT_PATH_SEPARATORS |
+                       net::UnescapeRule::PATH_SEPARATORS));
   GURL::Replacements replacements;
   replacements.SetRefStr(url.ref_piece());
   return translatedURL.ReplaceComponents(replacements);
@@ -45,7 +51,8 @@ static bool HandleTorrentURLReverseRewrite(GURL* url,
     content::BrowserContext* browser_context) {
   if (url->SchemeIs(extensions::kExtensionScheme) &&
       url->host() == brave_webtorrent_extension_id &&
-      url->ExtractFileName() == "brave_webtorrent.html") {
+      url->ExtractFileName() == "brave_webtorrent.html" &&
+      GURL(url->query()).SchemeIsHTTPOrHTTPS()) {
     *url =  TranslateTorrentUIURLReversed(*url);
     return true;
   }
@@ -65,7 +72,8 @@ static bool HandleTorrentURLRewrite(GURL* url,
   if (url->SchemeIsHTTPOrHTTPS() ||
       (url->SchemeIs(extensions::kExtensionScheme) &&
        url->host() == brave_webtorrent_extension_id &&
-       url->ExtractFileName() == "brave_webtorrent.html")) {
+       url->ExtractFileName() == "brave_webtorrent.html" &&
+       GURL(url->query()).SchemeIsHTTPOrHTTPS())) {
     return true;
   }
 
@@ -74,10 +82,11 @@ static bool HandleTorrentURLRewrite(GURL* url,
 
 static void LoadOrLaunchMagnetURL(
     const GURL& url,
-    const content::ResourceRequestInfo::WebContentsGetter& web_contents_getter,
+    content::WebContents::OnceGetter web_contents_getter,
     ui::PageTransition page_transition,
-    bool has_user_gesture) {
-  content::WebContents* web_contents = web_contents_getter.Run();
+    bool has_user_gesture,
+    const base::Optional<url::Origin>& initiating_origin) {
+  content::WebContents* web_contents = std::move(web_contents_getter).Run();
   if (!web_contents)
     return;
 
@@ -88,7 +97,7 @@ static void LoadOrLaunchMagnetURL(
     ExternalProtocolHandler::LaunchUrl(
         url, web_contents->GetRenderViewHost()->GetProcess()->GetID(),
         web_contents->GetRenderViewHost()->GetRoutingID(), page_transition,
-        has_user_gesture);
+        has_user_gesture, initiating_origin);
   }
 }
 
@@ -102,19 +111,23 @@ static bool HandleMagnetURLRewrite(GURL* url,
   return false;
 }
 
-static bool HandleMagnetProtocol(
+static void HandleMagnetProtocol(
     const GURL& url,
-    content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
+    content::WebContents::OnceGetter web_contents_getter,
     ui::PageTransition page_transition,
-    bool has_user_gesture) {
-  if (url.SchemeIs(kMagnetScheme)) {
-    base::PostTaskWithTraits(FROM_HERE, {content::BrowserThread::UI},
-        base::BindOnce(&LoadOrLaunchMagnetURL, url, web_contents_getter,
-        page_transition, has_user_gesture));
-    return true;
-  }
-
-  return false;
+    bool has_user_gesture,
+    const base::Optional<url::Origin>& initiating_origin) {
+  DCHECK(url.SchemeIs(kMagnetScheme));
+  base::PostTask(FROM_HERE, {content::BrowserThread::UI},
+                 base::BindOnce(&LoadOrLaunchMagnetURL, url,
+                                std::move(web_contents_getter), page_transition,
+                                has_user_gesture, initiating_origin));
 }
 
+static bool IsMagnetProtocol(const GURL& url) {
+  return url.SchemeIs(kMagnetScheme);
 }
+
+}  // namespace webtorrent
+
+#endif  // BRAVE_COMPONENTS_BRAVE_WEBTORRENT_BROWSER_CONTENT_BROWSER_CLIENT_HELPER_H_

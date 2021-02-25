@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import <XCTest/XCTest.h>
+
+#import "base/containers/flat_map.h"
 #import "CppTransformations.h"
 #import "test_foo.h"
 
@@ -69,6 +71,18 @@
   XCTAssertTrue([foo1.stringObject isEqualToString:@"test2"]);
   const auto numbers2 = @[ @(3.0), @(2.0), @(1.0) ];
   XCTAssertTrue([foo1.numbers isEqualToArray:numbers2]);
+}
+
+- (void)testStringNSDictionaryToStringMap
+{
+  const auto d = @{
+    @"1": @"2",
+    @"3": @"4"
+  };
+  base::flat_map<std::string, std::string> map = MapFromNSDictionary(d);
+  XCTAssert(map["1"] == "2");
+  XCTAssert(map["3"] == "4");
+  XCTAssert(map.find("5") == map.end());
 }
 
 @end

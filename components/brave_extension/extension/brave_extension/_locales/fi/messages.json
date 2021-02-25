@@ -1,34 +1,38 @@
 {
   "appName": {
-    "message": "Brave -laajennus",
+    "message": "Brave-laajennus",
     "description": "The name of the the extension."
   },
   "shields": {
-    "message": "Shields",
+    "message": "Suojaus",
     "description": "The Shields feature name"
   },
   "up": {
-    "message": "ylös",
+    "message": "päällä",
     "description": "Message for when shields is enabled"
   },
   "down": {
-    "message": "alas",
+    "message": "pois",
     "description": "Message for when shields is disabled"
   },
   "forThisSite": {
-    "message": "tälle sivustolle",
+    "message": "tällä sivustolla",
     "description": "Partial string for the phrase `shields is up *for this site*`"
   },
   "enabledMessage": {
-    "message": "Jos sivusto ei näytä toimivan oikein, kokeile ottaa suojat pois käytöstä",
+    "message": "Jos sivusto ei näytä toimivan oikein, kokeile ottaa suojaus pois käytöstä",
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Selaat tätä sivua ilman yksityisyys- ja turvallisuussuojausta",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Selaat tätä sivustoa ilman Braven yksityisyys- ja tietoturvasuojia. Eikö se toimi oikein kilpien ollessa käytössä?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Ilmoita toimimattomasta sivustosta",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
-    "message": "Kohteet estetty",
+    "message": "Kohdetta estetty",
     "description": "Message for the main blocked resources text when there is more than one ad/track/script blocked (plural)"
   },
   "itemBlocked": {
@@ -51,6 +55,22 @@
     "message": "Cross-site-seuraimet estetty",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Estetyt seuraimet & mainokset",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Seuraimet & mainokset estetty (aggressiivinen)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Seuraimet & mainokset estetty (standardi)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Salli kaikki seuraimet & mainokset",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Yhteys päivitetty HTTPS:ään",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -60,7 +80,7 @@
     "description": "Message for the main blocked resources text when there is one connection upgraded (singular) and no other ads/trackers blocked"
   },
   "scriptsBlocked": {
-    "message": "Skriptit estetty.",
+    "message": "Skriptit estetty",
     "description": "Message for the scripts blocked row label"
   },
   "thirdPartyCookiesBlocked": {
@@ -75,21 +95,25 @@
     "message": "Kaikki evästeet sallittu",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Cross-site-laitteentunnistus estetty",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Fingerprinting-tunniste estetty",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Laitteen tunnistusyritykset estetty",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Sormenjälkitunnistus estetty (standardi)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Kaikki laittentunnistusyritykset sallittu",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Sormenjälkitunnistus estetty (ankara, voi rikkoa sivustoja)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Salli kaikki sormenjälkitunnistaminen",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Laitteen tunnistuksen yrityksiä",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Sormenjälkitunnistuksen asetusyritykset",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Tämän sivuston skriptit",
@@ -156,7 +180,7 @@
     "description": "Message for context menu that resets the site filters for cosmetic filtering"
   },
   "resetAllFilterSettings": {
-    "message": "Selkeät CSS-säännöt kaikille sivustoille",
+    "message": "Tyhjennä kaikkien sivustojen CSS-säännöt",
     "description": "Message for context menu that resets all cosmetic filters"
   },
   "advancedView": {
@@ -172,7 +196,7 @@
     "description": "Message in read-only view explaining what Brave Shields do"
   },
   "blockedResoucesExplanation": {
-    "message": "Sivustot ylittävät seurantasovellukset (cross-site trackers) ja muita ikäviä juttuja estetty",
+    "message": "Sivustojen välistä seurantasovellusta (cross-site trackers) ja muuta ikävää juttua estetty",
     "description": "Message for the main trackers count in Shields simple view"
   },
   "webCompatWarning": {
@@ -184,7 +208,7 @@
     "description": "Message for the button that confirms the advanced view"
   },
   "learnMore": {
-    "message": "Lisätietoa",
+    "message": "Lisätietoja",
     "description": "Message inviting the user to learn more about Shields"
   }
 }

@@ -6,109 +6,97 @@
 #include <algorithm>
 #include <cmath>
 #include <ctime>
+#include <map>
 #include <utility>
 #include <vector>
 
-#include "bat/ledger/internal/bat_helper.h"
-#include "bat/ledger/internal/bignum.h"
+#include "base/guid.h"
+#include "base/strings/stringprintf.h"
+#include "bat/ledger/global_constants.h"
+#include "bat/ledger/internal/constants.h"
 #include "bat/ledger/internal/ledger_impl.h"
+#include "bat/ledger/internal/legacy/static_values.h"
+#include "bat/ledger/internal/publisher/prefix_util.h"
 #include "bat/ledger/internal/publisher/publisher.h"
-#include "bat/ledger/internal/publisher/publisher_server_list.h"
-#include "bat/ledger/internal/rapidjson_bat_helper.h"
-#include "bat/ledger/internal/static_values.h"
-#include "mojo/public/cpp/bindings/map.h"
-
-/* foo.bar.example.com
-   QLD = 'bar'
-   RLD = 'foo.bar'
-   SLD = 'example.com'
-   TLD = 'com'
-
-  search.yahoo.co.jp
-   QLD = 'search'
-   RLD = 'search'
-   SLD = 'yahoo.co.jp'
-   TLD = 'co.jp'
-*/
+#include "bat/ledger/internal/publisher/publisher_prefix_list_updater.h"
+#include "bat/ledger/internal/publisher/server_publisher_fetcher.h"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-namespace braveledger_publisher {
+namespace ledger {
+namespace publisher {
 
-Publisher::Publisher(bat_ledger::LedgerImpl* ledger):
-  ledger_(ledger),
-  state_(new braveledger_bat_helper::PUBLISHER_STATE_ST),
-  server_list_(std::make_unique<PublisherServerList>(ledger)) {
-  calcScoreConsts(state_->min_publisher_duration_);
+Publisher::Publisher(LedgerImpl* ledger):
+    ledger_(ledger),
+    prefix_list_updater_(
+        std::make_unique<PublisherPrefixListUpdater>(ledger)),
+    server_publisher_fetcher_(
+        std::make_unique<ServerPublisherFetcher>(ledger)) {
 }
 
-Publisher::~Publisher() {
+Publisher::~Publisher() = default;
+
+bool Publisher::ShouldFetchServerPublisherInfo(
+    type::ServerPublisherInfo* server_info) {
+  return server_publisher_fetcher_->IsExpired(server_info);
 }
 
-void Publisher::OnTimer(uint32_t timer_id) {
-  server_list_->OnTimer(timer_id);
+void Publisher::FetchServerPublisherInfo(
+    const std::string& publisher_key,
+    client::GetServerPublisherInfoCallback callback) {
+  server_publisher_fetcher_->Fetch(publisher_key, callback);
 }
 
 void Publisher::RefreshPublisher(
-      const std::string& publisher_key,
-      ledger::OnRefreshPublisherCallback callback) {
-  server_list_->Download(std::bind(&Publisher::OnRefreshPublisher,
-          this,
-          _1,
-          publisher_key,
-          callback));
-}
-
-void Publisher::OnRefreshPublisher(
-    const ledger::Result result,
     const std::string& publisher_key,
     ledger::OnRefreshPublisherCallback callback) {
-  if (result != ledger::Result::LEDGER_OK) {
-    callback(ledger::PublisherStatus::NOT_VERIFIED);
-    return;
-  }
+  // Bypass cache and unconditionally fetch the latest info
+  // for the specified publisher.
+  server_publisher_fetcher_->Fetch(publisher_key,
+      [this, callback](auto server_info) {
+        auto status = server_info
+            ? server_info->status
+            : type::PublisherStatus::NOT_VERIFIED;
 
-  const auto server_callback =
-    std::bind(&Publisher::OnRefreshPublisherServerPublisher,
-              this,
-              _1,
-              callback);
+        // If, after refresh, the publisher is now verified
+        // attempt to process any pending contributions for
+        // unverified publishers.
+        if (status == type::PublisherStatus::VERIFIED) {
+          ledger_->contribution()->ContributeUnverifiedPublishers();
+        }
 
-  ledger_->GetServerPublisherInfo(publisher_key, server_callback);
-}
-
-void Publisher::OnRefreshPublisherServerPublisher(
-    ledger::ServerPublisherInfoPtr info,
-    ledger::OnRefreshPublisherCallback callback) {
-  auto status = ledger::PublisherStatus::NOT_VERIFIED;
-  if (info) {
-    status = info->status;
-  }
-  callback(status);
+        callback(status);
+      });
 }
 
 void Publisher::SetPublisherServerListTimer() {
-  server_list_->SetTimer(false);
+  prefix_list_updater_->StartAutoUpdate([this]() {
+    // Attempt to reprocess any contributions for previously
+    // unverified publishers that are now verified.
+    ledger_->contribution()->ContributeUnverifiedPublishers();
+  });
 }
 
-void Publisher::calcScoreConsts(const uint64_t& min_duration_seconds) {
+void Publisher::CalcScoreConsts(const int min_duration_seconds) {
   // we increase duration for 100 to keep it as close to muon implementation
   // as possible (we used 1000 in muon)
   // keeping it with only seconds visits are not spaced out equally
   uint64_t min_duration_big = min_duration_seconds * 100;
-  a_ = (1.0 / (braveledger_ledger::_d * 2.0)) - min_duration_big;
-  a2_ = a_ * 2.0;
-  a4_ = a2_ * 2.0;
-  b_ = min_duration_big - a_;
-  b2_ = b_ * b_;
+  const double d = 1.0 / (30.0 * 1000.0);
+  const double a = (1.0 / (d * 2.0)) - min_duration_big;
+  const double b = min_duration_big - a;
+
+  ledger_->state()->SetScoreValues(a, b);
 }
 
 // courtesy of @dimitry-xyz:
 // https://github.com/brave/ledger/issues/2#issuecomment-221752002
 double Publisher::concaveScore(const uint64_t& duration_seconds) {
   uint64_t duration_big = duration_seconds * 100;
-  return (-b_ + std::sqrt(b2_ + (a4_ * duration_big))) / a2_;
+  double a, b;
+  ledger_->state()->GetScoreValues(&a, &b);
+  return (-b + std::sqrt((b * b) + (a * 4 * duration_big))) / (a * 2);
 }
 
 std::string getProviderName(const std::string& publisher_id) {
@@ -121,6 +109,8 @@ std::string getProviderName(const std::string& publisher_id) {
     return TWITTER_MEDIA_TYPE;
   } else if (publisher_id.find(VIMEO_MEDIA_TYPE) != std::string::npos) {
     return VIMEO_MEDIA_TYPE;
+  } else if (publisher_id.find(GITHUB_MEDIA_TYPE) != std::string::npos) {
+    return GITHUB_MEDIA_TYPE;
   }
 
   return "";
@@ -132,132 +122,189 @@ bool ignoreMinTime(const std::string& publisher_id) {
 
 void Publisher::SaveVisit(
     const std::string& publisher_key,
-    const ledger::VisitData& visit_data,
-    const uint64_t& duration,
+    const type::VisitData& visit_data,
+    const uint64_t duration,
+    const bool first_visit,
     uint64_t window_id,
     const ledger::PublisherInfoCallback callback) {
-  if (!ledger_->GetRewardsMainEnabled() || publisher_key.empty()) {
+  if (publisher_key.empty()) {
+    BLOG(0, "Publisher key is empty");
     return;
   }
 
-  auto server_callback =
+  auto on_server_info =
       std::bind(&Publisher::OnSaveVisitServerPublisher,
-                this,
-                _1,
-                publisher_key,
-                visit_data,
-                duration,
-                window_id,
-                callback);
+          this,
+          _1,
+          publisher_key,
+          visit_data,
+          duration,
+          first_visit,
+          window_id,
+          callback);
 
-  ledger_->GetServerPublisherInfo(publisher_key, server_callback);
+  ledger_->database()->SearchPublisherPrefixList(
+      publisher_key,
+      [this, publisher_key, on_server_info](bool publisher_exists) {
+        if (publisher_exists) {
+          GetServerPublisherInfo(publisher_key, on_server_info);
+        } else {
+          on_server_info(nullptr);
+        }
+      });
 }
 
-ledger::ActivityInfoFilterPtr Publisher::CreateActivityFilter(
+void Publisher::SaveVideoVisit(
     const std::string& publisher_id,
-    ledger::ExcludeFilter excluded,
+    const type::VisitData& visit_data,
+    uint64_t duration,
+    const bool first_visit,
+    uint64_t window_id,
+    ledger::PublisherInfoCallback callback) {
+  if (!ledger_->state()->GetPublisherAllowVideos()) {
+    duration = 0;
+  }
+
+  SaveVisit(
+      publisher_id,
+      visit_data,
+      duration,
+      first_visit,
+      window_id,
+      callback);
+}
+
+type::ActivityInfoFilterPtr Publisher::CreateActivityFilter(
+    const std::string& publisher_id,
+    type::ExcludeFilter excluded,
     bool min_duration,
     const uint64_t& current_reconcile_stamp,
     bool non_verified,
     bool min_visits) {
-  auto filter = ledger::ActivityInfoFilter::New();
+  auto filter = type::ActivityInfoFilter::New();
   filter->id = publisher_id;
   filter->excluded = excluded;
-  filter->min_duration = min_duration ? getPublisherMinVisitTime() : 0;
+  filter->min_duration = min_duration
+      ? ledger_->state()->GetPublisherMinVisitTime()
+      : 0;
   filter->reconcile_stamp = current_reconcile_stamp;
   filter->non_verified = non_verified;
-  filter->min_visits = min_visits ? GetPublisherMinVisits() : 0;
+  filter->min_visits = min_visits
+      ? ledger_->state()->GetPublisherMinVisits()
+      : 0;
 
   return filter;
 }
 
-std::string Publisher::GetBalanceReportName(
-    const ledger::ACTIVITY_MONTH month,
-    int year) {
-  return std::to_string(year) + "_" + std::to_string(month);
-}
-
 void Publisher::OnSaveVisitServerPublisher(
-    ledger::ServerPublisherInfoPtr server_info,
+    type::ServerPublisherInfoPtr server_info,
     const std::string& publisher_key,
-    const ledger::VisitData& visit_data,
-    uint64_t duration,
+    const type::VisitData& visit_data,
+    const uint64_t duration,
+    const bool first_visit,
     uint64_t window_id,
     const ledger::PublisherInfoCallback callback) {
   auto filter = CreateActivityFilter(
       publisher_key,
-      ledger::ExcludeFilter::FILTER_ALL,
+      type::ExcludeFilter::FILTER_ALL,
       false,
-      ledger_->GetReconcileStamp(),
+      ledger_->state()->GetReconcileStamp(),
       true,
       false);
 
   // we need to do this as I can't move server publisher into final function
-  auto status = ledger::PublisherStatus::NOT_VERIFIED;
+  auto status = type::PublisherStatus::NOT_VERIFIED;
   if (server_info) {
     status = server_info->status;
   }
 
-  bool server_excluded = server_info && server_info->excluded;
-
-  ledger::PublisherInfoCallback callbackGetPublishers =
+  ledger::PublisherInfoCallback get_callback =
       std::bind(&Publisher::SaveVisitInternal,
           this,
           status,
-          server_excluded,
           publisher_key,
           visit_data,
           duration,
+          first_visit,
           window_id,
           callback,
           _1,
           _2);
 
-  ledger_->GetActivityInfo(std::move(filter), callbackGetPublishers);
+  auto list_callback = std::bind(&Publisher::OnGetActivityInfo,
+      this,
+      _1,
+      get_callback,
+      filter->id);
+
+  ledger_->database()->GetActivityInfoList(
+      0,
+      2,
+      std::move(filter),
+      list_callback);
 }
 
-void Publisher::SaveVisitInternal(
-    const ledger::PublisherStatus status,
-    bool server_excluded,
-    const std::string& publisher_key,
-    const ledger::VisitData& visit_data,
-    uint64_t duration,
-    uint64_t window_id,
-    const ledger::PublisherInfoCallback callback,
-    ledger::Result result,
-    ledger::PublisherInfoPtr publisher_info) {
-  DCHECK(result != ledger::Result::TOO_MANY_RESULTS);
-  if (result != ledger::Result::LEDGER_OK &&
-      result != ledger::Result::NOT_FOUND) {
-    callback(ledger::Result::LEDGER_ERROR, nullptr);
+void Publisher::OnGetActivityInfo(
+    type::PublisherInfoList list,
+    ledger::PublisherInfoCallback callback,
+    const std::string& publisher_key) {
+  if (list.empty()) {
+    ledger_->database()->GetPublisherInfo(publisher_key, callback);
     return;
   }
 
-  bool is_verified = ledger_->IsPublisherConnectedOrVerified(status);
+  if (list.size() > 1) {
+    callback(type::Result::TOO_MANY_RESULTS, nullptr);
+    return;
+  }
 
-  bool new_visit = false;
+  callback(type::Result::LEDGER_OK, std::move(list[0]));
+}
+
+void Publisher::SaveVisitInternal(
+    const type::PublisherStatus status,
+    const std::string& publisher_key,
+    const type::VisitData& visit_data,
+    const uint64_t duration,
+    const bool first_visit,
+    uint64_t window_id,
+    const ledger::PublisherInfoCallback callback,
+    type::Result result,
+    type::PublisherInfoPtr publisher_info) {
+  DCHECK(result != type::Result::TOO_MANY_RESULTS);
+  if (result != type::Result::LEDGER_OK &&
+      result != type::Result::NOT_FOUND) {
+    BLOG(0, "Visit was not saved " << result);
+    callback(type::Result::LEDGER_ERROR, nullptr);
+    return;
+  }
+
+  bool is_verified = IsConnectedOrVerified(status);
+
+  bool new_publisher = false;
   if (!publisher_info) {
-    new_visit = true;
-    publisher_info = ledger::PublisherInfo::New();
+    new_publisher = true;
+    publisher_info = type::PublisherInfo::New();
     publisher_info->id = publisher_key;
   }
 
   std::string fav_icon = visit_data.favicon_url;
   if (is_verified && !fav_icon.empty()) {
     if (fav_icon.find(".invalid") == std::string::npos) {
-    ledger_->FetchFavIcon(fav_icon,
-                          "https://" + ledger_->GenerateGUID() + ".invalid",
-                          std::bind(&Publisher::onFetchFavIcon,
-                                    this,
-                                    publisher_info->id,
-                                    window_id,
-                                    _1,
-                                    _2));
+    ledger_->ledger_client()->FetchFavIcon(
+        fav_icon,
+        "https://" + base::GenerateGUID() + ".invalid",
+        std::bind(&Publisher::onFetchFavIcon,
+            this,
+            publisher_info->id,
+            window_id,
+            _1,
+            _2));
     } else {
         publisher_info->favicon_url = fav_icon;
     }
   } else {
-    publisher_info->favicon_url = ledger::kClearFavicon;
+    publisher_info->favicon_url = constant::kClearFavicon;
   }
 
   publisher_info->name = visit_data.name;
@@ -265,62 +312,67 @@ void Publisher::SaveVisitInternal(
   publisher_info->url = visit_data.url;
   publisher_info->status = status;
 
-  bool excluded = IsExcluded(
-      publisher_info->id,
-      server_excluded,
-      static_cast<ledger::PUBLISHER_EXCLUDE>(publisher_info->excluded));
+  bool excluded =
+      publisher_info->excluded == type::PublisherExclude::EXCLUDED;
   bool ignore_time = ignoreMinTime(publisher_key);
   if (duration == 0) {
     ignore_time = false;
   }
 
-  ledger::PublisherInfoPtr panel_info = nullptr;
+  type::PublisherInfoPtr panel_info = nullptr;
 
-  if (excluded) {
-    publisher_info->excluded = ledger::PUBLISHER_EXCLUDE::EXCLUDED;
-  }
+  uint64_t min_visit_time = static_cast<uint64_t>(
+      ledger_->state()->GetPublisherMinVisitTime());
 
   // for new visits that are excluded or are not long enough or ac is off
-  bool min_duration_new = duration < getPublisherMinVisitTime() &&
-      !ignore_time;
-  bool min_duration_ok = duration > getPublisherMinVisitTime() || ignore_time;
-  bool verified_new = !ledger_->GetPublisherAllowNonVerified() && !is_verified;
-  bool verified_old = (
-      (!ledger_->GetPublisherAllowNonVerified() && is_verified) ||
-      ledger_->GetPublisherAllowNonVerified());
+  bool allow_non_verified = ledger_->state()->GetPublisherAllowNonVerified();
+  bool min_duration_new = duration < min_visit_time && !ignore_time;
+  bool min_duration_ok = duration > min_visit_time || ignore_time;
+  bool verified_new = !allow_non_verified && !is_verified;
+  bool verified_old = allow_non_verified || is_verified;
 
-  if (new_visit &&
+  if (new_publisher &&
       (excluded ||
-       !ledger_->GetAutoContribute() ||
+       !ledger_->state()->GetAutoContributeEnabled() ||
        min_duration_new ||
        verified_new)) {
     panel_info = publisher_info->Clone();
 
-    ledger_->SetPublisherInfo(std::move(publisher_info));
+    auto callback = std::bind(&Publisher::OnPublisherInfoSaved,
+        this,
+        _1);
+
+    ledger_->database()->SavePublisherInfo(std::move(publisher_info), callback);
   } else if (!excluded &&
-             ledger_->GetAutoContribute() &&
+             ledger_->state()->GetAutoContributeEnabled() &&
              min_duration_ok &&
              verified_old) {
-    publisher_info->visits += 1;
+    if (first_visit) {
+      publisher_info->visits += 1;
+    }
     publisher_info->duration += duration;
     publisher_info->score += concaveScore(duration);
-    publisher_info->reconcile_stamp = ledger_->GetReconcileStamp();
+    publisher_info->reconcile_stamp = ledger_->state()->GetReconcileStamp();
 
     panel_info = publisher_info->Clone();
 
-    ledger_->SetActivityInfo(std::move(publisher_info));
+    auto callback = std::bind(&Publisher::OnPublisherInfoSaved,
+        this,
+        _1);
+
+    ledger_->database()->SaveActivityInfo(std::move(publisher_info), callback);
   }
 
   if (panel_info) {
-    if (panel_info->favicon_url == ledger::kClearFavicon) {
+    if (panel_info->favicon_url == constant::kClearFavicon) {
       panel_info->favicon_url = std::string();
     }
 
     auto callback_info = panel_info->Clone();
-    callback(ledger::Result::LEDGER_OK, std::move(callback_info));
+    callback(type::Result::LEDGER_OK, std::move(callback_info));
 
     if (window_id > 0) {
-      OnPanelPublisherInfo(ledger::Result::LEDGER_OK,
+      OnPanelPublisherInfo(type::Result::LEDGER_OK,
                            std::move(panel_info),
                            window_id,
                            visit_data);
@@ -333,12 +385,11 @@ void Publisher::onFetchFavIcon(const std::string& publisher_key,
                                    bool success,
                                    const std::string& favicon_url) {
   if (!success || favicon_url.empty()) {
-    BLOG(ledger_, ledger::LogLevel::LOG_WARNING) <<
-      "Missing or corrupted favicon file for: " << publisher_key;
+    BLOG(1, "Corrupted favicon file");
     return;
   }
 
-  ledger_->GetPublisherInfo(publisher_key,
+  ledger_->database()->GetPublisherInfo(publisher_key,
       std::bind(&Publisher::onFetchFavIconDBResponse,
                 this,
                 _1,
@@ -348,36 +399,36 @@ void Publisher::onFetchFavIcon(const std::string& publisher_key,
 }
 
 void Publisher::onFetchFavIconDBResponse(
-    ledger::Result result,
-    ledger::PublisherInfoPtr info,
+    type::Result result,
+    type::PublisherInfoPtr info,
     const std::string& favicon_url,
     uint64_t window_id) {
-  if (result == ledger::Result::LEDGER_OK && !favicon_url.empty()) {
-    info->favicon_url = favicon_url;
+  if (result != type::Result::LEDGER_OK || favicon_url.empty()) {
+    BLOG(1, "Missing or corrupted favicon file");
+    return;
+  }
 
-    ledger::PublisherInfoPtr panel_info = info->Clone();
+  info->favicon_url = favicon_url;
 
-    ledger_->SetPublisherInfo(std::move(info));
+  auto callback = std::bind(&Publisher::OnPublisherInfoSaved,
+      this,
+      _1);
 
-    if (window_id > 0) {
-      ledger::VisitData visit_data;
-      OnPanelPublisherInfo(ledger::Result::LEDGER_OK,
-                          std::move(panel_info),
-                          window_id,
-                          visit_data);
-    }
-  } else {
-    BLOG(ledger_, ledger::LogLevel::LOG_WARNING) <<
-      "Missing or corrupted favicon file";
+  ledger_->database()->SavePublisherInfo(info->Clone(), callback);
+
+  if (window_id > 0) {
+    type::VisitData visit_data;
+    OnPanelPublisherInfo(type::Result::LEDGER_OK,
+                        std::move(info),
+                        window_id,
+                        visit_data);
   }
 }
 
-void Publisher::OnPublisherInfoSaved(
-    ledger::Result result,
-    ledger::PublisherInfoPtr info) {
-  if (result != ledger::Result::LEDGER_OK || !info) {
-    BLOG(ledger_, ledger::LogLevel::LOG_ERROR) <<
-      "Publisher info was not saved!";
+void Publisher::OnPublisherInfoSaved(const type::Result result) {
+  if (result != type::Result::LEDGER_OK) {
+    BLOG(0, "Publisher info was not saved!");
+    return;
   }
 
   SynopsisNormalizer();
@@ -385,137 +436,89 @@ void Publisher::OnPublisherInfoSaved(
 
 void Publisher::SetPublisherExclude(
     const std::string& publisher_id,
-    const ledger::PUBLISHER_EXCLUDE& exclude,
-    ledger::SetPublisherExcludeCallback callback) {
-  ledger_->GetPublisherInfo(
-    publisher_id,
-    std::bind(&Publisher::OnSetPublisherExclude,
-              this,
-              exclude,
-              _1,
-              _2,
-              callback));
+    const type::PublisherExclude& exclude,
+    ledger::ResultCallback callback) {
+  ledger_->database()->GetPublisherInfo(
+      publisher_id,
+      std::bind(&Publisher::OnSetPublisherExclude,
+                this,
+                exclude,
+                _1,
+                _2,
+                callback));
 }
 
 void Publisher::OnSetPublisherExclude(
-    ledger::PUBLISHER_EXCLUDE exclude,
-    ledger::Result result,
-    ledger::PublisherInfoPtr publisher_info,
-    ledger::SetPublisherExcludeCallback callback) {
-  if (result != ledger::Result::LEDGER_OK &&
-      result != ledger::Result::NOT_FOUND) {
+    type::PublisherExclude exclude,
+    type::Result result,
+    type::PublisherInfoPtr publisher_info,
+    ledger::ResultCallback callback) {
+  if (result != type::Result::LEDGER_OK &&
+      result != type::Result::NOT_FOUND) {
+    BLOG(0, "Publisher exclude status not saved");
     callback(result);
     return;
   }
 
-  if (!publisher_info || publisher_info->excluded == exclude) {
-    callback(ledger::Result::LEDGER_ERROR);
+  if (!publisher_info) {
+    BLOG(0, "Publisher is null");
+    callback(type::Result::LEDGER_ERROR);
+    return;
+  }
+
+  if (publisher_info->excluded == exclude) {
+    callback(type::Result::LEDGER_OK);
     return;
   }
 
   publisher_info->excluded = exclude;
-  ledger_->SetPublisherInfo(publisher_info->Clone());
-  if (exclude == ledger::PUBLISHER_EXCLUDE::EXCLUDED) {
-    ledger_->DeleteActivityInfo(
+
+  auto save_callback = std::bind(&Publisher::OnPublisherInfoSaved,
+      this,
+      _1);
+  ledger_->database()->SavePublisherInfo(
+      publisher_info->Clone(),
+      save_callback);
+  if (exclude == type::PublisherExclude::EXCLUDED) {
+    ledger_->database()->DeleteActivityInfo(
       publisher_info->id,
-      [](ledger::Result _){});
+      [](const type::Result _){});
   }
-  callback(ledger::Result::LEDGER_OK);
+  callback(type::Result::LEDGER_OK);
 }
 
 void Publisher::OnRestorePublishers(
-    const ledger::Result result,
-    ledger::RestorePublishersCallback callback) {
-  if (result != ledger::Result::LEDGER_OK) {
-    BLOG(ledger_, ledger::LogLevel::LOG_ERROR)
-    << "Could not restore publishers.";
+    const type::Result result,
+    ledger::ResultCallback callback) {
+  if (result != type::Result::LEDGER_OK) {
+    BLOG(0, "Could not restore publishers.");
     callback(result);
     return;
   }
 
   SynopsisNormalizer();
-  callback(ledger::Result::LEDGER_OK);
-}
-
-// In seconds
-void Publisher::setPublisherMinVisitTime(const uint64_t& duration) {
-  state_->min_publisher_duration_ = duration;
-  calcScoreConsts(duration);
-  SynopsisNormalizer();
-  saveState();
-}
-
-void Publisher::setPublisherMinVisits(const unsigned int visits) {
-  state_->min_visits_ = visits;
-  SynopsisNormalizer();
-  saveState();
-}
-
-void Publisher::setPublisherAllowNonVerified(const bool& allow) {
-  state_->allow_non_verified_ = allow;
-  SynopsisNormalizer();
-  saveState();
-}
-
-void Publisher::setPublisherAllowVideos(const bool& allow) {
-  state_->allow_videos_ = allow;
-  SynopsisNormalizer();
-  saveState();
-}
-
-uint64_t Publisher::getPublisherMinVisitTime() const {
-  return state_->min_publisher_duration_;
-}
-
-unsigned int Publisher::GetPublisherMinVisits() const {
-  return state_->min_visits_;
-}
-
-bool Publisher::getPublisherAllowNonVerified() const {
-  return state_->allow_non_verified_;
-}
-
-bool Publisher::getPublisherAllowVideos() const {
-  return state_->allow_videos_;
-}
-
-bool Publisher::GetMigrateScore() const {
-  return state_->migrate_score_2;
-}
-
-void Publisher::SetMigrateScore(bool value) {
-  state_->migrate_score_2 = value;
-  saveState();
+  callback(type::Result::LEDGER_OK);
 }
 
 void Publisher::NormalizeContributeWinners(
-    ledger::PublisherInfoList* newList,
-    const ledger::PublisherInfoList* list,
+    type::PublisherInfoList* newList,
+    const type::PublisherInfoList* list,
     uint32_t record) {
-
   synopsisNormalizerInternal(newList, list, record);
 }
 
 void Publisher::synopsisNormalizerInternal(
-    ledger::PublisherInfoList* newList,
-    const ledger::PublisherInfoList* list,
+    type::PublisherInfoList* newList,
+    const type::PublisherInfoList* list,
     uint32_t /* next_record */) {
-  if (list->size() == 0) {
+  if (list->empty()) {
+    BLOG(1, "Publisher list is empty");
     return;
   }
 
   double totalScores = 0.0;
   for (size_t i = 0; i < list->size(); i++) {
-    // Check which would test uint problem from this issue
-    // https://github.com/brave/brave-browser/issues/3134
-    if (GetMigrateScore()) {
-      (*list)[i]->score = concaveScore((*list)[i]->duration);
-    }
     totalScores += (*list)[i]->score;
-  }
-
-  if (GetMigrateScore()) {
-    SetMigrateScore(false);
   }
 
   std::vector<unsigned int> percents;
@@ -577,296 +580,128 @@ void Publisher::synopsisNormalizerInternal(
 
 void Publisher::SynopsisNormalizer() {
   auto filter = CreateActivityFilter("",
-      ledger::ExcludeFilter::FILTER_ALL_EXCEPT_EXCLUDED,
+      type::ExcludeFilter::FILTER_ALL_EXCEPT_EXCLUDED,
       true,
-      ledger_->GetReconcileStamp(),
-      ledger_->GetPublisherAllowNonVerified(),
-      ledger_->GetPublisherMinVisits());
-  // TODO(SZ): We pull the whole list currently,
-  // I don't think it consumes lots of RAM, but could.
-  // We need to limit it and iterate.
-  ledger_->GetActivityInfoList(
+      ledger_->state()->GetReconcileStamp(),
+      ledger_->state()->GetPublisherAllowNonVerified(),
+      ledger_->state()->GetPublisherMinVisits());
+  ledger_->database()->GetActivityInfoList(
       0,
       0,
       std::move(filter),
-      std::bind(&Publisher::SynopsisNormalizerCallback, this, _1, _2));
+      std::bind(&Publisher::SynopsisNormalizerCallback, this, _1));
 }
 
 void Publisher::SynopsisNormalizerCallback(
-    ledger::PublisherInfoList list,
-    uint32_t record) {
-  ledger::PublisherInfoList normalized_list;
+    type::PublisherInfoList list) {
+  type::PublisherInfoList normalized_list;
   synopsisNormalizerInternal(&normalized_list, &list, 0);
-  ledger_->SaveNormalizedPublisherList(std::move(normalized_list));
-}
-
-bool Publisher::IsConnectedOrVerified(const ledger::PublisherStatus status) {
-  return status == ledger::PublisherStatus::CONNECTED ||
-         status == ledger::PublisherStatus::VERIFIED;
-}
-
-bool Publisher::IsExcluded(
-    const std::string& publisher_id,
-    const bool server_exclude,
-    const ledger::PUBLISHER_EXCLUDE& excluded) {
-  // If exclude is set to 1, we should avoid further computation and return true
-  if (excluded == ledger::PUBLISHER_EXCLUDE::EXCLUDED) {
-    return true;
+  type::PublisherInfoList save_list;
+  for (auto& item : list) {
+    save_list.push_back(item.Clone());
   }
 
-  if (excluded == ledger::PUBLISHER_EXCLUDE::INCLUDED) {
-    return false;
-  }
-
-  return server_exclude;
+  ledger_->database()->NormalizeActivityInfoList(
+      std::move(save_list),
+      [](const type::Result){});
 }
 
-void Publisher::clearAllBalanceReports() {
-  if (state_->monthly_balances_.empty()) {
-    return;
-  }
-  state_->monthly_balances_.clear();
-  saveState();
+bool Publisher::IsConnectedOrVerified(const type::PublisherStatus status) {
+  return status == type::PublisherStatus::CONNECTED ||
+         status == type::PublisherStatus::VERIFIED;
 }
 
-void Publisher::setBalanceReport(ledger::ACTIVITY_MONTH month,
-                                int year,
-                                const ledger::BalanceReportInfo& report_info) {
-  braveledger_bat_helper::REPORT_BALANCE_ST report_balance;
-  report_balance.opening_balance_ = report_info.opening_balance;
-  report_balance.closing_balance_ = report_info.closing_balance;
-  report_balance.grants_ = report_info.grants;
-  report_balance.deposits_ = report_info.deposits;
-  report_balance.earning_from_ads_ = report_info.earning_from_ads;
-  report_balance.recurring_donation_ = report_info.recurring_donation;
-  report_balance.one_time_donation_ = report_info.one_time_donation;
-  report_balance.auto_contribute_ = report_info.auto_contribute;
-
-  std::string total = "0";
-  total = braveledger_bat_bignum::sum(total, report_balance.grants_);
-  total = braveledger_bat_bignum::sum(total, report_balance.earning_from_ads_);
-  total = braveledger_bat_bignum::sum(total, report_balance.deposits_);
-  total = braveledger_bat_bignum::sub(total, report_balance.auto_contribute_);
-  total = braveledger_bat_bignum::sub(total,
-                                      report_balance.recurring_donation_);
-  total = braveledger_bat_bignum::sub(total, report_balance.one_time_donation_);
-
-  report_balance.total_ = total;
-  state_->monthly_balances_[GetBalanceReportName(month, year)] = report_balance;
-  saveState();
-}
-
-bool Publisher::getBalanceReport(ledger::ACTIVITY_MONTH month,
-                                     int year,
-                                     ledger::BalanceReportInfo* report_info) {
-  std::string name = GetBalanceReportName(month, year);
-  auto iter = state_->monthly_balances_.find(name);
-  if (!report_info) {
-    return false;
-  }
-
-  if (iter == state_->monthly_balances_.end()) {
-    ledger::BalanceReportInfo new_report_info;
-    new_report_info.opening_balance = "0";
-    new_report_info.closing_balance = "0";
-    new_report_info.grants = "0";
-    new_report_info.earning_from_ads = "0";
-    new_report_info.auto_contribute = "0";
-    new_report_info.recurring_donation = "0";
-    new_report_info.one_time_donation = "0";
-    new_report_info.total = "0";
-
-    setBalanceReport(month, year, new_report_info);
-    bool successGet = getBalanceReport(month, year, report_info);
-    if (successGet) {
-      iter = state_->monthly_balances_.find(name);
-    } else {
-      return false;
-    }
-  }
-
-  report_info->opening_balance = iter->second.opening_balance_;
-  report_info->closing_balance = iter->second.closing_balance_;
-  report_info->grants = iter->second.grants_;
-  report_info->earning_from_ads = iter->second.earning_from_ads_;
-  report_info->auto_contribute = iter->second.auto_contribute_;
-  report_info->recurring_donation = iter->second.recurring_donation_;
-  report_info->one_time_donation = iter->second.one_time_donation_;
-
-  return true;
-}
-
-std::map<std::string, ledger::BalanceReportInfoPtr>
-Publisher::GetAllBalanceReports() {
-  std::map<std::string, ledger::BalanceReportInfoPtr> newReports;
-  for (auto const& report : state_->monthly_balances_) {
-    ledger::BalanceReportInfoPtr newReport = ledger::BalanceReportInfo::New();
-    const braveledger_bat_helper::REPORT_BALANCE_ST oldReport = report.second;
-    newReport->opening_balance = oldReport.opening_balance_;
-    newReport->closing_balance = oldReport.closing_balance_;
-    newReport->grants = oldReport.grants_;
-    newReport->earning_from_ads = oldReport.earning_from_ads_;
-    newReport->auto_contribute = oldReport.auto_contribute_;
-    newReport->recurring_donation = oldReport.recurring_donation_;
-    newReport->one_time_donation = oldReport.one_time_donation_;
-
-    newReports[report.first] = std::move(newReport);
-  }
-
-  return newReports;
-}
-
-void Publisher::saveState() {
-  std::string data;
-  braveledger_bat_helper::saveToJsonString(*state_, &data);
-  ledger_->SavePublisherState(data, this);
-}
-
-bool Publisher::loadState(const std::string& data) {
-  braveledger_bat_helper::PUBLISHER_STATE_ST state;
-  if (!braveledger_bat_helper::loadFromJson(&state, data.c_str()))
-    return false;
-
-  state_.reset(new braveledger_bat_helper::PUBLISHER_STATE_ST(state));
-  calcScoreConsts(state_->min_publisher_duration_);
-  return true;
-}
-
-void Publisher::OnPublisherStateSaved(ledger::Result result) {
-  if (result != ledger::Result::LEDGER_OK) {
-    BLOG(ledger_, ledger::LogLevel::LOG_ERROR) <<
-      "Could not save publisher state";
-    // TODO(anyone) error handling
-    return;
-  }
-}
-
-void Publisher::getPublisherActivityFromUrl(
+void Publisher::GetPublisherActivityFromUrl(
     uint64_t windowId,
-    const ledger::VisitData& visit_data,
+    type::VisitDataPtr visit_data,
     const std::string& publisher_blob) {
-  if (!ledger_->GetRewardsMainEnabled()) {
+  if (!visit_data) {
     return;
   }
 
-  const bool is_media = visit_data.domain == YOUTUBE_TLD ||
-                        visit_data.domain == TWITCH_TLD ||
-                        visit_data.domain == TWITTER_TLD ||
-                        visit_data.domain == REDDIT_TLD ||
-                        visit_data.domain == VIMEO_TLD ||
-                        visit_data.domain == GITHUB_TLD;
+  const bool is_media =
+      visit_data->domain == YOUTUBE_TLD ||
+      visit_data->domain == TWITCH_TLD ||
+      visit_data->domain == TWITTER_TLD ||
+      visit_data->domain == REDDIT_TLD ||
+      visit_data->domain == VIMEO_TLD ||
+      visit_data->domain == GITHUB_TLD;
 
-  if (is_media &&
-      visit_data.path != "" && visit_data.path != "/") {
+  if (is_media && visit_data->path != "" && visit_data->path != "/") {
     std::string type = YOUTUBE_MEDIA_TYPE;
-    if (visit_data.domain == TWITCH_TLD) {
+    if (visit_data->domain == TWITCH_TLD) {
       type = TWITCH_MEDIA_TYPE;
-    } else if (visit_data.domain == TWITTER_TLD) {
+    } else if (visit_data->domain == TWITTER_TLD) {
       type = TWITTER_MEDIA_TYPE;
-    } else if (visit_data.domain == REDDIT_TLD) {
+    } else if (visit_data->domain == REDDIT_TLD) {
       type = REDDIT_MEDIA_TYPE;
-    } else if (visit_data.domain == VIMEO_TLD) {
+    } else if (visit_data->domain == VIMEO_TLD) {
       type = VIMEO_MEDIA_TYPE;
-    } else if (visit_data.domain == GITHUB_TLD) {
+    } else if (visit_data->domain == GITHUB_TLD) {
       type = GITHUB_MEDIA_TYPE;
     }
 
-    ledger::VisitDataPtr new_visit_data = ledger::VisitData::New(visit_data);
-
-    if (!new_visit_data->url.empty()) {
-      new_visit_data->url.pop_back();
+    if (!visit_data->url.empty()) {
+      visit_data->url.pop_back();
     }
 
-    new_visit_data->url += new_visit_data->path;
+    visit_data->url += visit_data->path;
 
-    ledger_->GetMediaActivityFromUrl(windowId,
-                                     std::move(new_visit_data),
-                                     type,
-                                     publisher_blob);
+    ledger_->media()->GetMediaActivityFromUrl(
+        windowId,
+        std::move(visit_data),
+        type,
+        publisher_blob);
     return;
   }
 
-  auto filter = CreateActivityFilter(visit_data.domain,
-        ledger::ExcludeFilter::FILTER_ALL,
-        false,
-        ledger_->GetReconcileStamp(),
-        true,
-        false);
+  auto filter = CreateActivityFilter(
+      visit_data->domain,
+      type::ExcludeFilter::FILTER_ALL,
+      false,
+      ledger_->state()->GetReconcileStamp(),
+      true,
+      false);
 
-  ledger::VisitData new_data;
-  new_data.domain = visit_data.domain;
-  new_data.path = visit_data.path;
-  new_data.name = visit_data.name;
-  new_data.url = visit_data.url;
-  new_data.favicon_url = "";
+  visit_data->favicon_url = "";
 
-  ledger_->GetPanelPublisherInfo(std::move(filter),
-        std::bind(&Publisher::OnPanelPublisherInfo,
-                  this,
-                  _1,
-                  _2,
-                  windowId,
-                  new_data));
+  ledger_->database()->GetPanelPublisherInfo(
+      std::move(filter),
+      std::bind(&Publisher::OnPanelPublisherInfo,
+          this,
+          _1,
+          _2,
+          windowId,
+          *visit_data));
 }
 
 void Publisher::OnSaveVisitInternal(
-    ledger::Result result,
-    ledger::PublisherInfoPtr info) {
+    type::Result result,
+    type::PublisherInfoPtr info) {
   // TODO(nejczdovc): handle if needed
 }
 
 void Publisher::OnPanelPublisherInfo(
-    ledger::Result result,
-    ledger::PublisherInfoPtr info,
+    type::Result result,
+    type::PublisherInfoPtr info,
     uint64_t windowId,
-    const ledger::VisitData& visit_data) {
-  if (result == ledger::Result::LEDGER_OK) {
-    ledger_->OnPanelPublisherInfo(result, std::move(info), windowId);
+    const type::VisitData& visit_data) {
+  if (result == type::Result::LEDGER_OK) {
+    ledger_->ledger_client()->OnPanelPublisherInfo(
+        result,
+        std::move(info),
+        windowId);
+    return;
   }
 
-  if (result == ledger::Result::NOT_FOUND && !visit_data.domain.empty()) {
+  if (result == type::Result::NOT_FOUND && !visit_data.domain.empty()) {
     auto callback = std::bind(&Publisher::OnSaveVisitInternal,
                               this,
                               _1,
                               _2);
 
-    SaveVisit(visit_data.domain, visit_data, 0, windowId, callback);
+    SaveVisit(visit_data.domain, visit_data, 0, true, windowId, callback);
   }
-}
-
-void Publisher::setBalanceReportItem(ledger::ACTIVITY_MONTH month,
-                                         int year,
-                                         ledger::ReportType type,
-                                         const std::string& probi) {
-  ledger::BalanceReportInfo report_info;
-  getBalanceReport(month, year, &report_info);
-
-  switch (type) {
-    case ledger::ReportType::GRANT:
-      report_info.grants =
-          braveledger_bat_bignum::sum(report_info.grants, probi);
-      break;
-    case ledger::ReportType::ADS:
-      report_info.earning_from_ads =
-          braveledger_bat_bignum::sum(report_info.earning_from_ads, probi);
-      break;
-    case ledger::ReportType::AUTO_CONTRIBUTION:
-      report_info.auto_contribute =
-          braveledger_bat_bignum::sum(report_info.auto_contribute, probi);
-      break;
-    case ledger::ReportType::TIP:
-      report_info.one_time_donation =
-          braveledger_bat_bignum::sum(report_info.one_time_donation, probi);
-      break;
-    case ledger::ReportType::TIP_RECURRING:
-      report_info.recurring_donation =
-          braveledger_bat_bignum::sum(report_info.recurring_donation, probi);
-      break;
-    default:
-      break;
-  }
-
-  setBalanceReport(month, year, report_info);
 }
 
 void Publisher::GetPublisherBanner(
@@ -878,14 +713,21 @@ void Publisher::GetPublisherBanner(
                 publisher_key,
                 callback);
 
-  ledger_->GetServerPublisherInfo(publisher_key, banner_callback);
+  // NOTE: We do not attempt to search the prefix list before getting
+  // the publisher data because if the prefix list was not properly
+  // loaded then the user would not see the correct banner information
+  // for a verified publisher. Assuming that the user has explicitly
+  // requested this information by interacting with the UI, we should
+  // make a best effort to return correct and updated information even
+  // if the prefix list is incorrect.
+  GetServerPublisherInfo(publisher_key, banner_callback);
 }
 
 void Publisher::OnGetPublisherBanner(
-    ledger::ServerPublisherInfoPtr info,
+    type::ServerPublisherInfoPtr info,
     const std::string& publisher_key,
     ledger::PublisherBannerCallback callback) {
-  auto banner = ledger::PublisherBanner::New();
+  auto banner = type::PublisherBanner::New();
 
   if (info) {
     if (info->banner) {
@@ -905,17 +747,18 @@ void Publisher::OnGetPublisherBanner(
                 _1,
                 _2);
 
-  ledger_->GetPublisherInfo(publisher_key, publisher_callback);
+  ledger_->database()->GetPublisherInfo(publisher_key, publisher_callback);
 }
 
 void Publisher::OnGetPublisherBannerPublisher(
     ledger::PublisherBannerCallback callback,
-    const ledger::PublisherBanner& banner,
-    ledger::Result result,
-    ledger::PublisherInfoPtr publisher_info) {
-  auto new_banner = ledger::PublisherBanner::New(banner);
+    const type::PublisherBanner& banner,
+    type::Result result,
+    type::PublisherInfoPtr publisher_info) {
+  auto new_banner = type::PublisherBanner::New(banner);
 
-  if (!publisher_info || result != ledger::Result::LEDGER_OK) {
+  if (!publisher_info || result != type::Result::LEDGER_OK) {
+    BLOG(0, "Publisher info not found");
     callback(std::move(new_banner));
     return;
   }
@@ -930,18 +773,206 @@ void Publisher::OnGetPublisherBannerPublisher(
   callback(std::move(new_banner));
 }
 
-void Publisher::SavePublisherProcessed(const std::string& publisher_key) {
-  const std::vector<std::string> list = state_->processed_pending_publishers;
-  if (std::find(list.begin(), list.end(), publisher_key) == list.end()) {
-    state_->processed_pending_publishers.push_back(publisher_key);
+void Publisher::GetServerPublisherInfo(
+    const std::string& publisher_key,
+    client::GetServerPublisherInfoCallback callback) {
+  ledger_->database()->GetServerPublisherInfo(
+      publisher_key,
+      std::bind(&Publisher::OnServerPublisherInfoLoaded,
+          this,
+          _1,
+          publisher_key,
+          callback));
+}
+
+void Publisher::OnServerPublisherInfoLoaded(
+    type::ServerPublisherInfoPtr server_info,
+    const std::string& publisher_key,
+    client::GetServerPublisherInfoCallback callback) {
+  if (ShouldFetchServerPublisherInfo(server_info.get())) {
+    // Store the current server publisher info so that if fetching fails
+    // we can execute the callback with the last known valid data.
+    auto shared_info = std::make_shared<type::ServerPublisherInfoPtr>(
+        std::move(server_info));
+
+    FetchServerPublisherInfo(
+        publisher_key,
+        [shared_info, callback](type::ServerPublisherInfoPtr info) {
+          callback(std::move(info ? info : *shared_info));
+        });
+    return;
   }
-  saveState();
+
+  callback(std::move(server_info));
 }
 
-bool Publisher::WasPublisherAlreadyProcessed(
-    const std::string& publisher_key) const {
-  const std::vector<std::string> list = state_->processed_pending_publishers;
-  return std::find(list.begin(), list.end(), publisher_key) != list.end();
+void Publisher::UpdateMediaDuration(
+    const uint64_t window_id,
+    const std::string& publisher_key,
+    const uint64_t duration,
+    const bool first_visit) {
+  BLOG(1, "Media duration: " << duration);
+  ledger_->database()->GetPublisherInfo(publisher_key,
+      std::bind(&Publisher::OnGetPublisherInfoForUpdateMediaDuration,
+                this,
+                _1,
+                _2,
+                window_id,
+                duration,
+                first_visit));
 }
 
-}  // namespace braveledger_publisher
+void Publisher::OnGetPublisherInfoForUpdateMediaDuration(
+    type::Result result,
+    type::PublisherInfoPtr info,
+    const uint64_t window_id,
+    const uint64_t duration,
+    const bool first_visit) {
+  if (result != type::Result::LEDGER_OK) {
+    BLOG(0, "Failed to retrieve publisher info while updating media duration");
+    return;
+  }
+
+  type::VisitData visit_data;
+  visit_data.name = info->name;
+  visit_data.url = info->url;
+  visit_data.provider = info->provider;
+  visit_data.favicon_url = info->favicon_url;
+
+  SaveVideoVisit(
+      info->id,
+      visit_data,
+      duration,
+      first_visit,
+      0,
+      [](type::Result, type::PublisherInfoPtr) {});
+}
+
+void Publisher::GetPublisherPanelInfo(
+    const std::string& publisher_key,
+    ledger::GetPublisherInfoCallback callback) {
+  auto filter = CreateActivityFilter(
+      publisher_key,
+      type::ExcludeFilter::FILTER_ALL,
+      false,
+      ledger_->state()->GetReconcileStamp(),
+      true,
+      false);
+
+  ledger_->database()->GetPanelPublisherInfo(std::move(filter),
+      std::bind(&Publisher::OnGetPanelPublisherInfo,
+                this,
+                _1,
+                _2,
+                callback));
+}
+
+void Publisher::OnGetPanelPublisherInfo(
+    const type::Result result,
+    type::PublisherInfoPtr info,
+    ledger::GetPublisherInfoCallback callback) {
+  if (result != type::Result::LEDGER_OK) {
+    BLOG(0, "Failed to retrieve panel publisher info");
+    callback(result, nullptr);
+    return;
+  }
+
+  callback(result, std::move(info));
+}
+
+void Publisher::SavePublisherInfo(
+    const uint64_t window_id,
+    type::PublisherInfoPtr publisher_info,
+    ledger::ResultCallback callback) {
+  if (!publisher_info || publisher_info->id.empty()) {
+    BLOG(0, "Publisher key is missing for url");
+    callback(type::Result::LEDGER_ERROR);
+    return;
+  }
+
+  type::VisitData visit_data;
+  visit_data.provider = publisher_info->provider;
+  visit_data.name = publisher_info->name;
+  visit_data.url = publisher_info->url;
+  if (!publisher_info->favicon_url.empty()) {
+    visit_data.favicon_url = publisher_info->favicon_url;
+  }
+
+  auto banner_callback = std::bind(
+      &Publisher::OnGetPublisherBannerForSavePublisherInfo,
+      this,
+      _1,
+      window_id,
+      publisher_info->id,
+      visit_data,
+      callback);
+
+  GetPublisherBanner(publisher_info->id, banner_callback);
+}
+
+void Publisher::OnGetPublisherBannerForSavePublisherInfo(
+    type::PublisherBannerPtr banner,
+    const uint64_t window_id,
+    const std::string& publisher_key,
+    const type::VisitData& visit_data,
+    ledger::ResultCallback callback) {
+  type::VisitData new_visit_data = visit_data;
+
+  if (banner && !banner->logo.empty()) {
+    auto index = banner->logo.find("https://");
+    if (index != std::string::npos) {
+      new_visit_data.favicon_url = std::string(banner->logo, index);
+    }
+  }
+
+  SaveVisit(
+      publisher_key,
+      new_visit_data,
+      0,
+      true,
+      window_id,
+      [callback](auto result, type::PublisherInfoPtr publisher_info) {
+        callback(result);
+      });
+}
+
+// static
+std::string Publisher::GetShareURL(
+    const base::flat_map<std::string, std::string>& args) {
+  auto comment = args.find("comment");
+  auto name = args.find("name");
+  auto tweet_id = args.find("tweet_id");
+  auto hashtag = args.find("hashtag");
+  if (comment == args.end() || name == args.end() || hashtag == args.end()) {
+    return "";
+  }
+
+  // Append hashtag to comment ("%20%23" = percent-escaped space and
+  // number sign)
+  const std::string comment_with_hashtag =
+      comment->second + "%20%23" + hashtag->second;
+
+  // If a tweet ID was specified, then quote the original tweet along
+  // with the supplied comment; otherwise, just tweet the comment.
+  std::string share_url;
+  if (tweet_id != args.end() && !tweet_id->second.empty()) {
+    const std::string quoted_tweet_url =
+        base::StringPrintf(
+            "https://twitter.com/%s/status/%s",
+            name->second.c_str(),
+            tweet_id->second.c_str());
+    share_url = base::StringPrintf(
+        "https://twitter.com/intent/tweet?text=%s&url=%s",
+        comment_with_hashtag.c_str(),
+        quoted_tweet_url.c_str());
+  } else {
+    share_url = base::StringPrintf(
+        "https://twitter.com/intent/tweet?text=%s",
+        comment_with_hashtag.c_str());
+  }
+
+  return share_url;
+}
+
+}  // namespace publisher
+}  // namespace ledger

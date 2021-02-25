@@ -11,6 +11,7 @@
 #include "base/auto_reset.h"
 #include "base/strings/string16.h"
 #include "brave/app/vector_icons/vector_icons.h"
+#include "chrome/browser/themes/theme_properties.h"
 #include "chrome/browser/ui/views/download/download_shelf_view.h"
 #include "components/strings/grit/components_strings.h"
 #include "components/vector_icons/vector_icons.h"
@@ -18,16 +19,29 @@
 #include "third_party/skia/include/core/SkColor.h"
 #include "ui/base/l10n/l10n_util.h"
 #include "ui/base/resource/resource_bundle.h"
+#include "ui/base/theme_provider.h"
 #include "ui/gfx/canvas.h"
 #include "ui/gfx/image/image.h"
 #include "ui/gfx/paint_vector_icon.h"
 #include "ui/gfx/text_elider.h"
 #include "ui/gfx/text_utils.h"
 #include "ui/views/controls/label.h"
+#include "ui/views/controls/styled_label.h"
 
 using download::DownloadItem;
 
 namespace {
+
+constexpr int kTextWidth = 140;
+
+// Padding before the icon and at end of the item.
+constexpr int kStartPadding = 12;
+
+// Horizontal padding between progress indicator and filename/status text.
+constexpr int kProgressTextPadding = 8;
+
+// Size of the space used for the progress indicator.
+constexpr int kProgressIndicatorSize = 25;
 
 // The minimum vertical padding above and below contents of the download item.
 constexpr int kMinimumVerticalPadding = 6;
@@ -48,7 +62,7 @@ BraveDownloadItemView::BraveDownloadItemView(
     DownloadShelfView* parent,
     views::View* accessible_alert)
     : DownloadItemView(std::move(download), parent, accessible_alert),
-      brave_model_(*model_),
+      brave_model_(model_.get()),
       is_origin_url_secure_(false) {
   // Prepare origin url font.
   ui::ResourceBundle& rb = ui::ResourceBundle::GetSharedInstance();
@@ -64,6 +78,7 @@ void BraveDownloadItemView::Layout() {
   DownloadItemView::Layout();
   // Adjust the position of the status text label.
   if (!IsShowingWarningDialog()) {
+    file_name_label_->SetY(GetYForFilenameText());
     status_label_->SetY(GetYForStatusText());
   }
 }
@@ -72,12 +87,13 @@ gfx::Size BraveDownloadItemView::CalculatePreferredSize() const {
   // Call base class to get the width.
   gfx::Size size = DownloadItemView::CalculatePreferredSize();
   // Calculate the height accounting for the extra line.
-  int child_height = font_list_.GetHeight() + kBraveVerticalTextPadding +
+  int child_height = file_name_label_->GetLineHeight() +
+                     kBraveVerticalTextPadding +
                      origin_url_font_list_.GetHeight() +
-                     kBraveVerticalTextPadding + status_font_list_.GetHeight();
+                     kBraveVerticalTextPadding + status_label_->GetLineHeight();
   if (IsShowingWarningDialog()) {
-    child_height =
-        std::max({child_height, GetButtonSize().height(), kWarningIconSize});
+    child_height = std::max(
+        {child_height, GetButtonSize().height(), GetIcon().Size().width()});
   }
   size.set_height(
       std::max(kDefaultHeight, 2 * kMinimumVerticalPadding + child_height));
@@ -110,7 +126,7 @@ void BraveDownloadItemView::OnDownloadUpdated() {
     bool needs_repaint = false;
     bool new_is_secure = false;
     base::string16 new_origin_url =
-        brave_model_.GetOriginURLText(new_is_secure);
+        brave_model_.GetOriginURLText(&new_is_secure);
     if (new_origin_url != origin_url_text_ ||
       new_is_secure != is_origin_url_secure_) {
       origin_url_text_ = new_origin_url;
@@ -127,8 +143,7 @@ void BraveDownloadItemView::OnDownloadUpdated() {
   }
 
   // Update tooltip.
-  base::string16 new_tip =
-      brave_model_.GetTooltipText(font_list_, kTooltipMaxWidth);
+  base::string16 new_tip = brave_model_.GetTooltipText();
   if (new_tip != tooltip_text_) {
     tooltip_text_ = new_tip;
     TooltipTextChanged();
@@ -138,18 +153,18 @@ void BraveDownloadItemView::OnDownloadUpdated() {
 // Positioning routines.
 
 int BraveDownloadItemView::GetYForFilenameText() const {
-  int text_height = font_list_.GetHeight();
+  int text_height = file_name_label_->GetLineHeight();
   if (!origin_url_text_.empty())
     text_height +=
         kBraveVerticalTextPadding + origin_url_font_list_.GetHeight();
-  if (!status_text_.empty())
-    text_height += kBraveVerticalTextPadding + status_font_list_.GetHeight();
+  if (status_label_ && !status_label_->GetText().empty())
+    text_height += kBraveVerticalTextPadding + status_label_->GetLineHeight();
   return (height() - text_height) / 2;
 }
 
 int BraveDownloadItemView::GetYForOriginURLText() const {
   int y = GetYForFilenameText();
-  y += (font_list_.GetHeight() + kBraveVerticalTextPadding);
+  y += (file_name_label_->GetLineHeight() + kBraveVerticalTextPadding);
   return y;
 }
 
@@ -166,8 +181,7 @@ void BraveDownloadItemView::DrawOriginURL(gfx::Canvas* canvas) {
   if (origin_url_text_.empty() || IsShowingWarningDialog())
     return;
 
-  int x = kStartPadding + DownloadShelf::kProgressIndicatorSize +
-          kProgressTextPadding;
+  int x = kStartPadding + kProgressIndicatorSize + kProgressTextPadding;
   int text_width = kTextWidth;
 
   if (!is_origin_url_secure_) {
@@ -181,7 +195,8 @@ void BraveDownloadItemView::DrawOriginURL(gfx::Canvas* canvas) {
       origin_url_text_, origin_url_font_list_, text_width, gfx::ELIDE_TAIL);
   int mirrored_x = GetMirroredXWithWidthInView(x, text_width);
 
-  SkColor dimmed_text_color = SkColorSetA(GetTextColor(), 0xC7);
+  SkColor dimmed_text_color = SkColorSetA(
+      GetThemeProvider()->GetColor(ThemeProperties::COLOR_BOOKMARK_TEXT), 0xC7);
   canvas->DrawStringRect(
       originURL, origin_url_font_list_, dimmed_text_color,
       gfx::Rect(mirrored_x, GetYForOriginURLText(), text_width,
@@ -193,8 +208,7 @@ void BraveDownloadItemView::DrawLockIcon(gfx::Canvas* canvas) {
     return;
 
   int mirrored_x = GetMirroredXWithWidthInView(
-      kStartPadding + DownloadShelf::kProgressIndicatorSize +
-          kProgressTextPadding,
+      kStartPadding + kProgressIndicatorSize + kProgressTextPadding,
       kTextWidth);
 
   // Get lock icon of the needed height.
@@ -210,8 +224,8 @@ gfx::ImageSkia BraveDownloadItemView::GetLockIcon(int height) {
 }
 
 // Update accessible name with origin URL.
-void BraveDownloadItemView::UpdateAccessibleName() {
-  DownloadItemView::UpdateAccessibleName();
+void BraveDownloadItemView::UpdateMode(Mode mode) {
+  DownloadItemView::UpdateMode(mode);
   if (IsShowingWarningDialog())
     return;
 
@@ -221,7 +235,6 @@ void BraveDownloadItemView::UpdateAccessibleName() {
       extra += base::char16(' ')
                    + l10n_util::GetStringUTF16(IDS_NOT_SECURE_VERBOSE_STATE);
     extra += base::char16(' ') + origin_url_text_;
-
     accessible_name_ += extra;
   }
 }

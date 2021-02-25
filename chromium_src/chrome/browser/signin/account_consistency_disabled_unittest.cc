@@ -10,7 +10,7 @@
 #include "base/test/scoped_feature_list.h"
 #include "build/buildflag.h"
 #include "chrome/browser/prefs/browser_prefs.h"
-#include "chrome/browser/signin/scoped_account_consistency.h"
+#include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/supervised_user/supervised_user_constants.h"
 #include "chrome/test/base/testing_profile.h"
 #include "components/prefs/pref_notifier_impl.h"
@@ -20,13 +20,13 @@
 #include "components/signin/public/base/signin_pref_names.h"
 #include "components/sync_preferences/testing_pref_service_syncable.h"
 #include "content/public/common/content_features.h"
-#include "content/public/test/test_browser_thread_bundle.h"
+#include "content/public/test/browser_task_environment.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
 #if BUILDFLAG(ENABLE_DICE_SUPPORT)
 // Checks that new profiles are migrated at creation.
 TEST(AccountConsistencyDisabledTest, NewProfile) {
-  content::TestBrowserThreadBundle test_thread_bundle;
+  content::BrowserTaskEnvironment task_environment;
   // kSignInProcessIsolation used to be needed here but it has since been
   // turned on to 100% of the user base and is no longer needed.
   // See 36417aa39a5e8484b23f1ec927bfda23465f4f21
@@ -39,31 +39,36 @@ TEST(AccountConsistencyDisabledTest, NewProfile) {
 
     std::unique_ptr<sync_preferences::TestingPrefServiceSyncable> pref_service =
         std::make_unique<sync_preferences::TestingPrefServiceSyncable>(
-            new TestingPrefStore(), new TestingPrefStore(), user_prefs,
-            new TestingPrefStore(), new user_prefs::PrefRegistrySyncable(),
+            /*managed_prefs=*/new TestingPrefStore(),
+            /*supervised_user_prefs=*/new TestingPrefStore(),
+            /*extension_prefs=*/new TestingPrefStore(),
+            user_prefs,
+            /*recommended_prefs=*/new TestingPrefStore(),
+            new user_prefs::PrefRegistrySyncable(),
             new PrefNotifierImpl());
     RegisterUserProfilePrefs(pref_service->registry());
     profile_builder.SetPrefService(std::move(pref_service));
   }
   std::unique_ptr<TestingProfile> profile = profile_builder.Build();
   ASSERT_TRUE(profile->IsNewProfile());
-  EXPECT_FALSE(AccountConsistencyModeManager::IsDiceEnabledForProfile(
+  EXPECT_TRUE(AccountConsistencyModeManager::IsDiceEnabledForProfile(
         profile.get()));
 }
 
 TEST(AccountConsistencyDisabledTest, DiceFixAuthErrorsForAllProfiles) {
-  content::TestBrowserThreadBundle test_thread_bundle;
+  content::BrowserTaskEnvironment task_environment;
 
   {
     // Regular profile.
     TestingProfile profile;
-    EXPECT_FALSE(
+    EXPECT_TRUE(
         AccountConsistencyModeManager::IsDiceEnabledForProfile(&profile));
-    EXPECT_EQ(signin::AccountConsistencyMethod::kDisabled,
+    EXPECT_EQ(signin::AccountConsistencyMethod::kDice,
               AccountConsistencyModeManager::GetMethodForProfile(&profile));
 
     // Incognito profile.
-    Profile* incognito_profile = profile.GetOffTheRecordProfile();
+    Profile* incognito_profile = profile.GetOffTheRecordProfile(
+        Profile::OTRProfileID::PrimaryID());
     EXPECT_FALSE(AccountConsistencyModeManager::IsDiceEnabledForProfile(
         incognito_profile));
     EXPECT_FALSE(

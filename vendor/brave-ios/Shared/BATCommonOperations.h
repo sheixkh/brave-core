@@ -7,15 +7,19 @@
 #import <string>
 #import <map>
 
+#import "base/containers/flat_map.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 /// A standard network completion block. Matches the native-ads/native-rewards signature, but
 /// each library uses their own typedef from their namespaces
-typedef void (^BATNetworkCompletionBlock)(int statusCode,
+typedef void (^BATNetworkCompletionBlock)(const std::string& errorDescription,
+                                          int statusCode,
                                           const std::string& response,
-                                          const std::map<std::string, std::string>& headers);
+                                          const base::flat_map<std::string, std::string>& headers);
 
 /// A set of common operations that accept and return C++ types
+OBJC_EXPORT
 @interface BATCommonOperations : NSObject
 
 - (instancetype)initWithStoragePath:(nullable NSString *)storagePath NS_DESIGNATED_INITIALIZER;
@@ -25,16 +29,9 @@ typedef void (^BATNetworkCompletionBlock)(int statusCode,
 /// Generates a UUID using NSUUID
 - (const std::string)generateUUID;
 
-#pragma mark - Timers
-
-/// Creates a timer that will fire after `offset`. When the timer fires `timerFired` is executed with the timer ID
-/// returned
-- (uint32_t)createTimerWithOffset:(uint64_t)offset timerFired:(void (^)(uint32_t))timerFired;
-
-/// Invalidates and removes the timer with the given timer ID
-- (void)removeTimerWithID:(uint32_t)timerID;
-
 #pragma mark - Network
+
+@property (nonatomic, copy, nullable) NSString *customUserAgent;
 
 /// Loads a URL request
 - (void)loadURLRequest:(const std::string&)url

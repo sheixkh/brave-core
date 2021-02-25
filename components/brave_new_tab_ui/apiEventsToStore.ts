@@ -6,10 +6,12 @@
 import getActions from './api/getActions'
 import * as preferencesAPI from './api/preferences'
 import * as statsAPI from './api/stats'
+import * as topSitesAPI from './api/topSites'
 import * as privateTabDataAPI from './api/privateTabData'
-import getInitialData from './api/initialData'
+import * as torTabDataAPI from './api/torTabData'
+import { getInitialData, getRewardsInitialData, getRewardsPreInitialData } from './api/initialData'
 
-async function updatePreferences (prefData: preferencesAPI.Preferences) {
+async function updatePreferences (prefData: NewTab.Preferences) {
   getActions().preferencesUpdated(prefData)
 }
 
@@ -21,19 +23,98 @@ async function updatePrivateTabData (data: privateTabDataAPI.PrivateTabData) {
   getActions().privateTabDataUpdated(data)
 }
 
+async function updateTorTabData (data: torTabDataAPI.TorTabData) {
+  getActions().torTabDataUpdated(data)
+}
+
+function onRewardsToggled (prefData: NewTab.Preferences): void {
+  if (prefData.showRewards) {
+    rewardsInitData()
+  }
+}
+
+async function onMostVisitedInfoChanged (topSites: topSitesAPI.MostVisitedInfoChanged) {
+  getActions().tilesUpdated(topSites.tiles)
+  getActions().topSitesStateUpdated(topSites.visible, topSites.custom_links_enabled)
+}
+
 // Not marked as async so we don't return a promise
 // and confuse callers
-export default function wireApiEventsToStore () {
+export function wireApiEventsToStore () {
   // Get initial data and dispatch to store
   getInitialData()
   .then((initialData) => {
+    if (initialData.preferences.showRewards) {
+      rewardsInitData()
+    }
     getActions().setInitialData(initialData)
+    if (initialData.preferences.showToday) {
+      getActions().today.todayInit()
+    }
     // Listen for API changes and dispatch to store
+    topSitesAPI.addMostVistedInfoChangedListener(onMostVisitedInfoChanged)
+    topSitesAPI.updateMostVisitedInfo()
     statsAPI.addChangeListener(updateStats)
     preferencesAPI.addChangeListener(updatePreferences)
+    preferencesAPI.addChangeListener(onRewardsToggled)
     privateTabDataAPI.addChangeListener(updatePrivateTabData)
+    torTabDataAPI.addChangeListener(updateTorTabData)
   })
   .catch(e => {
     console.error('New Tab Page fatal error:', e)
   })
 }
+
+export function rewardsInitData () {
+  getRewardsPreInitialData()
+  .then((preInitialRewardsData) => {
+    getActions().setPreInitialRewardsData(preInitialRewardsData)
+    fetchRewardsData()
+    setRewardsFetchInterval()
+  })
+  .catch(e => {
+    console.error('Error fetching pre-initial rewards data: ', e)
+  })
+}
+
+function setRewardsFetchInterval () {
+  window.setInterval(() => {
+    fetchRewardsData()
+  }, 30000)
+}
+
+function fetchRewardsData () {
+  chrome.braveRewards.isInitialized((initialized: boolean) => {
+    if (!initialized) {
+      return
+    }
+
+    getRewardsInitialData()
+    .then((initialRewardsData) => {
+      getActions().setInitialRewardsData(initialRewardsData)
+    })
+    .catch(e => {
+      console.error('Error fetching initial rewards data: ', e)
+    })
+  })
+}
+
+chrome.braveRewards.initialized.addListener((result: any | NewTab.RewardsResult) => {
+  rewardsInitData()
+})
+
+chrome.braveRewards.onAdsEnabled.addListener((enabled: boolean) => {
+  getActions().onAdsEnabled(enabled)
+})
+
+chrome.braveRewards.onPromotions.addListener((result: number, promotions: NewTab.Promotion[]) => {
+  getActions().onPromotions(result, promotions)
+})
+
+chrome.braveRewards.onPromotionFinish.addListener((result: number, promotion: NewTab.Promotion) => {
+  getActions().onPromotionFinish(result, promotion)
+})
+
+chrome.braveRewards.onCompleteReset.addListener((properties: { success: boolean }) => {
+  getActions().onCompleteReset(properties.success)
+})

@@ -39,6 +39,7 @@ const details: ShieldDetails = {
   javascript: 'block',
   trackers: 'block',
   ads: 'block',
+  cosmeticFiltering: 'block_third_party',
   fingerprinting: 'block',
   cookies: 'block'
 }
@@ -59,6 +60,10 @@ const tab: chrome.tabs.Tab = {
 const state: State = deepFreeze({
   persistentData: {
     isFirstAccess: true
+  },
+  settingsData: {
+    showAdvancedView: false,
+    statsBadgeVisible: true
   },
   tabs: {
     2: {
@@ -539,7 +544,7 @@ describe('braveShieldsPanelReducer', () => {
       let nextState = shieldsPanelReducer(state, {
         type: types.RESOURCE_BLOCKED,
         details: {
-          blockType: 'ads',
+          blockType: 'shieldsAds',
           tabId: 2,
           subresource: 'https://test.brave.com'
         }
@@ -559,7 +564,7 @@ describe('braveShieldsPanelReducer', () => {
       nextState = shieldsPanelReducer(nextState, {
         type: types.RESOURCE_BLOCKED,
         details: {
-          blockType: 'ads',
+          blockType: 'shieldsAds',
           tabId: 2,
           subresource: 'https://test2.brave.com'
         }
@@ -584,7 +589,7 @@ describe('braveShieldsPanelReducer', () => {
       let nextState = shieldsPanelReducer(state, {
         type: types.RESOURCE_BLOCKED,
         details: {
-          blockType: 'ads',
+          blockType: 'shieldsAds',
           tabId: tabId,
           subresource: 'https://test.brave.com'
         }
@@ -596,7 +601,7 @@ describe('braveShieldsPanelReducer', () => {
       nextState = shieldsPanelReducer(nextState, {
         type: types.RESOURCE_BLOCKED,
         details: {
-          blockType: 'ads',
+          blockType: 'shieldsAds',
           tabId: tabId,
           subresource: 'https://test2.brave.com'
         }
@@ -611,7 +616,7 @@ describe('braveShieldsPanelReducer', () => {
       nextState = shieldsPanelReducer(nextState, {
         type: types.RESOURCE_BLOCKED,
         details: {
-          blockType: 'ads',
+          blockType: 'shieldsAds',
           tabId: tabId,
           subresource: 'https://test2.brave.com'
         }
@@ -627,7 +632,7 @@ describe('braveShieldsPanelReducer', () => {
       let nextState = deepFreeze(shieldsPanelReducer(state, {
         type: types.RESOURCE_BLOCKED,
         details: {
-          blockType: 'ads',
+          blockType: 'shieldsAds',
           tabId: 2,
           subresource: 'https://test.brave.com'
         }
@@ -649,7 +654,7 @@ describe('braveShieldsPanelReducer', () => {
       nextState = shieldsPanelReducer(nextState, {
         type: types.RESOURCE_BLOCKED,
         details: {
-          blockType: 'ads',
+          blockType: 'shieldsAds',
           tabId: 3,
           subresource: 'https://test.brave.com'
         }
@@ -683,7 +688,7 @@ describe('braveShieldsPanelReducer', () => {
       let nextState = deepFreeze(shieldsPanelReducer(state, {
         type: types.RESOURCE_BLOCKED,
         details: {
-          blockType: 'ads',
+          blockType: 'shieldsAds',
           tabId: 2,
           subresource: 'https://test.brave.com'
         }
@@ -823,7 +828,7 @@ describe('braveShieldsPanelReducer', () => {
       expect(
         shieldsPanelReducer(state, {
           type: types.BLOCK_ADS_TRACKERS,
-          setting: 'allow'
+          setting: 'block'
         })).toEqual(state)
       expect(setAllowAdsSpy).toBeCalledWith(origin, 'block')
       expect(setAllowTrackersSpy).toBeCalledWith(origin, 'block')

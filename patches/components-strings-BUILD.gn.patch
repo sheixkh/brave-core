@@ -1,13 +1,21 @@
 diff --git a/components/strings/BUILD.gn b/components/strings/BUILD.gn
-index 0317fd69c368022e584ff6e63201a35beeaf7464..ac221fa7a55018ad9196953de934330bd5658c1b 100644
+index 776127ec45451450394ec6e39e555048fa0e6ee6..922142b79555f9083a67d35a652920ba8a2e90a4 100644
 --- a/components/strings/BUILD.gn
 +++ b/components/strings/BUILD.gn
-@@ -106,7 +106,7 @@ if (is_android) {
+@@ -45,6 +45,7 @@ grit("components_strings") {
+   if (is_android) {
+     outputs += android_components_strings_java_resources
+   }
++  deps = [ "//brave/components/resources:strings" ]
  }
  
- grit("components_chromium_strings") {
+ if (is_android) {
+@@ -62,7 +63,7 @@ grit("components_chromium_strings") {
+   # on desktop linux when this is run under Python3. Fix this.
+   run_under_python2 = true
+ 
 -  source = "../components_chromium_strings.grd"
 +  source = "../components_${branding_path_component}_strings.grd"
-   outputs = [
-     "grit/components_chromium_strings.h",
-   ]
+   outputs = [ "grit/components_chromium_strings.h" ]
+   foreach(locale, locales_with_fake_bidi) {
+     outputs += [ "components_chromium_strings_$locale.pak" ]

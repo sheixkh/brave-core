@@ -13,7 +13,7 @@ bool BraveShouldThemifyFaviconForUrl(const GURL& url);
 }  // namespace
 
 #define ShouldThemifyFaviconForUrl ShouldThemifyFaviconForUrl_ChromiumImpl
-#include "../../../../../../chrome/browser/ui/views/tabs/tab_icon.cc"  // NOLINT
+#include "../../../../../../../chrome/browser/ui/views/tabs/tab_icon.cc"
 #undef ShouldThemifyFaviconForUrl
 
 namespace {
@@ -23,7 +23,7 @@ namespace {
 bool BraveShouldThemifyFaviconForUrl(const GURL& url) {
   if (url.SchemeIs(content::kChromeUIScheme) &&
       (url.host_piece() == kWelcomeHost ||
-       url.host_piece() == kRewardsHost))
+       url.host_piece() == kRewardsPageHost))
     return false;
 
   return ShouldThemifyFaviconForUrl_ChromiumImpl(url);

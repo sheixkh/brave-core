@@ -13,126 +13,54 @@
 #include "base/macros.h"
 #include "base/values.h"
 
+class PrefRegistrySimple;
 class PrefService;
-class Profile;
 
 namespace base {
 class Time;
 }
 
-namespace user_prefs {
-class PrefRegistrySyncable;
-}
-
 namespace brave_sync {
-
-class Settings;
-class SyncDevices;
-
-namespace prefs {
-
-// String of device id. Supposed to be an integer
-extern const char kSyncDeviceId[];
-// String of 32 comma separated bytes
-// like "145,58,125,111,85,164,236,38,204,67,40,31,182,114,14,152,242,..."
-extern const char kSyncSeed[];
-// For storing previous seed after reset. It won't be cleared by Clear()
-extern const char kSyncPrevSeed[];
-// String of current device namefor sync
-extern const char kSyncDeviceName[];
-// The initial bookmarks order, in a format of
-// "<1(desktop)|2(mobile)>.<device_id>.">
-extern const char kSyncBookmarksBaseOrder[];
-// Boolean, whether sync is enabled for the current device
-// If true, then sync is enabled and running
-// If false, then sync is not enabled or not running (disabled after enabling,
-// but seed and device id are configured)
-extern const char kSyncEnabled[];
-extern const char kSyncBookmarksEnabled[];
-extern const char kSyncSiteSettingsEnabled[];
-extern const char kSyncHistoryEnabled[];
-// The latest time of synced bookmark record, field 'syncTimestamp'
-extern const char kSyncLatestRecordTime[];
-// The latest time of synced device record
-extern const char kSyncLatestDeviceRecordTime[];
-// The time of latest fetch records operation
-extern const char kSyncLastFetchTime[];
-// the list of all known sync devices
-// TODO(bridiver) - this should be a dictionary - not raw json
-extern const char kSyncDeviceList[];
-// the sync api version from the server
-extern const char kSyncApiVersion[];
-// The version of bookmarks state: 0,1,... .
-// Current to migrate to is 1.
-extern const char kSyncMigrateBookmarksVersion[];
-// Cached object_id list for unconfirmed records
-extern const char kSyncRecordsToResend[];
-// Meta info of kSyncRecordsToResend
-extern const char kSyncRecordsToResendMeta[];
 
 class Prefs {
  public:
   explicit Prefs(PrefService* pref_service);
+  virtual ~Prefs();
 
-  static void RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry);
+  static void RegisterProfilePrefs(PrefRegistrySimple* registry);
+
+  static std::string GetSeedPath();
 
   std::string GetSeed() const;
-  void SetSeed(const std::string& seed);
-  std::string GetPrevSeed() const;
-  void SetPrevSeed(const std::string& seed);
-  std::string GetThisDeviceId() const;
-  void SetThisDeviceId(const std::string& device_id);
-  std::string GetThisDeviceName() const;
-  void SetThisDeviceName(const std::string& device_name);
-  std::string GetBookmarksBaseOrder();
-  void SetBookmarksBaseOrder(const std::string& order);
+  bool SetSeed(const std::string& seed);
 
-  bool GetSyncEnabled() const;
-  void SetSyncEnabled(const bool sync_this_device);
-  bool GetSyncBookmarksEnabled() const;
-  void SetSyncBookmarksEnabled(const bool sync_bookmarks_enabled);
-  bool GetSyncSiteSettingsEnabled() const;
-  void SetSyncSiteSettingsEnabled(const bool sync_site_settings);
-  bool GetSyncHistoryEnabled() const;
-  void SetSyncHistoryEnabled(const bool sync_history_enabled);
+  bool IsSyncV1Migrated() const;
+  void SetSyncV1Migrated(bool is_migrated);
 
-  void SetLatestRecordTime(const base::Time &time);
-  base::Time GetLatestRecordTime();
-  void SetLatestDeviceRecordTime(const base::Time& time);
-  base::Time GetLatestDeviceRecordTime();
-  void SetLastFetchTime(const base::Time &time);
-  base::Time GetLastFetchTime();
+  bool IsSyncV1MetaInfoCleared() const;
+  void SetSyncV1MetaInfoCleared(bool is_cleared);
 
-  std::unique_ptr<SyncDevices> GetSyncDevices();
-  void SetSyncDevices(const SyncDevices& sync_devices);
+  // It is only used to read whether sync v1 was enabled before upgrading
+  bool IsSyncV1Enabled() const;
+#if defined(OS_ANDROID)
+  // Used for android clients to pretend sync v1 was enabled through the prefs.
+  // Originally Android used shared preferences
+  void SetSyncV1WasEnabled() const;
+#endif
 
-  std::string GetApiVersion();
-  void SetApiVersion(const std::string& api_version);
-
-  std::unique_ptr<Settings> GetBraveSyncSettings() const;
-
-  int GetMigratedBookmarksVersion();
-  void SetMigratedBookmarksVersion(const int);
-
-  std::vector<std::string> GetRecordsToResend() const;
-  void AddToRecordsToResend(const std::string& object_id,
-                            std::unique_ptr<base::DictionaryValue> meta);
-  void RemoveFromRecordsToResend(const std::string& object_id);
-  const base::DictionaryValue* GetRecordToResendMeta(
-      const std::string& object_id) const;
-  void SetRecordToResendMeta(const std::string& object_id,
-                             std::unique_ptr<base::DictionaryValue> meta);
+  bool IsSyncMigrateNoticeDismissed() const;
+  void SetDismissSyncMigrateNotice(bool is_dismissed);
 
   void Clear();
 
  private:
-  // May be null.
-  PrefService* pref_service_;
+  PrefService* const pref_service_;
 
   DISALLOW_COPY_AND_ASSIGN(Prefs);
 };
 
-}  // namespace prefs
+void MigrateBraveSyncPrefs(PrefService* prefs);
+
 }  // namespace brave_sync
 
 #endif  // BRAVE_COMPONENTS_BRAVE_SYNC_BRAVE_SYNC_PREFS_H_

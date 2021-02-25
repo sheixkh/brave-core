@@ -3,7 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import * as bluebird from 'bluebird'
-global.Promise = bluebird
+
+import './background/greaselion'
+import './background/today'
+
+// workaround https://github.com/DefinitelyTyped/DefinitelyTyped/issues/42084
+global.Promise = bluebird as any
 
 function promisifier (method: any) {
   // return a function

@@ -8,6 +8,10 @@
 Polymer({
   is: 'settings-brave-personalization-options',
 
+  behaviors: [
+    WebUIListenerBehavior,
+  ],
+
   properties: {
     webRTCPolicies_: {
       readOnly: true,
@@ -23,6 +27,7 @@ Polymer({
     },
 
     webRTCPolicy_: String,
+    p3aEnabled_: Boolean
   },
 
   /** @private {?settings.BravePrivacyBrowserProxy} */
@@ -35,24 +40,29 @@ Polymer({
 
   /** @override */
   ready: function() {
-    this.onWebRTCPolicyChange_ = this.onWebRTCPolicyChange_.bind(this)
-    this.browserProxy_.getWebRTCPolicy().then(policy => {
-      this.webRTCPolicy_ = policy;
+    // Used for first time initialization of checked state.
+    // Can't use `prefs` property of `settings-toggle-button`
+    // because p3a enabled is a local state setting.
+    this.browserProxy_.getP3AEnabled().then(enabled => {
+      this.p3aEnabled_ = enabled;
     });
+    this.addWebUIListener('p3a-enabled-changed', (enabled) => {
+      this.p3aEnabled_ = enabled
+    })
   },
 
-  /**
-   * @param {string} policy1
-   * @param {string} policy2
-   * @return {boolean}
-   * @private
-   */
-  webRTCPolicyEqual_: function(policy1, policy2) {
-    return policy1 === policy2;
+  onP3AEnabledChange_: function() {
+    this.browserProxy_.setP3AEnabled(this.$.p3aEnabled.checked);
   },
 
-  onWebRTCPolicyChange_: function() {
-    this.browserProxy_.setWebRTCPolicy(this.$.webRTCPolicy.value);
+  shouldShowRestart_: function(enabled) {
+    return enabled != this.browserProxy_.wasPushMessagingEnabledAtStartup();
   },
+
+  restartBrowser_: function(e) {
+    e.stopPropagation();
+    window.open("chrome://restart", "_self");
+  },
+
 });
 })();

@@ -6,49 +6,41 @@
 #ifndef BRAVELEDGER_UPHOLD_UPHOLD_WALLET_H_
 #define BRAVELEDGER_UPHOLD_UPHOLD_WALLET_H_
 
-#include <map>
 #include <string>
 
 #include "bat/ledger/ledger.h"
-#include "bat/ledger/internal/uphold/uphold.h"
 
-namespace bat_ledger {
+namespace ledger {
 class LedgerImpl;
-}
 
-namespace braveledger_uphold {
+namespace uphold {
 
 class UpholdWallet {
  public:
-  explicit UpholdWallet(bat_ledger::LedgerImpl* ledger, Uphold* uphold);
+  explicit UpholdWallet(LedgerImpl* ledger);
 
   ~UpholdWallet();
 
-  void Generate(
-    std::map<std::string, ledger::ExternalWalletPtr> wallets,
-    ledger::ExternalWalletCallback callback);
+  void Generate(ledger::ResultCallback callback);
 
  private:
   void OnGenerate(
-    const ledger::Result result,
-    const User& user,
-    const ledger::ExternalWallet& wallet,
-    ledger::ExternalWalletCallback callback);
+      const type::Result result,
+      const User& user,
+      ledger::ResultCallback callback);
 
   void OnCreateCard(
-    const bool allow_zero_balance,
-    const ledger::ExternalWallet& wallet,
-    ledger::ExternalWalletCallback callback,
-    const ledger::Result result,
-    const std::string& address);
+      const type::Result result,
+      const std::string& address,
+      ledger::ResultCallback callback);
 
-  ledger::ExternalWalletPtr SetStatus(
-    const User& user,
-    ledger::ExternalWalletPtr wallet);
+  type::WalletStatus GetNewStatus(
+      const type::WalletStatus old_status,
+      const User& user);
 
-  bat_ledger::LedgerImpl* ledger_;  // NOT OWNED
-  Uphold* uphold_;  // NOT OWNED
+  LedgerImpl* ledger_;  // NOT OWNED
 };
 
-}  // namespace braveledger_uphold
+}  // namespace uphold
+}  // namespace ledger
 #endif  // BRAVELEDGER_UPHOLD_UPHOLD_WALLET_H_

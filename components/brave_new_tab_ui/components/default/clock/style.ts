@@ -1,8 +1,9 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License. v. 2.0. If a copy of the MPL was not distributed with this file.
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+// Copyright (c) 2020 The Brave Authors. All rights reserved.
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this file,
+// you can obtain one at http://mozilla.org/MPL/2.0/.
 
-import styled from 'styled-components'
+import styled from 'brave-ui/theme'
 
 export const StyledClock = styled<{}, 'div'>('div')`
   color: #FFFFFF;
@@ -16,8 +17,8 @@ export const StyledClock = styled<{}, 'div'>('div')`
 
 export const StyledTime = styled<{}, 'span'>('span')`
   box-sizing: border-box;
-  font-size: 90px;
-  font-weight: 200;
+  font-size: 78px;
+  font-weight: 300;
   color: inherit;
   display: inline-flex;
 `

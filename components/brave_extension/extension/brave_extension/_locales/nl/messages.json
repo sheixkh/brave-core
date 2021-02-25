@@ -1,6 +1,6 @@
 {
   "appName": {
-    "message": "De Brave-extensie",
+    "message": "De Brave extensie",
     "description": "The name of the the extension."
   },
   "shields": {
@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "U surft op deze site zonder enige privacybescherming en beveiliging.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "U bekijkt deze site zonder de privacy- en beveiligingsbescherming van Brave. Werkt het niet goed met Shields?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Meld een gebroken site",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Items geblokkeerd",
@@ -51,6 +55,22 @@
     "message": "Cross-site trackers geblokkeerd",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Geblokkeerde trackers en advertenties",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Trackers & advertenties geblokkeerd (agressief)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Trackers & advertenties geblokkeerd (standaard)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Laat alle trackers & advertenties toe",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Verbindingen geüpgraded naar HTTPS",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "Alle cookies zijn toegestaan.",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Cross-site pogingen tot apparaatherkenning geblokkeerd",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Fingerprinting geblokkeerd",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Pogingen tot apparaatherkenning geblokkeerd",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Vingerafdrukken geblokkeerd (standaard)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Alle pogingen tot apparaatherkenning zijn toegestaan",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Vingerafdrukken geblokkeerd (strikt, kan websites doen stukgaan)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Sta alle vingerafdrukken toe",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Pogingen voor apparaatherkenning",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Vingerafdrukpogingen",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Scripts op deze site",
@@ -140,7 +164,7 @@
     "description": "Message for the button inside the static list of resources blocked to go back from the current screen"
   },
   "applyOnce": {
-    "message": "Eenmaal toepassen",
+    "message": "Eenmalig toepassen",
     "description": "Message for action in dynamic list of resources blocked to *apply once*"
   },
   "changeDefaults": {

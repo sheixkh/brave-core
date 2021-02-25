@@ -11,62 +11,87 @@
     },
     "events": [
       {
-        "name": "onWalletInitialized",
+        "name": "initialized",
         "type": "function",
         "description": "Fired when wallet is initialized",
-        "parameters": [
-          {
+        "parameters": [{
             "name": "result",
             "type": "integer"
           }
         ]
       },
       {
-        "name": "onGrant",
+        "name": "onPromotions",
         "type": "function",
-        "description": "Fired when grant is received",
+        "description": "Fired when promotion list is received",
         "parameters": [
           {
-            "name": "properties",
-            "type": "any"
+            "name": "result",
+            "type": "integer"
+          },
+          {
+            "name": "promotions",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "promotionId": {
+                  "type": "string",
+                  "description": "promotion id"
+                },
+                "type": {
+                  "type": "integer",
+                  "description": "promotion type"
+                },
+                "status": {
+                  "type": "integer",
+                  "description": "promotion status"
+                },
+                "expiresAt": {
+                  "type": "integer",
+                  "description": "when promotion expires"
+                },
+                "amount": {
+                  "type": "number",
+                  "description": "how much is this promotion worth"
+                }
+              }
+            }
           }
         ]
       },
       {
-        "name": "onGrantCaptcha",
+        "name": "onPromotionFinish",
         "type": "function",
-        "description": "Fired when grant captcha is received",
+        "description": "Fired when promotion is successfully claimed",
         "parameters": [
           {
-            "name": "captcha",
-            "type": "any"
-          }
-        ]
-      },
-      {
-        "name": "onGrantFinish",
-        "type": "function",
-        "description": "Fired when grant process is finished",
-        "parameters": [
+            "name": "result",
+            "type": "integer"
+          },
           {
-            "name": "properties",
+            "name": "promotion",
             "type": "object",
             "properties": {
-              "status": {
-                "type": "integer",
-                "description": "grant process status"
-              },
-              "expiryTime": {
-                "type": "integer",
-                "description": "grant expiry time"
-              },
-              "probi": {
+              "promotionId": {
                 "type": "string",
-                "description": "value of the grant"
+                "description": "promotion id"
               },
               "type": {
-                "type": "string",
-                "description": "type of the grant (ugp or ads)"
+                "type": "integer",
+                "description": "promotion type"
+              },
+              "status": {
+                "type": "integer",
+                "description": "promotion status"
+              },
+              "expiresAt": {
+                "type": "integer",
+                "description": "when promotion expires"
+              },
+              "amount": {
+                "type": "number",
+                "description": "how much is this promotion worth"
               }
             }
           }
@@ -97,11 +122,11 @@
                 "type": "string",
                 "description": "provider (if media publisher) for this publisher"
               },
-              "favicon_url": {
+              "favIconUrl": {
                 "type": "string",
                 "description": "publisher image url"
               },
-              "publisher_key": {
+              "publisherKey": {
                 "type": "string",
                 "description": "publisher key, unique identifier"
               },
@@ -122,121 +147,12 @@
         ]
       },
       {
-        "name": "onWalletProperties",
-        "type": "function",
-        "description": "Fired when wallet properties (balance) is fetched",
-        "parameters": [
-          {
-            "name": "properties",
-            "type": "object",
-            "properties": {
-              "probi": {
-                "type": "string",
-                "description": "balance represented in probis"
-              },
-              "balance": {
-                "type": "double",
-                "description": "balance"
-              },
-              "rates": {
-                "type": "object",
-                "description": "rates for different currencies",
-                "properties": {
-                  "BTC": {
-                    "type": "double",
-                    "description": "BTC rate"
-                  },
-                  "ETH": {
-                    "type": "double",
-                    "description": "ETH rate"
-                  },
-                  "USD": {
-                    "type": "double",
-                    "description": "USD rate"
-                  },
-                  "EUR": {
-                    "type": "double",
-                    "description": "EUR rate"
-                  }
-                }
-              },
-              "grants": {
-                "type": "array",
-                "description": "user claimed grants",
-                "items": {
-                  "type": "object",
-                  "properties": {
-                    "altcurrency": {
-                      "type": "string",
-                      "description": "currency in which grant is served"
-                    },
-                    "probi": {
-                      "type": "string",
-                      "description": "amount of the grant represented in probis"
-                    },
-                    "expiryTime": {
-                      "type": "integer",
-                      "description": "when grant expires, timestamp in seconds"
-                    },
-                    "type": {
-                      "type": "string",
-                      "description": "grant type, ugp or ads"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
-      },
-      {
-        "name": "onCurrentReport",
-        "type": "function",
-        "description": "Fired when we get current report back",
-        "parameters": [
-          {
-            "name": "properties",
-            "type": "object",
-            "properties": {
-              "ads": {
-                "type": "string",
-                "description": "balance defined in probi"
-              },
-              "contribute": {
-                "type": "string",
-                "description": "balance defined in probi"
-              },
-              "deposit": {
-                "type": "string",
-                "description": "balance defined in probi"
-              },
-              "grant": {
-                "type": "string",
-                "description": "balance defined in probi"
-              },
-              "donation": {
-                "type": "string",
-                "description": "balance defined in probi"
-              },
-              "tips": {
-                "type": "string",
-                "description": "balance defined in probi"
-              },
-              "total": {
-                "type": "string",
-                "description": "balance defined in probi"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "name": "onEnabledMain",
+        "name": "onAdsEnabled",
         "type": "function",
         "description": "",
         "parameters": [
           {
-            "name": "enabledMain",
+            "name": "enabled",
             "type": "boolean"
           }
         ]
@@ -263,7 +179,7 @@
             "items": {
               "type": "object",
               "properties": {
-                "publisher_key": {
+                "publisherKey": {
                   "type": "string",
                   "description": "publisher key, unique identifier"
                 },
@@ -289,7 +205,7 @@
             "name": "properties",
             "type": "object",
             "properties": {
-              "publisher_key": {
+              "publisherKey": {
                 "type": "string",
                 "description": "publisher key, unique identifier"
               },
@@ -347,9 +263,9 @@
                 "type": "integer",
                 "description": "result for this contribution"
               },
-              "category": {
+              "type": {
                 "type": "integer",
-                "description": "category of this contribution"
+                "description": "type of this contribution"
               }
             }
           }
@@ -376,14 +292,225 @@
             }
           }
         ]
+      },
+      {
+        "name": "onUnblindedTokensReady",
+        "type": "function",
+        "description": "Fired when we get unblinded tokens",
+        "parameters": []
+      },
+      {
+        "name": "onCompleteReset",
+        "type": "function",
+        "description": "Fired when rewards was reset",
+        "parameters": [
+          {
+            "name": "properties",
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "was reset successful"
+              }
+            }
+          }
+        ]
       }
     ],
     "functions": [
       {
-        "name": "createWallet",
+        "name": "openBrowserActionUI",
         "type": "function",
-        "description": "Creates new wallet",
-        "parameters": []
+        "description": "Prompts the user with a popup UI",
+        "parameters": [
+          {
+            "name": "windowId",
+            "type": "integer",
+            "minimum": 0,
+            "optional": true
+          },
+          {
+            "name": "relativePath",
+            "type": "string",
+            "optional": true
+          }
+        ]
+      },
+      {
+        "name": "updateMediaDuration",
+        "type": "function",
+        "description": "Update the media duration for a given resource",
+        "parameters": [
+          {
+            "name": "windowId",
+            "type": "number"
+          },
+          {
+            "name": "publisherKey",
+            "type": "string"
+          },
+          {
+            "name": "duration",
+            "type": "integer"
+          },
+          {
+            "name": "firstVisit",
+            "type": "boolean"
+          }
+        ]
+      },
+      {
+        "name": "getPublisherInfo",
+        "type": "function",
+        "description": "Get the details for a particular publisher",
+        "parameters": [
+          {
+            "name": "publisherKey",
+            "type": "string"
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "result",
+                "type": "integer"
+              },
+              {
+                "name": "properties",
+                "type": "object",
+                "optional": true,
+                "properties": {
+                  "publisherKey": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "percentage": {
+                    "type": "number"
+                  },
+                  "status": {
+                    "type": "number"
+                  },
+                  "excluded": {
+                    "type": "number"
+                  },
+                  "url": {
+                    "type": "string"
+                  },
+                  "provider": {
+                    "type": "string"
+                  },
+                  "favIconUrl": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "getPublisherPanelInfo",
+        "type": "function",
+        "description": "Get the panel info for a particular publisher",
+        "parameters": [
+          {
+            "name": "publisherKey",
+            "type": "string"
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "result",
+                "type": "integer"
+              },
+              {
+                "name": "publisher",
+                "type": "object",
+                "optional": true,
+                "properties": {
+                  "percentage": {
+                    "type": "integer",
+                    "description": "publisher attention score"
+                  },
+                  "excluded": {
+                    "type": "number",
+                    "description": "is site excluded from auto contribute"
+                  },
+                  "provider": {
+                    "type": "string",
+                    "description": "provider (if media publisher) for this publisher"
+                  },
+                  "favIconUrl": {
+                    "type": "string",
+                    "description": "publisher image url"
+                  },
+                  "publisherKey": {
+                    "type": "string",
+                    "description": "publisher key, unique identifier"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "publisher name"
+                  },
+                  "url": {
+                    "type": "string",
+                    "description": "url of the current tab"
+                  },
+                  "status": {
+                    "type": "integer",
+                    "description": "publisher status"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "savePublisherInfo",
+        "type": "function",
+        "description": "Save the publisher info when visiting a site",
+        "parameters": [
+          {
+            "name": "windowId",
+            "type": "number"
+          },
+          {
+            "name": "mediaType",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "name": "publisherKey",
+            "type": "string"
+          },
+          {
+            "name": "publisherName",
+            "type": "string"
+          },
+          {
+            "name": "favIconUrl",
+            "type": "string"
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "result",
+                "type": "integer"
+              }
+            ]
+          }
+        ]
       },
       {
         "name": "tipSite",
@@ -397,109 +524,57 @@
           {
             "name": "publisherKey",
             "type": "string"
+          },
+          {
+            "name": "entryPoint",
+            "type": "string"
           }
         ]
       },
       {
-        "name": "tipTwitterUser",
+        "name": "tipUser",
         "type": "function",
-        "description": "Allow the user to perform a donation to a Twitter user",
+        "description": "Allow the user to tip a user on a particular site",
         "parameters": [
           {
-            "name": "tabID",
-            "type": "integer"
+            "name": "tabId",
+            "type": "number"
           },
           {
-            "name": "mediaMetaData",
-            "type": "object",
-            "properties": {
-              "mediaType": {
-                "type": "string",
-                "description": "description used in UI to identify the media type"
-              },
-              "userId": {
-                "type": "string",
-                "description": "User ID of tweet author"
-              },
-              "twitterName": {
-                "type": "string",
-                "description": "Name of tweet author"
-              },
-              "screenName": {
-                "type": "string",
-                "description": "Twitter handle of tweet author"
-              },
-              "tweetId": {
-                "type": "string",
-                "description": "Unique tweet ID"
-              },
-              "tweetTimestamp": {
-                "type": "number",
-                "description": "Timestamp (in milliseconds) of tweet"
-              },
-              "tweetText": {
-                "type": "string",
-                "description": "Textual contents of tweet"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "name": "tipRedditUser",
-        "type": "function",
-        "description": "Allow the user to perform a donation to a Reddit user",
-        "parameters": [
-          {
-            "name": "tabID",
-            "type": "integer"
+            "name": "mediaType",
+            "type": "string"
           },
           {
-            "name": "mediaMetaData",
-            "type": "object",
-            "properties": {
-              "mediaType": {
-                "type": "string",
-                "description": "description used in UI to identify the media type"
-              },
-              "userName": {
-                "type": "string",
-                "description": "User name of the Reddit post/comment author"
-              },
-              "postText": {
-                "type": "string",
-                "description": "Textual contents of comment/post"
-              },
-              "postRelDate": {
-                "type": "string",
-                "description": "Date of post relative to current date"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "name": "tipGitHubUser",
-        "type": "function",
-        "description": "Allow the user to perform a donation to a GitHub user",
-        "parameters": [
-          {
-            "name": "tabID",
-            "type": "integer"
+            "name": "url",
+            "type": "string"
           },
           {
-            "name": "mediaMetaData",
-            "type": "object",
-            "properties": {
-              "mediaType": {
-                "type": "string",
-                "description": "description used in UI to identify the media type"
-              },
-              "userName": {
-                "type": "string",
-                "description": "Username of the GitHub author"
-              }
-            }
+            "name": "publisherKey",
+            "type": "string"
+          },
+          {
+            "name": "publisherName",
+            "type": "string"
+          },
+          {
+            "name": "publisherScreenName",
+            "type": "string"
+          },
+          {
+            "name": "favIconUrl",
+            "type": "string"
+          },
+          {
+            "name": "postId",
+            "type": "string"
+          },
+          {
+            "name": "postTimestamp",
+            "type": "string"
+          },
+          {
+            "name": "postText",
+            "type": "string"
           }
         ]
       },
@@ -527,16 +602,85 @@
         ]
       },
       {
-        "name": "getWalletProperties",
+        "name": "getRewardsParameters",
         "type": "function",
-        "description": "Get wallet data (balance, grant)",
-        "parameters": []
+        "description": "Get default values that we get from the server",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "properties",
+                "type": "object",
+                "properties": {
+                  "rate": {
+                    "type": "number",
+                    "description": "conversion rate for BAT"
+                  },
+                  "monthlyTipChoices": {
+                    "type": "array",
+                    "description": "default tip choices for monthly tips",
+                    "items": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  },
+                  "autoContributeChoices": {
+                    "type": "array",
+                    "description": "A list of auto-contribute amount options",
+                    "items": {
+                      "type": "number",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        ]
       },
       {
-        "name": "getCurrentReport",
+        "name": "getBalanceReport",
         "type": "function",
         "description": "Get current month wallet report",
-        "parameters": []
+        "parameters": [
+          {
+            "name": "month",
+            "type": "number"
+          },
+          {
+            "name": "year",
+            "type": "number"
+          },
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "properties",
+                "type": "object",
+                "properties": {
+                  "ads": {
+                    "type": "number"
+                  },
+                  "contribute": {
+                    "type": "number"
+                  },
+                  "monthly": {
+                    "type": "number"
+                  },
+                  "grant": {
+                    "type": "number"
+                  },
+                  "tips": {
+                    "type": "number"
+                  }
+                }
+              }
+            ]
+          }
+        ]
       },
       {
         "name": "includeInAutoContribution",
@@ -554,38 +698,92 @@
         ]
       },
       {
-        "name": "getGrants",
+        "name": "fetchPromotions",
         "type": "function",
-        "description": "Retrieves grant when panel is mounted",
+        "description": "Retrieves promotions when panel is mounted",
         "parameters": []
       },
       {
-        "name": "getGrantCaptcha",
+        "name": "claimPromotion",
         "type": "function",
-        "description": "Retrieves grant captcha data",
+        "description": "Starts claim process for selected promotion",
         "parameters": [
           {
             "name": "promotionId",
             "type": "string"
           },
           {
-            "name": "type",
-            "type": "string"
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "properties",
+                "type": "object",
+                "properties": {
+                  "result": {
+                    "type": "integer"
+                  },
+                  "promotionId": {
+                    "type": "string"
+                  },
+                  "captchaId": {
+                    "type": "string"
+                  },
+                  "captchaImage": {
+                    "type": "string"
+                  },
+                  "hint": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
           }
         ]
       },
       {
-        "name": "solveGrantCaptcha",
+        "name": "attestPromotion",
         "type": "function",
         "description": "Sends the user solution to the grant claim captcha",
         "parameters": [
+          {
+            "name": "promotionId",
+            "type": "string"
+          },
           {
             "name": "solution",
             "type": "string"
           },
           {
-            "name": "promotionId",
-            "type": "string"
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "result",
+                "type": "integer"
+              },
+              {
+                "name": "promotion",
+                "type": "object",
+                "properties": {
+                  "promotionId": {
+                    "type": "string"
+                  },
+                  "expiresAt": {
+                    "optional": true,
+                    "type": "integer"
+                  },
+                  "amount": {
+                    "optional": true,
+                    "type": "number"
+                  },
+                  "type": {
+                    "optional": true,
+                    "type": "integer"
+                  }
+                }
+              }
+            ]
           }
         ]
       },
@@ -607,9 +805,9 @@
         ]
       },
       {
-        "name": "getRewardsMainEnabled",
+        "name": "getAdsEnabled",
         "type": "function",
-        "description": "Gets whether rewards has been enabled explicitly",
+        "description": "Gets whether ads is enabled",
         "parameters": [
           {
             "type": "function",
@@ -618,6 +816,40 @@
               {
                 "name": "enabled",
                 "type": "boolean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "getAdsSupported",
+        "type": "function",
+        "description": "Gets whether ads is supported in the user's region",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "supported",
+                "type": "boolean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "getAdsEstimatedEarnings",
+        "type": "function",
+        "description": "Gets estimated ads earnings for the current month",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "amount",
+                "type": "number"
               }
             ]
           }
@@ -656,17 +888,13 @@
         ]
       },
       {
-        "name": "saveSetting",
+        "name": "setAutoContributeEnabled",
         "type": "function",
-        "description": "Updates settings related to rewards service",
+        "description": "Updates ac enabled state",
         "parameters": [
           {
-            "name": "key",
-            "type": "string"
-          },
-          {
-            "name": "value",
-            "type": "string"
+            "name": "enabled",
+            "type": "boolean"
           }
         ]
       },
@@ -681,7 +909,7 @@
           },
           {
             "name": "new_amount",
-            "type": "integer"
+            "type": "number"
           }
         ]
       },
@@ -801,7 +1029,7 @@
         ]
       },
       {
-        "name": "getInlineTipSetting",
+        "name": "getInlineTippingPlatformEnabled",
         "type": "function",
         "description": "Gets setting for inline tip for provided key",
         "parameters": [
@@ -837,9 +1065,6 @@
                   "total": {
                     "type": "any"
                   },
-                  "rates": {
-                    "type": "any"
-                  },
                   "wallets": {
                     "type": "any"
                   }
@@ -869,6 +1094,7 @@
               {
                 "name": "wallet",
                 "type": "object",
+                "optional": true,
                 "properties": {
                   "token": {
                     "type": "any"
@@ -877,9 +1103,6 @@
                     "type": "any"
                   },
                   "status": {
-                    "type": "any"
-                  },
-                  "type": {
                     "type": "any"
                   },
                   "verifyUrl": {
@@ -896,6 +1119,9 @@
                   },
                   "accountUrl": {
                     "type": "any"
+                  },
+                  "loginUrl": {
+                    "type": "string"
                   }
                 }
               }
@@ -911,6 +1137,145 @@
           {
             "name": "type",
             "type": "string"
+          }
+        ]
+      },
+      {
+        "name": "onlyAnonWallet",
+        "type": "function",
+        "description": "Get information if we should only allow anonymous wallet",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "only",
+                "type": "boolean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "getAnonWalletStatus",
+        "type": "function",
+        "description": "Gets wallet status fo anon wallet",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "result",
+                "type": "integer"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "isInitialized",
+        "type": "function",
+        "description": "Is ledger process initialized",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "initialized",
+                "type": "boolean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "shouldShowOnboarding",
+        "type": "function",
+        "description": "Gets a value indicating whether rewards onboarding should be shown to the user.",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "name": "showOnboarding",
+                "type": "boolean"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "saveOnboardingResult",
+        "type": "function",
+        "description": "Saves the rewards user onboarding result.",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "result"
+          }
+        ]
+      },
+      {
+        "name": "getPrefs",
+        "type": "function",
+        "description": "Gets rewards preferences for the current profile",
+        "parameters": [
+          {
+            "type": "function",
+            "name": "callback",
+            "parameters": [
+              {
+                "type": "object",
+                "name": "prefs",
+                "properties": {
+                  "autoContributeEnabled": {
+                    "type": "boolean"
+                  },
+                  "autoContributeAmount": {
+                    "type": "number"
+                  },
+                  "adsEnabled": {
+                    "type": "boolean"
+                  },
+                  "adsPerHour": {
+                    "type": "integer"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "updatePrefs",
+        "type": "function",
+        "description": "Updates rewards preferences for the current profile",
+        "parameters": [
+          {
+            "type": "object",
+            "name": "prefs",
+            "properties": {
+              "autoContributeEnabled": {
+                "type": "boolean",
+                "optional": true
+              },
+              "autoContributeAmount": {
+                "type": "number",
+                "optional": true
+              },
+              "adsEnabled": {
+                "type": "boolean",
+                "optional": true
+              },
+              "adsPerHour": {
+                "type": "integer",
+                "optional": true
+              }
+            }
           }
         ]
       }

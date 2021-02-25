@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "brave/browser/themes/brave_theme_service.h"
+#include "brave/browser/themes/brave_dark_mode_utils.h"
 #include "brave/browser/themes/theme_properties.h"
 #include "brave/common/pref_names.h"
 #include "chrome/test/base/in_process_browser_test.h"
@@ -13,29 +13,22 @@
 #include "chrome/browser/themes/theme_service_factory.h"
 #include "chrome/browser/ui/browser.h"
 #include "components/prefs/pref_service.h"
+#include "content/public/test/browser_test.h"
 #include "testing/gmock/include/gmock/gmock.h"
+#include "testing/gtest/include/gtest/gtest-spi.h"
 #include "ui/native_theme/native_theme.h"
-#include "ui/native_theme/native_theme_dark_aura.h"
 #include "ui/native_theme/native_theme_observer.h"
 
 #if defined(OS_WIN)
 #include "base/run_loop.h"
+#include "base/test/scoped_run_loop_timeout.h"
 #include "base/time/time.h"
 #include "base/win/registry.h"
 #endif
 
 using BraveThemeServiceTest = InProcessBrowserTest;
-using BTS = BraveThemeService;
 
 namespace {
-
-void SetBraveThemeType(Profile* profile, BraveThemeType type) {
-  profile->GetPrefs()->SetInteger(kBraveThemeType, type);
-}
-
-bool IsDefaultThemeOverridden(Profile* profile) {
-  return profile->GetPrefs()->GetBoolean(kUseOverriddenBraveThemeType);
-}
 
 class TestNativeThemeObserver : public ui::NativeThemeObserver {
  public:
@@ -45,20 +38,31 @@ class TestNativeThemeObserver : public ui::NativeThemeObserver {
   MOCK_METHOD1(OnNativeThemeUpdated, void(ui::NativeTheme*));
 };
 
+#if defined(OS_WIN)
+void RunLoopRunWithTimeout(base::TimeDelta timeout) {
+  // ScopedRunLoopTimeout causes a FATAL failure on timeout though, but for us
+  // the timeout means success, so turn the FATAL failure into success.
+  base::RunLoop run_loop;
+  base::test::ScopedRunLoopTimeout run_timeout(FROM_HERE, timeout);
+  // EXPECT_FATAL_FAILURE() can only reference globals and statics.
+  static base::RunLoop& static_loop = run_loop;
+  EXPECT_FATAL_FAILURE(static_loop.Run(), "Run() timed out.");
+}
+#endif
+
 }  // namespace
 
 class BraveThemeServiceTestWithoutSystemTheme : public InProcessBrowserTest {
  public:
   BraveThemeServiceTestWithoutSystemTheme() {
-    BraveThemeService::is_test_ = true;
-    BraveThemeService::use_system_theme_mode_in_test_ = false;
+    dark_mode::SetUseSystemDarkModeEnabledForTest(false);
   }
 };
 
 IN_PROC_BROWSER_TEST_F(BraveThemeServiceTestWithoutSystemTheme,
                        BraveThemeChangeTest) {
   Profile* profile = browser()->profile();
-  Profile* profile_private = profile->GetOffTheRecordProfile();
+  Profile* profile_private = profile->GetPrimaryOTRProfile();
 
   const ui::ThemeProvider& tp =
       ThemeService::GetThemeProviderForProfile(profile);
@@ -67,35 +71,24 @@ IN_PROC_BROWSER_TEST_F(BraveThemeServiceTestWithoutSystemTheme,
 
   auto test_theme_property = BraveThemeProperties::COLOR_FOR_TEST;
 
-  // Check default type is set initially.
-  EXPECT_TRUE(IsDefaultThemeOverridden(profile));
-  EXPECT_TRUE(IsDefaultThemeOverridden(profile_private));
-
   // Test light theme
-  SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_LIGHT);
-  EXPECT_EQ(BraveThemeType::BRAVE_THEME_TYPE_LIGHT,
-            BTS::GetActiveBraveThemeType(profile));
+  dark_mode::SetBraveDarkModeType(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT);
+  EXPECT_EQ(dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT,
+            dark_mode::GetActiveBraveDarkModeType());
   EXPECT_EQ(BraveThemeProperties::kLightColorForTest,
             tp.GetColor(test_theme_property));
 
-  // Test light theme private
-  SetBraveThemeType(profile_private, BraveThemeType::BRAVE_THEME_TYPE_LIGHT);
-  EXPECT_EQ(BraveThemeType::BRAVE_THEME_TYPE_LIGHT,
-            BTS::GetActiveBraveThemeType(profile_private));
-  EXPECT_EQ(BraveThemeProperties::kPrivateColorForTest,
-            tp_private.GetColor(test_theme_property));
-
   // Test dark theme
-  SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_DARK);
-  EXPECT_EQ(BraveThemeType::BRAVE_THEME_TYPE_DARK,
-            BTS::GetActiveBraveThemeType(profile));
+  dark_mode::SetBraveDarkModeType(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK);
+  EXPECT_EQ(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK,
+      dark_mode::GetActiveBraveDarkModeType());
   EXPECT_EQ(BraveThemeProperties::kDarkColorForTest,
             tp.GetColor(test_theme_property));
 
   // Test dark theme private
-  SetBraveThemeType(profile_private, BraveThemeType::BRAVE_THEME_TYPE_DARK);
-  EXPECT_EQ(BraveThemeType::BRAVE_THEME_TYPE_DARK,
-            BTS::GetActiveBraveThemeType(profile_private));
   EXPECT_EQ(BraveThemeProperties::kPrivateColorForTest,
             tp_private.GetColor(test_theme_property));
 }
@@ -103,9 +96,9 @@ IN_PROC_BROWSER_TEST_F(BraveThemeServiceTestWithoutSystemTheme,
 // Test whether appropriate native/web theme observer is called when brave theme
 // is changed.
 IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, ThemeObserverTest) {
-  Profile* profile = browser()->profile();
   // Initially set to light.
-  SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_LIGHT);
+  dark_mode::SetBraveDarkModeType(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT);
 
   // Check theme oberver is called twice by changing theme.
   // One for changing to dark and the other for changing to light.
@@ -124,33 +117,36 @@ IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, ThemeObserverTest) {
   ui::NativeTheme::GetInstanceForWeb()->AddObserver(
       &web_theme_observer);
 
-  SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_DARK);
-  SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_LIGHT);
+  dark_mode::SetBraveDarkModeType(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK);
+  dark_mode::SetBraveDarkModeType(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT);
 }
 
 IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, SystemThemeChangeTest) {
   const bool initial_mode =
-      ui::NativeTheme::GetInstanceForNativeUi()->SystemDarkModeEnabled();
-  Profile* profile = browser()->profile();
+      ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors();
 
   // Change to light.
-  SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_LIGHT);
+  dark_mode::SetBraveDarkModeType(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT);
   EXPECT_FALSE(
-      ui::NativeTheme::GetInstanceForNativeUi()->SystemDarkModeEnabled());
+      ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors());
 
-  SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_DARK);
-  EXPECT_TRUE(
-      ui::NativeTheme::GetInstanceForNativeUi()->SystemDarkModeEnabled());
+  dark_mode::SetBraveDarkModeType(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DARK);
+  EXPECT_TRUE(ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors());
 
-  SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_LIGHT);
+  dark_mode::SetBraveDarkModeType(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT);
   EXPECT_FALSE(
-      ui::NativeTheme::GetInstanceForNativeUi()->SystemDarkModeEnabled());
+      ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors());
 
-  if (BraveThemeService::SystemThemeModeEnabled()) {
-    SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_DEFAULT);
-    EXPECT_EQ(
-        initial_mode,
-        ui::NativeTheme::GetInstanceForNativeUi()->SystemDarkModeEnabled());
+  if (dark_mode::SystemDarkModeEnabled()) {
+    dark_mode::SetBraveDarkModeType(
+        dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DEFAULT);
+    EXPECT_EQ(initial_mode,
+              ui::NativeTheme::GetInstanceForNativeUi()->ShouldUseDarkColors());
   }
 }
 
@@ -178,8 +174,8 @@ IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, DarkModeChangeByRegTest) {
   const bool initial_dark_mode = apps_use_light_theme == 0;
 
   // Toggle dark mode and check get notification for default type (same as...).
-  auto* profile = browser()->profile();
-  SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_DEFAULT);
+  dark_mode::SetBraveDarkModeType(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_DEFAULT);
 
   apps_use_light_theme = !initial_dark_mode ? 0 : 1;
   hkcu_themes_regkey.WriteValue(L"AppsUseLightTheme", apps_use_light_theme);
@@ -193,7 +189,8 @@ IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, DarkModeChangeByRegTest) {
 
   // Toggle dark mode and |native_theme_observer_for_light| will not get
   // notification for light type.
-  SetBraveThemeType(profile, BraveThemeType::BRAVE_THEME_TYPE_LIGHT);
+  dark_mode::SetBraveDarkModeType(
+      dark_mode::BraveDarkModeType::BRAVE_DARK_MODE_TYPE_LIGHT);
 
   TestNativeThemeObserver native_theme_observer_for_light;
   EXPECT_CALL(
@@ -206,7 +203,6 @@ IN_PROC_BROWSER_TEST_F(BraveThemeServiceTest, DarkModeChangeByRegTest) {
   hkcu_themes_regkey.WriteValue(L"AppsUseLightTheme", apps_use_light_theme);
 
   // Timeout is used because we can't get notifiication with light theme.
-  base::RunLoop run_loop;
-  run_loop.RunWithTimeout(base::TimeDelta::FromMilliseconds(500));;
+  RunLoopRunWithTimeout(base::TimeDelta::FromMilliseconds(500));
 }
 #endif

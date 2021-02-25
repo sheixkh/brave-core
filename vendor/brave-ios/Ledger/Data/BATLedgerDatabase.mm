@@ -2,629 +2,390 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#import <Foundation/Foundation.h>
 #import "BATLedgerDatabase.h"
 
 #import "DataController.h"
-#import "CoreDataModels.h"
-#import "bat/ledger/publisher_info.h"
-
-NS_INLINE DataControllerCompletion _Nullable
-WriteToDataControllerCompletion(BATLedgerDatabaseWriteCompletion _Nullable completion) {
-  if (!completion) {
-    return nil;
-  }
-  return ^(NSError * _Nullable error) {
-    dispatch_async(dispatch_get_main_queue(), ^{
-      completion(error == nil);
-    });
-  };
-}
+#import "bat/ledger/global_constants.h"
+#import "RewardsLogging.h"
 
 @implementation BATLedgerDatabase
 
-+ (nullable __kindof NSManagedObject *)firstOfClass:(Class)clazz
-                                    withPublisherID:(NSString *)publisherID
-                                additionalPredicate:(nullable NSPredicate *)additionalPredicate
-                                            context:(NSManagedObjectContext *)context
++ (nullable NSString *)migrateCoreDataToSQLTransaction
 {
+  const auto bundlePath = [[NSBundle bundleForClass:BATLedgerDatabase.class] pathForResource:@"migrate" ofType:@"sql"];
+  NSError *error = nil;
+  const auto migrationScript = [NSString stringWithContentsOfFile:bundlePath encoding:NSUTF8StringEncoding error:&error];
+  if (error) {
+    BLOG(0, @"Failed to load migration script from path: %@", bundlePath);
+    return nil;
+  }
+  
+  const auto statements = [[NSMutableArray alloc] init];
+  
+  // activity_info
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(ActivityInfo.class, ^(ActivityInfo *info){
+    return [self activityInfoInsertFor:info];
+  })];
+  
+  // contribution_info
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(ContributionInfo.class, ^(ContributionInfo *info){
+    return [self contributionInfoInsertFor:info];
+  })];
+  
+  // contribution_queue
+  __block int64_t contributionQueueMaxID = 0;
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(ContributionQueue.class, ^(ContributionQueue *obj){
+    contributionQueueMaxID = MAX(obj.id, contributionQueueMaxID);
+    return [self contributionQueueInsertFor:obj];
+  })];
+  if (contributionQueueMaxID > 0) {
+    [statements addObject:
+     [NSString stringWithFormat:@"UPDATE SQLITE_SEQUENCE SET seq = %lld WHERE name = 'contribution_queue';", contributionQueueMaxID]
+     ];
+  }
+  
+  // contribution_queue_publishers
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(ContributionPublisher.class, ^(ContributionPublisher *obj){
+    return [self contributionQueuePublisherInsertFor:obj];
+  })];
+  
+  // media_publisher_info
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(MediaPublisherInfo.class, ^(MediaPublisherInfo *obj){
+    return [self mediaPublisherInfoInsertFor:obj];
+  })];
+  
+  // pending_contribution
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(PendingContribution.class, ^(PendingContribution *obj){
+    return [self pendingContributionInsertFor:obj];
+  })];
+  
+  // promotion
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(Promotion.class, ^(Promotion *obj){
+    return [self promotionInsertFor:obj];
+  })];
+  
+  // promotion_creds
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(PromotionCredentials.class, ^(PromotionCredentials *obj){
+    return [self promotionCredsInsertFor:obj];
+  })];
+  
+  // publisher_info
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(PublisherInfo.class, ^(PublisherInfo *obj){
+    return [self publisherInfoInsertFor:obj];
+  })];
+  
+  // recurring_donation
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(RecurringDonation.class, ^(RecurringDonation *obj){
+    return [self recurringDonationInsertFor:obj];
+  })];
+  
+  // unblinded_tokens
+  __block int64_t unblindedTokenMaxID = 0;
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(UnblindedToken.class, ^(UnblindedToken *obj){
+    unblindedTokenMaxID = MAX(obj.tokenID, unblindedTokenMaxID);
+    return [self unblindedTokenInsertFor:obj];
+  })];
+  if (unblindedTokenMaxID > 0) {
+    [statements addObject:
+     [NSString stringWithFormat:@"UPDATE SQLITE_SEQUENCE SET seq = %lld WHERE name = 'unblinded_tokens';", unblindedTokenMaxID]
+     ];
+  }
+  
+  return [migrationScript stringByReplacingOccurrencesOfString:@"# {statements}" withString:[statements componentsJoinedByString:@"\n"]];
+}
+
++ (nullable NSString *)migrateCoreDataBATOnlyToSQLTransaction
+{
+  const auto bundlePath = [[NSBundle bundleForClass:BATLedgerDatabase.class] pathForResource:@"migrate" ofType:@"sql"];
+  NSError *error = nil;
+  const auto migrationScript = [NSString stringWithContentsOfFile:bundlePath encoding:NSUTF8StringEncoding error:&error];
+  if (error) {
+    BLOG(0, @"Failed to load migration script from path: %@", bundlePath);
+    return nil;
+  }
+  
+  const auto statements = [[NSMutableArray alloc] init];
+  
+  // promotion
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(Promotion.class, ^(Promotion *obj){
+    return [self promotionInsertFor:obj];
+  })];
+  
+  // promotion_creds
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(PromotionCredentials.class, ^(PromotionCredentials *obj){
+    return [self promotionCredsInsertFor:obj];
+  })];
+  
+  // unblinded_tokens
+  __block int64_t unblindedTokenMaxID = 0;
+  [statements addObjectsFromArray:
+   MapFetchedObjectsToInsertsForClass(UnblindedToken.class, ^(UnblindedToken *obj){
+    unblindedTokenMaxID = MAX(obj.tokenID, unblindedTokenMaxID);
+    return [self unblindedTokenInsertFor:obj];
+  })];
+  if (unblindedTokenMaxID > 0) {
+    [statements addObject:
+     [NSString stringWithFormat:@"UPDATE SQLITE_SEQUENCE SET seq = %lld WHERE name = 'unblinded_tokens';", unblindedTokenMaxID]
+     ];
+  }
+  
+  return [migrationScript stringByReplacingOccurrencesOfString:@"# {statements}" withString:[statements componentsJoinedByString:@"\n"]];
+}
+
+#pragma mark -
+
++ (NSString *)activityInfoInsertFor:(ActivityInfo *)info
+{
+  const auto activityInfoInsert =
+  @"INSERT INTO \"activity_info\" "
+  "(publisher_id, duration, visits, score, percent, weight, reconcile_stamp) VALUES ("
+  "%@,"   // publisher_id LONGVARCHAR NOT NULL
+  "%lld," // duration INTEGER DEFAULT 0 NOT NULL,
+  "%d,"   // visits INTEGER DEFAULT 0 NOT NULL,
+  "%f,"   // score DOUBLE DEFAULT 0 NOT NULL
+  "%d,"   // percent INTEGER DEFAULT 0 NOT NULL
+  "%f,"   // weight DOUBLE DEFAULT 0 NOT NULL,
+  "%lld"  // reconcile_stamp INTEGER DEFAULT 0 NOT NULL
+  ");";
+  return [NSString stringWithFormat:activityInfoInsert,
+          SQLString(info.publisherID), info.duration, info.visits, info.score,
+          info.percent, info.weight, info.reconcileStamp];
+}
+
++ (NSString *)contributionInfoInsertFor:(ContributionInfo *)info
+{
+  const auto contributionInfoInsert =
+  @"INSERT INTO \"contribution_info\" "
+  "(publisher_id, probi, date, type, month, year) VALUES ("
+  "%@,"   // publisher_id LONGVARCHAR
+  "%@,"   // probi TEXT "0"  NOT NULL
+  "%lld," // date INTEGER NOT NULL
+  "%d,"   // type INTEGER NOT NULL
+  "%d,"   // month INTEGER NOT NULL
+  "%d"    // year INTEGER NOT NULL
+  ");";
+  return [NSString stringWithFormat:contributionInfoInsert,
+          SQLString(info.publisherID), SQLString(info.probi), info.date,
+          info.type, info.month, info.year];
+}
+
++ (NSString *)contributionQueueInsertFor:(ContributionQueue *)obj
+{
+  const auto contributionQueueInsert =
+  @"INSERT INTO \"contribution_queue\" "
+  "(contribution_queue_id, type, amount, partial) VALUES ("
+  "%lld," // contribution_queue_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
+  "%d,"   // type INTEGER NOT NULL
+  "%f,"   // amount DOUBLE NOT NULL
+  "%d"    // partial INTEGER NOT NULL DEFAULT 0
+  ");";
+  return [NSString stringWithFormat:contributionQueueInsert,
+          obj.id, obj.type, obj.amount, obj.partial];
+}
+
++ (NSString *)contributionQueuePublisherInsertFor:(ContributionPublisher *)obj
+{
+  const auto contributionQueuePublisherInsert =
+  @"INSERT INTO \"contribution_queue_publishers\" "
+  "(contribution_queue_id, publisher_key, amount_percent) VALUES ("
+  "%lld," // contribution_queue_id INTEGER NOT NULL
+  "%@,"   // publisher_key TEXT NOT NULL
+  "%f"    // amount_percent DOUBLE NOT NULL
+  ");";
+  return [NSString stringWithFormat:contributionQueuePublisherInsert,
+          obj.queue.id, SQLString(obj.publisherKey), obj.amountPercent];
+}
+
++ (NSString *)mediaPublisherInfoInsertFor:(MediaPublisherInfo *)obj
+{
+  const auto mediaPublisherInfoInsert =
+  @"INSERT INTO \"media_publisher_info\" "
+  "(media_key, publisher_id) VALUES ("
+  "%@," // media_key TEXT NOT NULL PRIMARY KEY UNIQUE
+  "%@"  // publisher_id LONGVARCHAR NOT NULL
+  ");";
+  return [NSString stringWithFormat:mediaPublisherInfoInsert,
+          SQLString(obj.mediaKey), SQLString(obj.publisherID)];
+}
+
++ (NSString *)pendingContributionInsertFor:(PendingContribution *)obj
+{
+  const auto pendingContributionInsert =
+  @"INSERT INTO \"pending_contribution\" "
+  "(publisher_id, amount, added_date, viewing_id, type) VALUES ("
+  "%@,"   // publisher_id LONGVARCHAR NOT NULL
+  "%f,"   // amount DOUBLE DEFAULT 0 NOT NULL
+  "%lld," // added_date INTEGER DEFAULT 0 NOT NULL
+  "%@,"   // viewing_id LONGVARCHAR NOT NULL
+  "%d"    // type INTEGER NOT NULL
+  ");";
+  return [NSString stringWithFormat:pendingContributionInsert,
+          SQLString(obj.publisherID), obj.amount, obj.addedDate,
+          SQLString(obj.viewingID), obj.type];
+}
+
++ (NSString *)promotionInsertFor:(Promotion *)obj
+{
+  const auto promotionInsert =
+  @"INSERT INTO \"promotion\" "
+  "(promotion_id, version, type, public_keys, suggestions, "
+  "approximate_value, status, expires_at) VALUES ("
+  "%@,"  // promotion_id TEXT NOT NULL
+  "%d,"  // version INTEGER NOT NULL
+  "%d,"  // type INTEGER NOT NULL
+  "%@,"  // public_keys TEXT NOT NULL
+  "%d,"  // suggestions INTEGER NOT NULL DEFAULT 0
+  "%f,"  // approximate_value DOUBLE NOT NULL DEFAULT 0
+  "%d,"  // status INTEGER NOT NULL DEFAULT 0
+  "%lld" // expires_at TIMESTAMP NOT NULL
+  ");";
+  return [NSString stringWithFormat:promotionInsert,
+          SQLString(obj.promotionID), obj.version, obj.type, SQLString(obj.publicKeys),
+          obj.suggestions, obj.approximateValue, obj.status,
+          static_cast<int64_t>(obj.expiryDate.timeIntervalSince1970)];
+}
+
++ (NSString *)promotionCredsInsertFor:(PromotionCredentials *)obj
+{
+  const auto promotionCredsInsert =
+  @"INSERT INTO \"promotion_creds\" "
+  "(promotion_id, tokens, blinded_creds, signed_creds, public_key, "
+  "batch_proof, claim_id) VALUES ("
+  "%@,"  // promotion_id TEXT UNIQUE NOT NULL
+  "%@,"  // tokens TEXT NOT NULL
+  "%@,"  // blinded_creds TEXT NOT NULL
+  "%@,"  // signed_creds TEXT
+  "%@,"  // public_key TEXT
+  "%@,"  // batch_proof TEXT
+  "%@"   // claim_id TEXT
+  ");";
+  return [NSString stringWithFormat:promotionCredsInsert,
+          SQLString(obj.promotionID), SQLString(obj.tokens), SQLString(obj.blindedCredentials),
+          SQLNullableString(obj.signedCredentials), SQLNullableString(obj.publicKey),
+          SQLNullableString(obj.batchProof), SQLNullableString(obj.claimID)];
+}
+
++ (NSString *)publisherInfoInsertFor:(PublisherInfo *)obj
+{
+  const auto publisherInfoInsert =
+  @"INSERT INTO \"publisher_info\" "
+  "(publisher_id, excluded, name, favIcon, url, provider) VALUES ("
+  "%@,"  // publisher_id LONGVARCHAR PRIMARY KEY NOT NULL UNIQUE
+  "%d,"  // excluded INTEGER DEFAULT 0 NOT NULL
+  "%@,"  // name TEXT NOT NULL
+  "%@,"  // favIcon TEXT NOT NULL
+  "%@,"  // url TEXT NOT NULL
+  "%@"   // provider TEXT NOT NULL
+  ");";
+  return [NSString stringWithFormat:publisherInfoInsert,
+          SQLString(obj.publisherID), obj.excluded, SQLString(obj.name),
+          SQLString(obj.faviconURL), SQLString(obj.url), SQLString(obj.provider)];
+}
+
++ (NSString *)recurringDonationInsertFor:(RecurringDonation *)obj
+{
+  const auto recurringDonationInsert =
+  @"INSERT INTO \"recurring_donation\" "
+  "(publisher_id, amount, added_date) VALUES ("
+  "%@,"  // publisher_id LONGVARCHAR NOT NULL PRIMARY KEY UNIQUE
+  "%f,"  // amount DOUBLE DEFAULT 0 NOT NULL
+  "%lld" // added_date INTEGER DEFAULT 0 NOT NULL
+  ");";
+  return [NSString stringWithFormat:recurringDonationInsert,
+          SQLString(obj.publisherID), obj.amount, obj.addedDate];
+}
+
++ (NSString *)unblindedTokenInsertFor:(UnblindedToken *)obj
+{
+  const auto unblindedTokenInsert =
+  @"INSERT INTO \"unblinded_tokens\" "
+  "(token_id, token_value, public_key, value, promotion_id) VALUES ("
+  "%lld," // token_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL
+  "%@,"   // token_value TEXT
+  "%@,"   // public_key TEXT
+  "%f,"   // value DOUBLE NOT NULL DEFAULT 0
+  "%@"    // promotion_id TEXT
+  ");";
+  return [NSString stringWithFormat:unblindedTokenInsert,
+          obj.tokenID, SQLNullableString(obj.tokenValue),
+          SQLNullableString(obj.publicKey), obj.value,
+          SQLNullableString(obj.promotionID)];
+}
+
++ (void)deleteCoreDataServerPublisherList:(nullable void (^)(NSError * _Nullable error))completion
+{
+  const auto context = [DataController newBackgroundContext];
+  
+  BLOG(1, @"CoreData: Deleting publisher list");
+  [context performBlock:^{
+    const auto fetchRequest = ServerPublisherInfo.fetchRequest;
+    fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(ServerPublisherInfo.class)
+                                      inManagedObjectContext:context];
+    NSError *error = nil;
+    const auto deleteRequest = [[NSBatchDeleteRequest alloc] initWithFetchRequest:fetchRequest];
+    [context executeRequest:deleteRequest error:&error];
+    
+    if (!error && context.hasChanges) {
+      [context save:&error];
+    }
+    
+    if (completion) {
+      dispatch_async(dispatch_get_main_queue(), ^{
+        completion(error);
+      });
+    }
+  }];
+}
+
+#pragma mark -
+
+NS_INLINE NSString *SQLNullableString(NSString * _Nullable value) {
+  return (value == nil ? @"NULL" : SQLString(value));
+}
+
+NS_INLINE NSString *SQLString(NSString * _Nonnull value) {
+  // Obj-C doesn't enforce nullability, therefore adding an extra check
+  if (value == nil) {
+    return @"''";
+  }
+  // Have to make sure to escape any apostrophies
+  return [NSString stringWithFormat:@"'%@'",
+          [value stringByReplacingOccurrencesOfString:@"'" withString:@"''"]];
+}
+
+static NSArray<NSString *> *
+MapFetchedObjectsToInsertsForClass(Class clazz,
+                                   NSString * (NS_NOESCAPE ^block)(__kindof NSManagedObject* obj))
+{
+  const auto context = DataController.viewContext;
   const auto fetchRequest = [clazz fetchRequest];
   fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(clazz)
                                     inManagedObjectContext:context];
-  fetchRequest.fetchLimit = 1;
-
-  const auto predicates = [[NSMutableArray<NSPredicate *> alloc] init];
-  [predicates addObject:[NSPredicate predicateWithFormat:@"publisherID == %@", publisherID]];
-
-  if (additionalPredicate) {
-    [predicates addObject:additionalPredicate];
-  }
-
-  fetchRequest.predicate = [NSCompoundPredicate andPredicateWithSubpredicates:predicates];
-
   NSError *error;
   const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
   if (error) {
-    NSLog(@"%s: %@", __PRETTY_FUNCTION__, error);
+    return @[];
   }
-
-  return fetchedObjects.firstObject;
-}
-
-+ (nullable PublisherInfo *)getPublisherInfoWithID:(NSString *)publisherID context:(NSManagedObjectContext *)context
-{
-  return [self firstOfClass:PublisherInfo.class withPublisherID:publisherID
-            additionalPredicate:nil context:context];
-}
-
-+ (nullable ActivityInfo *)getActivityInfoWithPublisherID:(NSString *)publisherID
-                                           reconcileStamp:(unsigned long long)reconcileStamp
-                                                  context:(NSManagedObjectContext *)context
-{
-  const auto reconcilePredicate = [NSPredicate predicateWithFormat:@"reconcileStamp == %ld", reconcileStamp];
-  return [self firstOfClass:ActivityInfo.class withPublisherID:publisherID
-            additionalPredicate:reconcilePredicate context:context];
-}
-
-+ (nullable RecurringDonation *)getRecurringDonationWithPublisherID:(NSString *)publisherID context:(NSManagedObjectContext *)context
-{
-  return [self firstOfClass:RecurringDonation.class withPublisherID:publisherID
-            additionalPredicate:nil context:context];
-}
-
-+ (nullable PendingContribution *)getPendingContributonWithPublisherID:(NSString *)publisherID
-                                                           viewingID:(NSString *)viewingID
-                                                           addedDate:(UInt64)addedDate
-                                                             context:(NSManagedObjectContext *)context
-{
-  const auto otherPedicate = [NSPredicate predicateWithFormat:@"viewingID == %@ && addedDate = %d", viewingID, addedDate];
-  return [self firstOfClass:PendingContribution.class withPublisherID:publisherID
-        additionalPredicate:otherPedicate context:context];
-}
-
-+ (nullable MediaPublisherInfo *)getMediaPublisherInfoWithMediaKey:(NSString *)mediaKey context:(NSManagedObjectContext *)context
-{
-  const auto fetchRequest = MediaPublisherInfo.fetchRequest;
-  fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(MediaPublisherInfo.class)
-                                    inManagedObjectContext:context];
-  fetchRequest.fetchLimit = 1;
-  fetchRequest.predicate = [NSPredicate predicateWithFormat:@"mediaKey == %@", mediaKey];
-
-  NSError *error;
-  const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
-  if (error) {
-    NSLog(@"%s: %@", __PRETTY_FUNCTION__, error);
-  }
-
-  return fetchedObjects.firstObject;
-}
-
-#pragma mark - Publisher Info
-
-+ (BATPublisherInfo *)publisherInfoWithPublisherID:(NSString *)publisherID
-{
-  auto databaseInfo = [self getPublisherInfoWithID:publisherID context:DataController.viewContext];
-  if (!databaseInfo) {
-    return nil;
-  }
-  auto info = [[BATPublisherInfo alloc] init];
-  info.id = databaseInfo.publisherID;
-  info.name = databaseInfo.name;
-  info.url = databaseInfo.url;
-  info.faviconUrl = databaseInfo.faviconURL;
-  info.provider = databaseInfo.provider;
-  info.verified = databaseInfo.verified;
-  info.excluded = (BATPublisherExclude)databaseInfo.excluded;
-  return info;
-}
-
-+ (BATPublisherInfo *)panelPublisherWithFilter:(BATActivityInfoFilter *)filter
-{
-  const auto info = [self publisherInfoWithPublisherID:filter.id];
-  const auto activity = [self getActivityInfoWithPublisherID:filter.id
-                                              reconcileStamp:filter.reconcileStamp
-                                                     context:DataController.viewContext];
-  if (activity) {
-    info.percent = activity.percent;
-  }
-  return info;
-}
-
-+ (void)insertOrUpdatePublisherInfo:(BATPublisherInfo *)info completion:( BATLedgerDatabaseWriteCompletion)completion
-{
-  return [self insertOrUpdatePublisherInfo:info context:nil completion:completion];
-}
-
-+ (void)insertOrUpdatePublisherInfo:(BATPublisherInfo *)info context:(nullable NSManagedObjectContext *)context completion:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  if (info.id.length == 0) {
-    if (completion) { completion(NO); }
-    return;
-  }
-
-  [DataController.shared performOnContext:context task:^(NSManagedObjectContext * _Nonnull context) {
-    const auto pi = [self getPublisherInfoWithID:info.id context:context] ?:
-      [[PublisherInfo alloc] initWithEntity:[NSEntityDescription entityForName:NSStringFromClass(PublisherInfo.class) inManagedObjectContext:context]
-             insertIntoManagedObjectContext:context];
-    pi.publisherID = info.id;
-    pi.verified = info.verified;
-    pi.excluded = info.excluded;
-    pi.name = info.name;
-    pi.url = info.url;
-    pi.provider = info.provider;
-    if ([info.faviconUrl isEqualToString:[NSString stringWithUTF8String:ledger::kClearFavicon]]) {
-      pi.faviconURL = @"";
-    } else {
-      pi.faviconURL = info.faviconUrl;
-    }
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-+ (NSArray<BATPublisherInfo *> *)excludedPublishers
-{
-  const auto context = DataController.viewContext;
-  const auto fetchRequest = PublisherInfo.fetchRequest;
-  fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(PublisherInfo.class)
-                                    inManagedObjectContext:context];
-  fetchRequest.predicate = [NSPredicate predicateWithFormat:@"excluded == %d", BATExcludeFilterFilterExcluded];
-
-  NSError *error;
-  const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
-  if (error) {
-    NSLog(@"%@", error);
-  }
-
-  const auto publishers = [[NSMutableArray<BATPublisherInfo *> alloc] init];
-  for (PublisherInfo *publisher in fetchedObjects) {
-    auto info = [[BATPublisherInfo alloc] init];
-    info.id = publisher.publisherID;
-    info.excluded = static_cast<BATPublisherExclude>(publisher.excluded);
-    info.name = publisher.name;
-    info.url = publisher.url;
-    info.provider = publisher.provider;
-    info.faviconUrl = publisher.faviconURL;
-    [publishers addObject:info];
-  }
-  return publishers;
-}
-
-+ (void)restoreExcludedPublishers:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
-    const auto fetchRequest = PublisherInfo.fetchRequest;
-    fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(PublisherInfo.class)
-                                      inManagedObjectContext:context];
-    fetchRequest.predicate = [NSPredicate predicateWithFormat:@"excluded == %d", BATPublisherExcludeExcluded];
-
-    NSError *error;
-    const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
-
-    if (error) {
-      NSLog(@"%s: %@", __PRETTY_FUNCTION__, error);
-    }
-
-    for (PublisherInfo *info in fetchedObjects) {
-      info.excluded = BATPublisherExcludeDefault;
-    }
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-+ (NSUInteger)excludedPublishersCount
-{
-  const auto context = DataController.viewContext;
-  const auto fetchRequest = ActivityInfo.fetchRequest;
-  fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(PublisherInfo.class)
-                                    inManagedObjectContext:context];
-  fetchRequest.predicate = [NSPredicate predicateWithFormat:@"excluded == %d", BATPublisherExcludeExcluded];
-
-  NSError *error;
-  const auto count = [context countForFetchRequest:fetchRequest error:&error];
-  if (error) {
-    NSLog(@"%s: %@", __PRETTY_FUNCTION__, error);
-  }
-  return count;
-}
-
-#pragma mark - Contribution Info
-
-+ (void)insertContributionInfo:(NSString *)probi month:(const int)month year:(const int)year date:(const uint32_t)date publisherKey:(NSString *)publisherKey category:(BATRewardsCategory)category completion:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
-    auto ci = [[ContributionInfo alloc] initWithEntity:[NSEntityDescription entityForName:NSStringFromClass(ContributionInfo.class) inManagedObjectContext:context]
-                        insertIntoManagedObjectContext:context];
-    ci.probi = probi;
-    ci.month = month;
-    ci.year = year;
-    ci.date = date;
-    ci.publisherID = publisherKey;
-    ci.category = category;
-    ci.publisher = [self getPublisherInfoWithID:publisherKey context:context];
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-+ (NSArray<BATPublisherInfo *> *)oneTimeTipsPublishersForMonth:(BATActivityMonth)month year:(int)year
-{
-  const auto context = DataController.viewContext;
-  const auto fetchRequest = ContributionInfo.fetchRequest;
-  fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(ContributionInfo.class)
-                                    inManagedObjectContext:context];
-  fetchRequest.predicate = [NSPredicate predicateWithFormat:@"month = %d AND year = %d AND category = %d",
-                            month, year, BATRewardsCategoryOneTimeTip];
-
-  NSError *error;
-  const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
-  if (error) {
-    NSLog(@"%@", error);
-  }
-
-  const auto publishers = [[NSMutableArray<BATPublisherInfo *> alloc] init];
-  for (ContributionInfo *ci in fetchedObjects) {
-    auto info = [[BATPublisherInfo alloc] init];
-    info.id = ci.publisherID;
-    info.name = ci.publisher.name;
-    info.url = ci.publisher.url;
-    info.faviconUrl = ci.publisher.faviconURL;
-    info.weight = [ci.probi doubleValue];
-    info.reconcileStamp = ci.date;
-    info.verified = ci.publisher.verified;
-    info.provider = ci.publisher.provider;
-    [publishers addObject:info];
-  }
-  return publishers;
-}
-
-#pragma mark - Activity Info
-
-+ (void)insertOrUpdateActivityInfoFromPublisher:(BATPublisherInfo *)info completion:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  [self insertOrUpdateActivityInfoFromPublisher:info context:nil completion:completion];
-}
-
-+ (void)insertOrUpdateActivityInfoFromPublisher:(BATPublisherInfo *)info context:(nullable NSManagedObjectContext *)context completion:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  if (info.id.length == 0) {
-    if (completion) { completion(NO); }
-    return;
-  }
-
-  [DataController.shared performOnContext:context task:^(NSManagedObjectContext * _Nonnull context) {
-    [self insertOrUpdatePublisherInfo:info context:context completion:nil];
-
-    const auto publisherFromInfo = [self getActivityInfoWithPublisherID:info.id
-                                                         reconcileStamp:info.reconcileStamp context:context];
-
-    const auto ai = publisherFromInfo ?:
-      [[ActivityInfo alloc] initWithEntity:[NSEntityDescription entityForName:NSStringFromClass(ActivityInfo.class) inManagedObjectContext:context] insertIntoManagedObjectContext:context];
-
-    ai.publisher = [self getPublisherInfoWithID:info.id context:context];
-    ai.publisherID = info.id;
-    ai.duration = info.duration;
-    ai.score = info.score;
-    ai.percent = info.percent;
-    ai.weight = info.weight;
-    ai.reconcileStamp = info.reconcileStamp;
-    ai.visits = info.visits;
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-+ (void)insertOrUpdateActivitiesInfoFromPublishers:(NSArray<BATPublisherInfo *> *)publishers  completion:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
-    for (BATPublisherInfo *info in publishers) {
-      [self insertOrUpdateActivityInfoFromPublisher:info context:context completion:nil];
-    }
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-+ (NSArray<BATPublisherInfo *> *)publishersWithActivityFromOffset:(uint32_t)start limit:(uint32_t)limit filter:(BATActivityInfoFilter *)filter
-{
-  const auto context = DataController.viewContext;
-  const auto fetchRequest = ActivityInfo.fetchRequest;
-  fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(ActivityInfo.class)
-                                    inManagedObjectContext:context];
-  if (limit > 0) {
-    fetchRequest.fetchLimit = limit;
-    if (start > 1) {
-      fetchRequest.fetchOffset = start;
-    }
-  }
-
-  NSMutableArray *sortDescriptors = [[NSMutableArray alloc] init];
-  for (BATActivityInfoFilterOrderPair *orderPair in filter.orderBy) {
-    [sortDescriptors addObject:[NSSortDescriptor sortDescriptorWithKey:orderPair.propertyName ascending:orderPair.ascending]];
-  }
-  fetchRequest.sortDescriptors = sortDescriptors;
-
-  const auto predicates = [[NSMutableArray<NSPredicate *> alloc] init];
-
-  if (filter.id.length > 0) {
-    [predicates addObject:[NSPredicate predicateWithFormat:@"publisherID == %@", filter.id]];
-  }
-
-  if (filter.reconcileStamp > 0) {
-    [predicates addObject:[NSPredicate predicateWithFormat:@"reconcileStamp == %ld", filter.reconcileStamp]];
-  }
-
-  if (filter.minDuration > 0) {
-    [predicates addObject:[NSPredicate predicateWithFormat:@"duration >= %ld", filter.minDuration]];
-  }
-
-  if (filter.excluded != BATExcludeFilterFilterAll) {
-    if (filter.excluded != BATExcludeFilterFilterAllExceptExcluded) {
-      [predicates addObject:[NSPredicate predicateWithFormat:@"publisher.excluded == %d", filter.excluded]];
-    } else {
-      [predicates addObject:[NSPredicate predicateWithFormat:@"publisher.excluded != %d", BATExcludeFilterFilterExcluded]];
-    }
-  }
-
-  if (filter.percent) {
-    [predicates addObject:[NSPredicate predicateWithFormat:@"percent >= %d", filter.percent]];
-  }
-
-  if (filter.minVisits) {
-    [predicates addObject:[NSPredicate predicateWithFormat:@"visits >= %d", filter.minVisits]];
-  }
-
-  if (predicates.count > 0) {
-    fetchRequest.predicate = [NSCompoundPredicate andPredicateWithSubpredicates:predicates];
-  }
-
-  NSError *error;
-  const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
-  if (error) {
-    NSLog(@"%@", error);
-  }
-
-  const auto publishers = [[NSMutableArray<BATPublisherInfo *> alloc] init];
-  for (ActivityInfo *activity in fetchedObjects) {
-    auto info = [[BATPublisherInfo alloc] init];
-    info.id = activity.publisherID;
-    info.duration = activity.duration;
-    info.score = activity.score;
-    info.percent = activity.percent;
-    info.weight = activity.weight;
-    info.verified = activity.publisher.verified;
-    info.excluded = (BATPublisherExclude)activity.publisher.excluded;
-    info.name = activity.publisher.name;
-    info.url = activity.publisher.url;
-    info.provider = activity.publisher.provider;
-    info.faviconUrl = activity.publisher.faviconURL;
-    info.reconcileStamp = activity.reconcileStamp;
-    info.visits = activity.visits;
-    [publishers addObject:info];
-  }
-  return publishers;
-}
-
-+ (void)deleteActivityInfoWithPublisherID:(NSString *)publisherID reconcileStamp:(uint64_t)reconcileStamp completion:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
-    const auto request = ActivityInfo.fetchRequest;
-    request.entity = [NSEntityDescription entityForName:NSStringFromClass(ActivityInfo.class)
-                                 inManagedObjectContext:context];
-    request.predicate = [NSPredicate predicateWithFormat:@"publisherID == %@ AND reconcileStamp == %ld", publisherID, reconcileStamp];
-
-    NSError *error;
-    const auto fetchedObjects = [context executeFetchRequest:request error:&error];
-    if (error) {
-      NSLog(@"%@", error);
-      dispatch_async(dispatch_get_main_queue(), ^{
-        completion(NO);
-      });
-      return;
-    }
-
-    for (ActivityInfo *info in fetchedObjects) {
-      [context deleteObject:info];
-    }
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-#pragma mark - Media Publisher Info
-
-+ (BATPublisherInfo *)mediaPublisherInfoWithMediaKey:(NSString *)mediaKey
-{
-  const auto mi = [self getMediaPublisherInfoWithMediaKey:mediaKey context:DataController.viewContext];
-  if (!mi) {
-    return nil;
-  }
-  // As far as I know, there is no data that is actually coming from MediaPublisherInfo, just basically
-  // here to grab a publisher info object with a media key
-  return [self publisherInfoWithPublisherID:mi.publisherID];
-}
-
-+ (void)insertOrUpdateMediaPublisherInfoWithMediaKey:(NSString *)mediaKey publisherID:(NSString *)publisherID completion:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  if (mediaKey.length == 0 || publisherID.length == 0) {
-    if (completion) { completion(NO); }
-    return;
-  }
-
-  [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
-    auto mi = [self getMediaPublisherInfoWithMediaKey:mediaKey context:context] ?: [[MediaPublisherInfo alloc] initWithEntity:[NSEntityDescription entityForName:NSStringFromClass(MediaPublisherInfo.class) inManagedObjectContext:context]
-                          insertIntoManagedObjectContext:context];
-    mi.mediaKey = mediaKey;
-    mi.publisherID = publisherID;
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-#pragma mark - Recurring Tips
-
-+ (NSArray<BATPublisherInfo *> *)recurringTips
-{
-  const auto context = DataController.viewContext;
-  const auto fetchRequest = RecurringDonation.fetchRequest;
-  fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(RecurringDonation.class)
-                                    inManagedObjectContext:context];
-
-  NSError *error;
-  const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
-  if (error) {
-    NSLog(@"%@", error);
-  }
-
-  const auto publishers = [[NSMutableArray<BATPublisherInfo *> alloc] init];
-  for (RecurringDonation *rd in fetchedObjects) {
-    auto info = [[BATPublisherInfo alloc] init];
-    info.id = rd.publisherID;
-    info.name = rd.publisher.name;
-    info.url = rd.publisher.url;
-    info.faviconUrl = rd.publisher.faviconURL;
-    info.weight = rd.amount;
-    info.reconcileStamp = rd.addedDate;
-    info.verified = rd.publisher.verified;
-    info.provider = rd.publisher.provider;
-    [publishers addObject:info];
-  }
-  return publishers;
-}
-
-+ (void)insertOrUpdateRecurringTipWithPublisherID:(NSString *)publisherID
-                                           amount:(double)amount
-                                        dateAdded:(uint32_t)dateAdded
-                                       completion:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  if (publisherID.length == 0) {
-    if (completion) { completion(NO); }
-    return;
-  }
-
-  [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
-    auto rd = [self getRecurringDonationWithPublisherID:publisherID context:context] ?: [[RecurringDonation alloc] initWithEntity:[NSEntityDescription entityForName:NSStringFromClass(RecurringDonation.class) inManagedObjectContext:context]
-                         insertIntoManagedObjectContext:context];
-    rd.publisherID = publisherID;
-    rd.amount = amount;
-    rd.addedDate = dateAdded;
-    rd.publisher = [self getPublisherInfoWithID:publisherID context:context];
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-+ (void)removeRecurringTipWithPublisherID:(NSString *)publisherID completion:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  // Early guard to check if object exists.
-  // The check happens on main thread, while the deletion is done in background.
-  const auto donationExists = [self getRecurringDonationWithPublisherID:publisherID
-                                                                context:DataController.viewContext];
-  if (!donationExists) {
-    if (completion) { completion(NO); }
-    return;
-  }
-
-  [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
-    const auto donation = [self getRecurringDonationWithPublisherID:publisherID context:context];
-    [context deleteObject:donation];
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-#pragma mark - Pending Contributions
-
-+ (NSArray<BATPendingContributionInfo *> *)pendingContributions
-{
-  const auto context = DataController.viewContext;
-  const auto fetchRequest = PendingContribution.fetchRequest;
-  fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(PendingContribution.class)
-                                    inManagedObjectContext:context];
-
-  NSError *error;
-  const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
-  if (error) {
-    NSLog(@"%@", error);
-  }
-
-  const auto publishers = [[NSMutableArray<BATPendingContributionInfo *> alloc] init];
-  for (PendingContribution *pc in fetchedObjects) {
-    auto info = [[BATPendingContributionInfo alloc] init];
-    info.publisherKey = pc.publisherID;
-    info.name = pc.publisher.name;
-    info.url = pc.publisher.url;
-    info.faviconUrl = pc.publisher.faviconURL;
-    info.verified = pc.publisher.verified;
-    info.provider = pc.publisher.provider;
-    info.amount = pc.amount;
-    info.addedDate = pc.addedDate;
-    info.viewingId = pc.viewingID;
-    info.category = pc.category;
-    [publishers addObject:info];
-  }
-  return publishers;
-}
-
-+ (void)insertPendingContributions:(NSArray<BATPendingContribution *> *)contributions completion:(nullable BATLedgerDatabaseWriteCompletion)completion
-{
-  const auto now = [[NSDate date] timeIntervalSince1970];
-  [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
-    for (BATPendingContribution *contribution in contributions) {
-      auto pc = [[PendingContribution alloc] initWithEntity:[NSEntityDescription entityForName:NSStringFromClass(PendingContribution.class) inManagedObjectContext:context]
-                             insertIntoManagedObjectContext:context];
-      pc.publisher = [self getPublisherInfoWithID:contribution.publisherKey context:context];
-      pc.publisherID = contribution.publisherKey;
-      pc.amount = contribution.amount;
-      pc.addedDate = now;
-      pc.viewingID = contribution.viewingId;
-      pc.category = contribution.category;
-    }
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-+ (void)removePendingContributionForPublisherID:(NSString *)publisherID viewingID:(NSString *)viewingID addedDate:(UInt64)addedDate completion:(BATLedgerDatabaseWriteCompletion)completion
-{
-  // Early guard to check if object exists.
-  // The check happens on main thread, while the deletion is done in background.
-  const auto pendingContribution = [self getPendingContributonWithPublisherID:publisherID
-                                                                    viewingID:viewingID
-                                                                    addedDate:addedDate
-                                                                      context:DataController.viewContext];
-  if (!pendingContribution) {
-    if (completion) { completion(NO); }
-    return;
-  }
-
-  [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
-    const auto pendingContribution = [self getPendingContributonWithPublisherID:publisherID
-                                                                      viewingID:viewingID
-                                                                      addedDate:addedDate
-                                                                        context:context];
-    [context deleteObject:pendingContribution];
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-+ (void)removeAllPendingContributions:(BATLedgerDatabaseWriteCompletion)completion
-{
-  [DataController.shared performOnContext:nil task:^(NSManagedObjectContext * _Nonnull context) {
-    const auto fetchRequest = PendingContribution.fetchRequest;
-    fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(PendingContribution.class)
-                                      inManagedObjectContext:context];
-
-    NSError *error;
-    const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
-    if (error) {
-      NSLog(@"%@", error);
-      completion(NO);
-      return;
-    }
-
-    for (PendingContribution *pc in fetchedObjects) {
-      [context deleteObject:pc];
-    }
-  } completion:WriteToDataControllerCompletion(completion)];
-}
-
-+ (double)reservedAmountForPendingContributions
-{
-  const auto context = DataController.viewContext;
-  const auto fetchRequest = PendingContribution.fetchRequest;
-  fetchRequest.entity = [NSEntityDescription entityForName:NSStringFromClass(PendingContribution.class)
-                                    inManagedObjectContext:context];
-
-  NSError *error;
-  const auto fetchedObjects = [context executeFetchRequest:fetchRequest error:&error];
-  if (!fetchedObjects) {
-    NSLog(@"%@", error);
-  }
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wobjc-messaging-id"
-  return [[fetchedObjects valueForKeyPath:@"@sum.amount"] doubleValue];
-#pragma clang diagnostic pop
+  const auto statements = [[NSMutableArray<NSString *> alloc] init];
+  [fetchedObjects enumerateObjectsUsingBlock:^(NSManagedObject *_Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+    if (![obj isKindOfClass:clazz]) { return; }
+    [statements addObject:block(obj)];
+  }];
+  return statements;
 }
 
 @end

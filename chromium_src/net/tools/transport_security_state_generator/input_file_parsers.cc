@@ -1,4 +1,5 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright 2019 The Brave Authors. All rights reserved.
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
@@ -308,16 +309,37 @@ bool ParseJSON(base::StringPiece json,
     ],
     "entries": [
       // Brave
-      { "name": "ledger.mercury.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"},
-      { "name": "ledger-staging.mercury.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"},
-      { "name": "balance.mercury.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"},
-      { "name": "balance-staging.mercury.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"},
       { "name": "download.brave.com", "mode": "force-https", "policy": "custom", "pins": "brave"},
       { "name": "laptop-updates.brave.com", "mode": "force-https", "policy": "custom", "pins": "brave"},
+      // TODO(darkdh): remove sync v1 endpoints when Android migrates to v2
       { "name": "sync.brave.com", "mode": "force-https", "policy": "custom", "pins": "brave"},
       { "name": "sync-staging.brave.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "sync-v2.brave.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "sync-v2.bravesoftware.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "sync-v2.brave.software", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "p3a.brave.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "p3a.bravesoftware.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "p3a-dev.bravesoftware.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+
+      // Rewards
+      { "name": "ledger.mercury.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "ledger-staging.mercury.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "ledger.rewards.brave.software", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "balance.mercury.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "balance-staging.mercury.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "balance.rewards.brave.software", "policy": "custom", "mode": "force-https", "pins": "brave"},
       { "name": "publishers-distro.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"},
-      { "name": "publishers-staging-distro.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"}
+      { "name": "publishers-staging-distro.basicattentiontoken.org", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "creators-distro.brave.software", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "grant.rewards.brave.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "grant.rewards.bravesoftware.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "grant.rewards.brave.software", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "payment.rewards.brave.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "payment.rewards.bravesoftware.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "payment.rewards.brave.software", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "api.rewards.brave.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "api.rewards.bravesoftware.com", "policy": "custom", "mode": "force-https", "pins": "brave"},
+      { "name": "api.rewards.brave.software", "policy": "custom", "mode": "force-https", "pins": "brave"}
     ]})brave_json";
 
   return ParseJSON_ChromiumImpl(brave_json, entries, pinsets);

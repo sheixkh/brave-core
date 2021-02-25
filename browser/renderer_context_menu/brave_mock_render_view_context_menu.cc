@@ -14,8 +14,6 @@
 #include "chrome/grit/generated_resources.h"
 #include "chrome/test/base/testing_profile.h"
 #include "components/prefs/pref_service.h"
-#include "components/renderer_context_menu/render_view_context_menu_observer.h"
-#include "components/renderer_context_menu/render_view_context_menu_proxy.h"
 #include "content/public/browser/browser_context.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "ui/base/l10n/l10n_util.h"
@@ -99,7 +97,7 @@ void BraveMockRenderViewContextMenu::AddMenuItem(int command_id,
 void BraveMockRenderViewContextMenu::AddMenuItemWithIcon(
     int command_id,
     const base::string16& title,
-    const gfx::ImageSkia& image) {
+    const ui::ImageModel& icon) {
   AddMenuItem(command_id, title);
 }
 
@@ -159,7 +157,7 @@ void BraveMockRenderViewContextMenu::AddSubMenuWithStringIdAndIcon(
     int command_id,
     int message_id,
     ui::MenuModel* model,
-    const gfx::ImageSkia& image) {
+    const ui::ImageModel& icon) {
   AddSubMenu(command_id, base::NumberToString16(message_id), model);
 }
 
@@ -181,8 +179,9 @@ void BraveMockRenderViewContextMenu::UpdateMenuItem(
          << " command_id: " << command_id;
 }
 
-void BraveMockRenderViewContextMenu::UpdateMenuIcon(int command_id,
-                                                    const gfx::Image& image) {
+void BraveMockRenderViewContextMenu::UpdateMenuIcon(
+    int command_id,
+    const ui::ImageModel& image) {
   for (auto& item : items_) {
     if (item.command_id == command_id) {
       return;

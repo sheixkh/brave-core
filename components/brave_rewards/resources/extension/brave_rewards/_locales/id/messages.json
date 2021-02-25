@@ -19,12 +19,16 @@
     "message": "Sekarang Anda bisa mendapatkan token dengan melihat iklan yang menghargai privasi.",
     "description": "Entry text for welcome screen in the panel, new user"
   },
+  "welcomeDescPoints": {
+    "message": "Anda sekarang bisa mendapat poin untuk menonton iklan yang menghormati privasi.",
+    "description": "Entry text for welcome screen in the panel, points"
+  },
   "welcomeFooterTextOne": {
     "message": "Lihat apa saja yang telah ditingkatkan",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, existing user"
   },
   "welcomeFooterTextTwo": {
-    "message": "Pelajari Lebih Lanjut",
+    "message": "Pelajari Selengkapnya",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, new user"
   },
   "welcomeHeaderOne": {
@@ -43,6 +47,22 @@
     "message": "Hibah",
     "description": "Title for grant section in wallet summary"
   },
+  "details": {
+    "message": "Rincian",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "Saldo Anda",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "Poin BAT",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "dapat digunakan di Brave Rewards untuk memberi kontribusi kepada kreator konten favorit Anda. BAT Points tidak dapat ditukarkan dengan BAT.",
+    "description": "Text for BAT Point helper message"
+  },
   "on": {
     "message": "di",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -56,11 +76,11 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "Beri tip bulanan untuk situs ini",
+    "message": "Kontribusi Bulanan",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
-    "message": "Sertakan di Konribusi Otomatis",
+    "message": "Sertakan dalam Kontribusi Otomatis",
     "description": "Label for checkbox that allows user to exclude publishers from auto contribute"
   },
   "donateNow": {
@@ -128,12 +148,22 @@
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "Hibah Token",
-    "description": "Title for grant notification"
+    "message": "Hibah $currency$",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
-    "message": "Hibah Token Diklaim\n",
+    "message": "Hibah Token Diklaim",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "Hibah Poin Telah Diambil",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "Pendapatan dari Iklan",
@@ -152,11 +182,11 @@
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "Tip Bulanan",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "Kontribusi Bulanan",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
-    "message": "Mati",
+    "message": "Nonaktif",
     "description": "Label used in toggle indicating that toggle is off"
   },
   "ok": {
@@ -164,12 +194,8 @@
     "description": "Used in notification to dismiss notification"
   },
   "braveAdsLaunchMsg": {
-    "message": "Sekarang Anda bisa mendapatkan penghasilan dari melihat iklan.",
+    "message": "Sekarang Anda bisa mendapat imbalan dengan melihat iklan.",
     "description": "Message for ads launch notification"
-  },
-  "braveAdsLaunchTitle": {
-    "message": "Brave Ads telah tiba!",
-    "description": "Message used in notification to let users know Ads is available"
   },
   "braveAdsTitle": {
     "message": "Brave Ads",
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "Anda menyumbangkan $amount$ BAT",
+    "message": "Anda telah berkontribusi $amount$ $currency$",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -198,7 +228,7 @@
     "description": "Notification button text when we ask user to backup wallet"
   },
   "backupWalletTitle": {
-    "message": "Cadangkan Dompet\n",
+    "message": "Cadangkan Dompet",
     "description": "Notification title when we ask user to backup wallet"
   },
   "backupWalletNotification": {
@@ -214,7 +244,7 @@
     "description": "Title for insufficient funds notification"
   },
   "braveRewardsCreatingText": {
-    "message": "Membuat wallet",
+    "message": "Membuat dompet",
     "description": "Used in a button displaying wallet creation process"
   },
   "contributeNotificationError": {
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "Pembayaran bulanan terjadwal Anda untuk Kontribusi Otomatis dan tip bulanan tak dapat diproses karena dana kurang. Kami akan mencoba kembali dalam 30 hari.",
+    "message": "Pembayaran bulanan berjadwal Anda untuk Kontribusi Otomatis dan kontribusi bulanan tidak dapat diselesaikan karena dana tidak mencukupi. Kami akan mencoba lagi dalam 30 hari.",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -238,7 +268,7 @@
     "description": "Directs the user to drag the BAT icon"
   },
   "captchaProveHuman": {
-    "message": "Buktikan bahwa Anda adalah manusia!",
+    "message": "Anda bukan robot kan?",
     "description": "Cosmetic text for captcha prompt"
   },
   "captchaTarget": {
@@ -261,33 +291,17 @@
     "message": "Tanggal Kedaluwarsa Hibah",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "Maaf, tampaknya hibah ini sudah diklaim.",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
     "message": "Oke",
     "description": "Button text for clearing the error."
   },
   "grantGeneralErrorText": {
-    "message": "Brave Rewards mengalami masalah. Silakan coba lagi nanti.",
+    "message": "Brave Rewards mengalami kendala. Silakan coba lagi nanti.",
     "description": "Error text when user is having problems claiming a grant."
   },
   "grantGeneralErrorTitle": {
     "message": "Ups, ada yang keliru. Silakan coba lagi nanti.",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "Oke",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "Maaf, tampaknya hibah ini telah kedaluwarsa.",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "Hibah ini tidak lagi tersedia.",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "Segarkan Status",
@@ -306,15 +320,15 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "Anda telah menetapkan {{reservedAmount}} BAT untuk pembuat konten yang belum mendaftar untuk menerima kontribusi. Peramban Anda akan terus berusaha memberi kontribusi sampai mereka memverifikasi, atau sampai 90 hari telah berlalu.",
+    "message": "Anda menetapkan {{reservedAmount}} {{currency}} untuk kreator yang belum mendaftarkan diri untuk menerima kontribusi. Peramban akan tetap mencoba memberi kontribusi sampai mereka memverifikasi, atau hingga 90 hari berlalu.",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
-    "message": "Pelajari lebih lanjut.\n",
+    "message": "Pelajari lebih lanjut.",
     "description": "Text for the link that explains more about reserved amount"
   },
   "disabledPanelOff": {
-    "message": "Mati",
+    "message": "Nonaktif",
     "description": "Off state text for Panel's disabled state"
   },
   "disabledPanelSettings": {
@@ -382,12 +396,12 @@
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "Tip bulanan Anda sudah diproses!",
-    "description": "Message for monthly tips processed notification"
+    "message": "Kontribusi bulanan Anda telah diproses!",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "Kontribusi & Tip",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "Dengan mengklik 'Ikuti Reward', Anda menyatakan telah membaca dan menyetujui",
@@ -397,8 +411,12 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
+  },
   "turnOnAds": {
-    "message": "Aktifkan Iklan",
+    "message": "Nyalakan Iklan",
     "description": "Prompt to turn on Ads via notification"
   },
   "adsEarnings": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "Imbalan token Anda sedang dikirim.",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "Hibah $currency$ Anda sedang dikirim.",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "Hibah Token Gratis",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "Hibah Poin Gratis",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Reward Iklan Brave!",
+    "message": "Anda memperoleh Reward Iklan!",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "Hibah reward Anda dari Iklan Brave sedang diproses.",
+    "message": "Reward sedang dikirim ke dompet Brave Rewards Anda.",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "Hibah Token Iklan Brave Anda",
+    "message": "Jumlah Reward Anda",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "Kreator terverifikasi ini belum memverifikasi (KYC)  akun mereka untuk menerima tips dari dompet terverifikasi Anda. Tips akan tetap ada di dompet Anda sampai mereka menyelesaikan proses verifikasi.",
+    "message": "Pencipta Terverifikasi Brave ini belum mengkonfigurasi akunnya untuk menerima kontribusi dari pengguna Brave. Tips yang Anda kirim akan tetap disimpan di dompet Anda sampai mereka menyelesaikan proses ini.",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "Selesaikan verifikasi dompet",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "Tetapkan…",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "token",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "Poin",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "Token",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "poin",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "Hibah Token",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "Hibah Poin",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "Halo, $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "Batal",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "Ubah jumlah",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "Masuk",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "Memverifikasi dompet mengizinkan Anda mengelola dana dengan lebih efisien.",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "Anda harus memiliki minimal 25 BAT untuk membuat akun Uphold. Silakan coba lagi nanti. \nJika Anda sudah memiliki akun Uphold yang diverifikasi, lanjutkan untuk login.",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "Tersambung",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "Tertunda",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "Catatan: Transaksi Anda akan terlihat untuk Dijalankan setelah Anda mengotorisasi; misalnya, mereka akan dapat melihat penerima dan jumlah tip Anda.",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "Dapatkan Token & Berikan Balik\n",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "Dapatkan token dengan melihat iklan yang menghormati privasi dan dukung situs dan pembuat konten favorit Anda secara otomatis.",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "Mulai Gunakan Brave Rewards",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "Lihat tur singkat",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "Dengan melanjutkan, Anda menyetujui $tos_link_begin$Syarat Layanan$tos_link_end$ dan $pp_link_begin$Kebijakan Privasi$pp_link_end$.",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "Kembali",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "Mari ikuti tur singkat",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "Lanjutkan",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "Selesai",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "Lewati",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "Lewati dulu",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "Selamat datang di Brave Rewards!",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Berbeda dengan iklan tradisional, Iklan Privat Brave menghadiahi Anda token untuk mendukung kreator konten, sembari menjaga informasi personal Anda tetap privat.",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "Di mana iklan muncul?",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Iklan Privat Brave akan muncul sebagai pemberitahuan normal. Anda mengontrol seberapa sering Anda melihat iklan-iklan ini di pengaturan.",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "Kapan Anda menerima imbalan",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "Token yang Anda peroleh dari Iklan Privat Brave sepanjang bulan ini akan tiba tanggal 5 bulan berikutnya.",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "Jadi mudah untuk memberi balik",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "Kreator menerima kontribusi token Anda secara otomatis berdasarkan tingkat keterlibatan Anda yang kami ukur sebagai 'Atensi'.",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "Ucapkan terima kasih dengan tip",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "Memberi tip adalah cara untuk mendorong dan mendukung konten atau kreator yang Anda sukai. Ayo berikan tip!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "Apa yang dapat Anda lakukan dengan token?",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "Token dapat digunakan selain untuk mendukung kreator. Anda dapat membeli konten digital dan barang-barang lainnya di merchant.",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "Cihuy, Anda kini siap!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "Dengan menggunakan Brave Rewards Anda membantu menjadikan web tempat yang lebih baik bagi semua orang. Dan itu keren!",
+    "description": ""
   }
 }

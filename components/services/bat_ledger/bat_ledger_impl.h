@@ -8,33 +8,40 @@
 
 #include <stdint.h>
 
-#include <map>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "base/containers/flat_map.h"
 #include "base/memory/weak_ptr.h"
 #include "bat/ledger/ledger.h"
 #include "brave/components/services/bat_ledger/public/interfaces/bat_ledger.mojom.h"
 
 namespace bat_ledger {
 
-class BatLedgerClientMojoProxy;
+class BatLedgerClientMojoBridge;
 
-class BatLedgerImpl : public mojom::BatLedger,
+class BatLedgerImpl :
+    public mojom::BatLedger,
     public base::SupportsWeakPtr<BatLedgerImpl> {
  public:
-  explicit BatLedgerImpl(mojom::BatLedgerClientAssociatedPtrInfo client_info);
+  explicit BatLedgerImpl(
+      mojo::PendingAssociatedRemote<mojom::BatLedgerClient> client_info);
   ~BatLedgerImpl() override;
 
-  // bat_ledger::mojom::BatLedger
-  void Initialize(InitializeCallback callback) override;
-  void CreateWallet(CreateWalletCallback callback) override;
-  void FetchWalletProperties(FetchWalletPropertiesCallback callback) override;
+  BatLedgerImpl(const BatLedgerImpl&) = delete;
+  BatLedgerImpl& operator=(const BatLedgerImpl&) = delete;
 
-  void GetAutoContributeProps(
-      GetAutoContributePropsCallback callback) override;
+  // bat_ledger::mojom::BatLedger
+  void Initialize(
+    const bool execute_create_script,
+    InitializeCallback callback) override;
+  void CreateWallet(CreateWalletCallback callback) override;
+  void GetRewardsParameters(GetRewardsParametersCallback callback) override;
+
+  void GetAutoContributeProperties(
+      GetAutoContributePropertiesCallback callback) override;
   void GetPublisherMinVisitTime(
       GetPublisherMinVisitTimeCallback callback) override;
   void GetPublisherMinVisits(
@@ -43,92 +50,82 @@ class BatLedgerImpl : public mojom::BatLedger,
       GetPublisherAllowNonVerifiedCallback callback) override;
   void GetPublisherAllowVideos(
       GetPublisherAllowVideosCallback callback) override;
-  void GetAutoContribute(GetAutoContributeCallback callback) override;
+  void GetAutoContributeEnabled(
+      GetAutoContributeEnabledCallback callback) override;
   void GetReconcileStamp(GetReconcileStampCallback callback) override;
 
-  void OnLoad(ledger::VisitDataPtr visit_data, uint64_t current_time) override;
+  void OnLoad(
+      ledger::type::VisitDataPtr
+      visit_data,
+      uint64_t current_time) override;
   void OnUnload(uint32_t tab_id, uint64_t current_time) override;
   void OnShow(uint32_t tab_id, uint64_t current_time) override;
   void OnHide(uint32_t tab_id, uint64_t current_time) override;
   void OnForeground(uint32_t tab_id, uint64_t current_time) override;
   void OnBackground(uint32_t tab_id, uint64_t current_time) override;
 
-  void OnPostData(const std::string& url,
-      const std::string& first_party_url, const std::string& referrer,
-      const std::string& post_data, ledger::VisitDataPtr visit_data) override;
+  void OnPostData(
+      const std::string& url,
+      const std::string& first_party_url,
+      const std::string& referrer,
+      const std::string& post_data,
+      ledger::type::VisitDataPtr visit_data) override;
   void OnXHRLoad(uint32_t tab_id, const std::string& url,
       const base::flat_map<std::string, std::string>& parts,
       const std::string& first_party_url, const std::string& referrer,
-      ledger::VisitDataPtr visit_data) override;
+      ledger::type::VisitDataPtr visit_data) override;
 
   void SetPublisherExclude(
       const std::string& publisher_key,
-      const int32_t exclude,
+      const ledger::type::PublisherExclude exclude,
       SetPublisherExcludeCallback callback) override;
   void RestorePublishers(RestorePublishersCallback callback) override;
 
-  void SetBalanceReportItem(
-      int32_t month, int32_t year, int32_t type,
-      const std::string& probi) override;
-  void OnReconcileCompleteSuccess(const std::string& viewing_id,
-      int32_t category, const std::string& probi, int32_t month,
-      int32_t year, uint32_t data) override;
-
-  void FetchGrants(
-      const std::string& lang,
-      const std::string& payment_id,
-      FetchGrantsCallback callback) override;
-  void GetGrantCaptcha(const std::vector<std::string>& headers,
-      GetGrantCaptchaCallback callback) override;
-  void GetWalletPassphrase(GetWalletPassphraseCallback callback) override;
-  void RecoverWallet(const std::string& passPhrase) override;
-  void SolveGrantCaptcha(
+  void FetchPromotions(FetchPromotionsCallback callback) override;
+  void ClaimPromotion(
+      const std::string& promotion_id,
+      const std::string& payload,
+      ClaimPromotionCallback callback) override;
+  void AttestPromotion(
+      const std::string& promotion_id,
       const std::string& solution,
-      const std::string& promotionId) override;
+      AttestPromotionCallback callback) override;
+  void RecoverWallet(
+      const std::string& pass_phrase,
+      RecoverWalletCallback callback) override;
 
-  void SetRewardsMainEnabled(bool enabled) override;
-  void SetPublisherMinVisitTime(uint64_t duration_in_seconds) override;
-  void SetPublisherMinVisits(uint32_t visits) override;
+  void SetPublisherMinVisitTime(int duration_in_seconds) override;
+  void SetPublisherMinVisits(int visits) override;
   void SetPublisherAllowNonVerified(bool allow) override;
   void SetPublisherAllowVideos(bool allow) override;
-  void SetUserChangedContribution() override;
-  void SetContributionAmount(double amount) override;
-  void SetAutoContribute(bool enabled) override;
-  void UpdateAdsRewards() override;
+  void SetAutoContributionAmount(double amount) override;
+  void SetAutoContributeEnabled(bool enabled) override;
 
-  void OnTimer(uint32_t timer_id) override;
-
-  void GetAllBalanceReports(GetAllBalanceReportsCallback callback) override;
-  void GetBalanceReport(int32_t month, int32_t year,
+  void GetBalanceReport(ledger::type::ActivityMonth month, int32_t year,
       GetBalanceReportCallback callback) override;
-
-  void IsWalletCreated(IsWalletCreatedCallback callback) override;
 
   void GetPublisherActivityFromUrl(
       uint64_t window_id,
-      ledger::VisitDataPtr visit_data,
+      ledger::type::VisitDataPtr visit_data,
       const std::string& publisher_blob) override;
 
-  void GetContributionAmount(
-      GetContributionAmountCallback callback) override;
+  void GetAutoContributionAmount(
+      GetAutoContributionAmountCallback callback) override;
   void GetPublisherBanner(const std::string& publisher_id,
       GetPublisherBannerCallback callback) override;
 
-  void DoDirectTip(const std::string& publisher_id,
-                   int32_t amount,
-                   const std::string& currency,
-                   DoDirectTipCallback callback) override;
+  void OneTimeTip(
+      const std::string& publisher_key,
+      const double amount,
+      OneTimeTipCallback callback) override;
 
   void RemoveRecurringTip(
       const std::string& publisher_key,
       RemoveRecurringTipCallback callback) override;
-  void GetBootStamp(GetBootStampCallback callback) override;
-  void GetRewardsMainEnabled(
-      GetRewardsMainEnabledCallback callback) override;
+  void GetCreationStamp(GetCreationStampCallback callback) override;
   void HasSufficientBalanceToReconcile(
       HasSufficientBalanceToReconcileCallback callback) override;
-  void GetTransactionHistory(
-      GetTransactionHistoryCallback callback) override;
+
   void GetRewardsInternalsInfo(
       GetRewardsInternalsInfoCallback callback) override;
   void RefreshPublisher(
@@ -137,8 +134,9 @@ class BatLedgerImpl : public mojom::BatLedger,
   void StartMonthlyContribution() override;
 
   void SaveRecurringTip(
-      ledger::ContributionInfoPtr info,
+      ledger::type::RecurringTipPtr info,
       SaveRecurringTipCallback callback) override;
+
   void GetRecurringTips(GetRecurringTipsCallback callback) override;
 
   void GetOneTimeTips(GetOneTimeTipsCallback callback) override;
@@ -146,26 +144,44 @@ class BatLedgerImpl : public mojom::BatLedger,
   void GetActivityInfoList(
     uint32_t start,
     uint32_t limit,
-    ledger::ActivityInfoFilterPtr filter,
+    ledger::type::ActivityInfoFilterPtr filter,
     GetActivityInfoListCallback callback) override;
 
-  void LoadPublisherInfo(
-    const std::string& publisher_key,
-    LoadPublisherInfoCallback callback) override;
+  void GetExcludedList(GetExcludedListCallback callback) override;
 
   void SaveMediaInfo(
       const std::string& type,
       const base::flat_map<std::string, std::string>& args,
       SaveMediaInfoCallback callback) override;
 
-  void SetInlineTipSetting(const std::string& key, bool enabled) override;
+  void UpdateMediaDuration(
+      const uint64_t window_id,
+      const std::string& publisher_key,
+      const uint64_t duration,
+      const bool first_visit) override;
 
-  void GetInlineTipSetting(
-    const std::string& key,
-    GetInlineTipSettingCallback callback) override;
+  void GetPublisherInfo(
+      const std::string& publisher_key,
+      GetPublisherInfoCallback callback) override;
+
+  void GetPublisherPanelInfo(
+      const std::string& publisher_key,
+      GetPublisherPanelInfoCallback callback) override;
+
+  void SavePublisherInfo(
+      const uint64_t window_id,
+      ledger::type::PublisherInfoPtr publisher_info,
+      SavePublisherInfoCallback callback) override;
+
+  void SetInlineTippingPlatformEnabled(
+      const ledger::type::InlineTipsPlatforms platform,
+      bool enabled) override;
+
+  void GetInlineTippingPlatformEnabled(
+    const ledger::type::InlineTipsPlatforms platform,
+    GetInlineTippingPlatformEnabledCallback callback) override;
 
   void GetShareURL(
-    const std::string& type,
     const base::flat_map<std::string, std::string>& args,
     GetShareURLCallback callback) override;
 
@@ -173,10 +189,8 @@ class BatLedgerImpl : public mojom::BatLedger,
     GetPendingContributionsCallback callback) override;
 
   void RemovePendingContribution(
-    const std::string& publisher_key,
-    const std::string& viewing_id,
-    uint64_t added_date,
-    RemovePendingContributionCallback callback) override;
+      const uint64_t id,
+      RemovePendingContributionCallback callback) override;
 
   void RemoveAllPendingContributions(
     RemovePendingContributionCallback callback) override;
@@ -186,8 +200,7 @@ class BatLedgerImpl : public mojom::BatLedger,
 
   void FetchBalance(FetchBalanceCallback callback) override;
 
-  void GetExternalWallet(const std::string& wallet_type,
-                         GetExternalWalletCallback callback) override;
+  void GetUpholdWallet(GetUpholdWalletCallback callback) override;
 
   void ExternalWalletAuthorization(
     const std::string& wallet_type,
@@ -198,13 +211,43 @@ class BatLedgerImpl : public mojom::BatLedger,
     const std::string& wallet_type,
     DisconnectWalletCallback callback) override;
 
- private:
-  void SetCatalogIssuers(const std::string& info) override;
-  void ConfirmAd(const std::string& info) override;
-  void ConfirmAction(const std::string& uuid,
-                     const std::string& creative_set_id,
-                     const std::string& type) override;
+  void GetAnonWalletStatus(GetAnonWalletStatusCallback callback) override;
 
+  void GetTransactionReport(
+      const ledger::type::ActivityMonth month,
+      const int year,
+      GetTransactionReportCallback callback) override;
+
+  void GetContributionReport(
+      const ledger::type::ActivityMonth month,
+      const int year,
+      GetContributionReportCallback callback) override;
+
+  void GetAllContributions(GetAllContributionsCallback callback) override;
+
+  void SavePublisherInfoForTip(
+      ledger::type::PublisherInfoPtr info,
+      SavePublisherInfoForTipCallback callback) override;
+
+  void GetMonthlyReport(
+      const ledger::type::ActivityMonth month,
+      const int year,
+      GetMonthlyReportCallback callback) override;
+
+  void GetAllMonthlyReportIds(
+      GetAllMonthlyReportIdsCallback callback) override;
+
+  void GetAllPromotions(GetAllPromotionsCallback callback) override;
+
+  void Shutdown(ShutdownCallback callback) override;
+
+  void GetEventLogs(GetEventLogsCallback callback) override;
+
+  void GetBraveWallet(GetBraveWalletCallback callback) override;
+
+  void GetWalletPassphrase(GetWalletPassphraseCallback callback) override;
+
+ private:
   // workaround to pass base::OnceCallback into std::bind
   template <typename Callback>
     class CallbackHolder {
@@ -222,104 +265,119 @@ class BatLedgerImpl : public mojom::BatLedger,
       Callback callback_;
     };
 
-  static void OnGetGrantCaptcha(
-      CallbackHolder<GetGrantCaptchaCallback>* holder,
-      const std::string& image,
-      const std::string& hint);
+  static void OnPublisherInfo(
+      CallbackHolder<GetPublisherInfoCallback>* holder,
+      const ledger::type::Result result,
+      ledger::type::PublisherInfoPtr info);
+
+  static void OnPublisherPanelInfo(
+      CallbackHolder<GetPublisherPanelInfoCallback>* holder,
+      const ledger::type::Result result,
+      ledger::type::PublisherInfoPtr info);
+
+  static void OnGetBalanceReport(
+      CallbackHolder<GetBalanceReportCallback>* holder,
+      const ledger::type::Result result,
+      ledger::type::BalanceReportInfoPtr report_info);
+
+  static void OnClaimPromotion(
+      CallbackHolder<ClaimPromotionCallback>* holder,
+      const ledger::type::Result result,
+      const std::string& response);
+
+  static void OnAttestPromotion(
+      CallbackHolder<AttestPromotionCallback>* holder,
+      const ledger::type::Result result,
+      ledger::type::PromotionPtr promotion);
 
   static void OnCreateWallet(
       CallbackHolder<CreateWalletCallback>* holder,
-      ledger::Result result);
+      ledger::type::Result result);
 
   static void OnInitialize(
       CallbackHolder<InitializeCallback>* holder,
-      ledger::Result result);
+      ledger::type::Result result);
 
-  static void OnFetchWalletProperties(
-      CallbackHolder<FetchWalletPropertiesCallback>* holder,
-      ledger::Result result,
-      ledger::WalletPropertiesPtr properties);
+  static void OnRecoverWallet(
+      CallbackHolder<RecoverWalletCallback>* holder,
+      ledger::type::Result result);
+
+  static void OnGetRewardsParameters(
+      CallbackHolder<GetRewardsParametersCallback>* holder,
+      ledger::type::RewardsParametersPtr properties);
 
   static void OnSetPublisherExclude(
       CallbackHolder<SetPublisherExcludeCallback>* holder,
-      const ledger::Result result);
+      const ledger::type::Result result);
 
   static void OnRestorePublishers(
       CallbackHolder<SetPublisherExcludeCallback>* holder,
-      const ledger::Result result);
+      const ledger::type::Result result);
 
   static void OnGetPublisherBanner(
       CallbackHolder<GetPublisherBannerCallback>* holder,
-      ledger::PublisherBannerPtr banner);
+      ledger::type::PublisherBannerPtr banner);
 
   static void OnRemoveRecurringTip(
       CallbackHolder<RemoveRecurringTipCallback>* holder,
-      const ledger::Result result);
+      const ledger::type::Result result);
 
-  static void OnDoDirectTip(
-      CallbackHolder<DoDirectTipCallback>* holder,
-      const ledger::Result result);
-
-  static void OnGetTransactionHistory(
-      CallbackHolder<GetTransactionHistoryCallback>* holder,
-      std::unique_ptr<ledger::TransactionsInfo> history);
+  static void OnOneTimeTip(
+      CallbackHolder<OneTimeTipCallback>* holder,
+      const ledger::type::Result result);
 
   static void OnGetRewardsInternalsInfo(
       CallbackHolder<GetRewardsInternalsInfoCallback>* holder,
-      ledger::RewardsInternalsInfoPtr info);
+      ledger::type::RewardsInternalsInfoPtr info);
 
   static void OnSaveRecurringTip(
       CallbackHolder<SaveRecurringTipCallback>* holder,
-      ledger::Result result);
+      ledger::type::Result result);
 
   static void OnGetRecurringTips(
       CallbackHolder<GetRecurringTipsCallback>* holder,
-      ledger::PublisherInfoList list,
-      uint32_t num);
+      ledger::type::PublisherInfoList list);
 
   static void OnGetOneTimeTips(
       CallbackHolder<GetRecurringTipsCallback>* holder,
-      ledger::PublisherInfoList list,
-      uint32_t num);
+      ledger::type::PublisherInfoList list);
   static void OnRefreshPublisher(
       CallbackHolder<RefreshPublisherCallback>* holder,
-      ledger::PublisherStatus status);
+      ledger::type::PublisherStatus status);
 
   static void OnGetActivityInfoList(
     CallbackHolder<GetActivityInfoListCallback>* holder,
-    ledger::PublisherInfoList list,
-    uint32_t num);
+    ledger::type::PublisherInfoList list);
 
-  static void OnLoadPublisherInfo(
-    CallbackHolder<LoadPublisherInfoCallback>* holder,
-    ledger::Result result,
-    ledger::PublisherInfoPtr info);
+  static void OnGetExcludedList(
+      CallbackHolder<GetExcludedListCallback>* holder,
+      ledger::type::PublisherInfoList list);
 
   static void OnSaveMediaInfoCallback(
     CallbackHolder<SaveMediaInfoCallback>* holder,
-    ledger::Result result,
-    ledger::PublisherInfoPtr info);
+    ledger::type::Result result,
+    ledger::type::PublisherInfoPtr info);
 
   static void OnGetPendingContributions(
     CallbackHolder<GetPendingContributionsCallback>* holder,
-    ledger::PendingContributionInfoList list);
+    ledger::type::PendingContributionInfoList list);
 
   static void OnRemovePendingContribution(
     CallbackHolder<RemovePendingContributionCallback>* holder,
-    ledger::Result result);
+    ledger::type::Result result);
 
   static void OnRemoveAllPendingContributions(
     CallbackHolder<RemovePendingContributionCallback>* holder,
-    ledger::Result result);
+    ledger::type::Result result);
 
   static void OnGetPendingContributionsTotal(
     CallbackHolder<GetPendingContributionsTotalCallback>* holder,
     double amount);
 
-  static void OnFetchGrants(
-    CallbackHolder<FetchGrantsCallback>* holder,
-    ledger::Result result,
-    std::vector<ledger::GrantPtr> grants);
+  static void OnFetchPromotions(
+    CallbackHolder<FetchPromotionsCallback>* holder,
+    const ledger::type::Result result,
+    ledger::type::PromotionList promotions);
 
   static void OnHasSufficientBalanceToReconcile(
     CallbackHolder<HasSufficientBalanceToReconcileCallback>* holder,
@@ -327,27 +385,74 @@ class BatLedgerImpl : public mojom::BatLedger,
 
   static void OnFetchBalance(
       CallbackHolder<FetchBalanceCallback>* holder,
-      ledger::Result result,
-      ledger::BalancePtr balance);
+      ledger::type::Result result,
+      ledger::type::BalancePtr balance);
 
-  static void OnGetExternalWallet(
-    CallbackHolder<GetExternalWalletCallback>* holder,
-    ledger::Result result,
-    ledger::ExternalWalletPtr wallet);
+  static void OnGetUpholdWallet(
+    CallbackHolder<GetUpholdWalletCallback>* holder,
+    ledger::type::Result result,
+    ledger::type::UpholdWalletPtr wallet);
 
   static void OnExternalWalletAuthorization(
     CallbackHolder<ExternalWalletAuthorizationCallback>* holder,
-    ledger::Result result,
-    const std::map<std::string, std::string>& args);
+    ledger::type::Result result,
+    const base::flat_map<std::string, std::string>& args);
 
   static void OnDisconnectWallet(
     CallbackHolder<DisconnectWalletCallback>* holder,
-    ledger::Result result);
+    ledger::type::Result result);
 
-  std::unique_ptr<BatLedgerClientMojoProxy> bat_ledger_client_mojo_proxy_;
+  static void OnGetAnonWalletStatus(
+      CallbackHolder<GetAnonWalletStatusCallback>* holder,
+      const ledger::type::Result result);
+
+  static void OnGetTransactionReport(
+      CallbackHolder<GetTransactionReportCallback>* holder,
+      ledger::type::TransactionReportInfoList list);
+
+  static void OnGetContributionReport(
+      CallbackHolder<GetContributionReportCallback>* holder,
+      ledger::type::ContributionReportInfoList list);
+
+  static void OnGetAllContributions(
+      CallbackHolder<GetAllContributionsCallback>* holder,
+      ledger::type::ContributionInfoList list);
+
+  static void OnSavePublisherInfoForTip(
+      CallbackHolder<SavePublisherInfoForTipCallback>* holder,
+      const ledger::type::Result result);
+
+  static void OnSavePublisherInfo(
+      CallbackHolder<SavePublisherInfoCallback>* holder,
+      const ledger::type::Result result);
+
+  static void OnGetMonthlyReport(
+      CallbackHolder<GetMonthlyReportCallback>* holder,
+      const ledger::type::Result result,
+      ledger::type::MonthlyReportInfoPtr info);
+
+  static void OnGetAllMonthlyReportIds(
+      CallbackHolder<GetAllMonthlyReportIdsCallback>* holder,
+      const std::vector<std::string>& ids);
+
+  static void OnGetAllPromotions(
+      CallbackHolder<GetAllPromotionsCallback>* holder,
+      ledger::type::PromotionMap items);
+
+  static void OnShutdown(
+      CallbackHolder<ShutdownCallback>* holder,
+      const ledger::type::Result result);
+
+  static void OnGetEventLogs(
+      CallbackHolder<GetEventLogsCallback>* holder,
+      ledger::type::EventLogs logs);
+
+  static void OnGetBraveWallet(
+      CallbackHolder<GetBraveWalletCallback>* holder,
+      ledger::type::BraveWalletPtr wallet);
+
+  std::unique_ptr<BatLedgerClientMojoBridge> bat_ledger_client_mojo_bridge_;
   std::unique_ptr<ledger::Ledger> ledger_;
-
-  DISALLOW_COPY_AND_ASSIGN(BatLedgerImpl);
 };
 
 }  // namespace bat_ledger

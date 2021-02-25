@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "आप किसी भी गोपनीयता और सुरक्षा उपायों के बिना इस वेबसाइट को ब्राउज़ कर रहे हैं.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "आप इस साइट को Brave के गोपनीयता और सुरक्षा संरक्षण के बिना ब्राउज़ कर रहे हैं। क्या यह संरक्षण के साथ सही तरीके से काम नहीं करता है?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "एक ब्रेक हुई साइट की रिपोर्ट करें",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "अवरुद्ध की गई चीज़ें",
@@ -51,6 +55,22 @@
     "message": "क्रॉस-साइट ट्रैकर्स ब्लॉक किए गए",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "ट्रैकर्स और विज्ञापन को ब्लॉक किया",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "ट्रैकर्स और विज्ञापन ब्लॉक किए गए (प्रभाशाली)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "ट्रैकर्स और विज्ञापन ब्लॉक किए गए (सामान्य)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "सभी ट्रैकर्स और विज्ञापनों की अनुमति दें",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "कनेक्शन HTTPS पर अपग्रेड किए गए",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "सभी कुकीज़ स्वीकार की गईं",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "क्रॉस-साइट उपकरण की पहचान ब्लॉक की गई",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "फिंगरप्रिंटिंग ब्लॉक किया गया",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "उपकरण की पहचान के प्रयासों को ब्लॉक किया गया",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "फ़िंगरप्रिंटिंग ब्लॉक की गई है (सामान्य)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "उपकरण की पहचान के सभी प्रयासों की अनुमति है",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "फ़िंगरप्रिंटिंग ब्लॉक (सख्त, साइटों को ब्रेक कर सकते हैं)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "सभी फिंगरप्रिंटिंग की अनुमति दें",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "डिवाइस के पहचान का प्रयास",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "फ़िंगरप्रिंटिंग के प्रयास",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "इस साइट में उपलब्ध स्क्रिप्ट्स",

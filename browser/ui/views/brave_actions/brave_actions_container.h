@@ -10,37 +10,53 @@
 #include <memory>
 #include <string>
 
-#include "chrome/browser/ui/views/toolbar/toolbar_action_view.h"
-#include "chrome/browser/ui/toolbar/toolbar_action_view_controller.h"
-#include "chrome/browser/ui/browser.h"
+#include "brave/browser/extensions/api/brave_action_api.h"
+#include "brave/components/brave_rewards/browser/buildflags/buildflags.h"
+#include "brave/components/brave_rewards/browser/rewards_service.h"
 #include "chrome/browser/extensions/api/extension_action/extension_action_api.h"
+#include "chrome/browser/ui/browser.h"
+#include "chrome/browser/ui/toolbar/toolbar_action_view_controller.h"
+#include "chrome/browser/ui/views/toolbar/toolbar_action_view.h"
 #include "components/prefs/pref_member.h"
+#include "extensions/browser/extension_registry.h"
 #include "extensions/browser/extension_registry_observer.h"
 #include "extensions/common/extension.h"
 #include "ui/views/view.h"
 
+#if BUILDFLAG(BRAVE_REWARDS_ENABLED)
+#include "brave/browser/ui/views/brave_actions/brave_rewards_action_stub_view.h"
+#endif
+
+class BraveActionViewController;
 class BraveActionsContainerTest;
-class BraveRewardsBrowserTest;
+class RewardsBrowserTest;
 
 namespace extensions {
 class ExtensionActionManager;
-class ExtensionRegistry;
+}
+
+namespace views {
+class Button;
 }
 
 // This View contains all the built-in BraveActions such as Shields and Payments
 // TODO(petemill): consider splitting to separate model, like
 // ToolbarActionsModel and ToolbarActionsBar
 class BraveActionsContainer : public views::View,
+                              public extensions::BraveActionAPI::Observer,
                               public extensions::ExtensionActionAPI::Observer,
                               public extensions::ExtensionRegistryObserver,
-                              public ToolbarActionView::Delegate {
+                              public ToolbarActionView::Delegate,
+#if BUILDFLAG(BRAVE_REWARDS_ENABLED)
+                              public BraveRewardsActionStubView::Delegate
+#endif
+                              {
  public:
   BraveActionsContainer(Browser* browser, Profile* profile);
   ~BraveActionsContainer() override;
   void Init();
   void Update();
   void SetShouldHide(bool should_hide);
-
   // ToolbarActionView::Delegate
   content::WebContents* GetCurrentWebContents() override;
   bool ShownInsideMenu() const override;
@@ -48,7 +64,7 @@ class BraveActionsContainer : public views::View,
   void OnToolbarActionViewDragDone() override;
   // Returns the view of the toolbar actions overflow menu to use as a
   // reference point for a popup when this view isn't visible.
-  views::MenuButton* GetOverflowReferenceView() override;
+  views::LabelButton* GetOverflowReferenceView() const override;
   // Returns the preferred size of the ToolbarActionView.
   gfx::Size GetToolbarActionSize() override;
   // Overridden from views::DragController (required by
@@ -60,6 +76,11 @@ class BraveActionsContainer : public views::View,
   bool CanStartDragForView(View* sender,
                            const gfx::Point& press_pt,
                            const gfx::Point& p) override;
+
+#if BUILDFLAG(BRAVE_REWARDS_ENABLED)
+  // BraveRewardsActionStubView::Delegate
+  void OnRewardsStubButtonClicked() override;
+#endif
 
   // ExtensionRegistryObserver:
   void OnExtensionLoaded(content::BrowserContext* browser_context,
@@ -76,7 +97,7 @@ class BraveActionsContainer : public views::View,
   // incognito contexts, so |browser_context| may not equal
   // |browser_context_|.)
   void OnExtensionActionUpdated(
-      ExtensionAction* extension_action,
+      extensions::ExtensionAction* extension_action,
       content::WebContents* web_contents,
       content::BrowserContext* browser_context) override;
 
@@ -88,7 +109,10 @@ class BraveActionsContainer : public views::View,
 
  private:
   friend class ::BraveActionsContainerTest;
-  friend class ::BraveRewardsBrowserTest;
+  friend class ::RewardsBrowserTest;
+
+  class EmptyExtensionsContainer;
+
   // Special positions in the container designators
   enum ActionPosition : int {
     ACTION_ANY_POSITION = -1,
@@ -102,8 +126,8 @@ class BraveActionsContainer : public views::View,
     void Reset();
 
     int position_;
-    std::unique_ptr<ToolbarActionView> view_;
-    std::unique_ptr<ToolbarActionViewController> view_controller_;
+    std::unique_ptr<views::Button> view_;
+    std::unique_ptr<BraveActionViewController> view_controller_;
   };
 
   // Actions that belong to the container
@@ -111,17 +135,24 @@ class BraveActionsContainer : public views::View,
 
   // Actions operations
   bool ShouldAddAction(const std::string& id) const;
-  bool ShouldAddBraveRewardsAction() const;
   bool IsContainerAction(const std::string& id) const;
-  void AddAction(const extensions::Extension* extension,
-                 int pos = ACTION_ANY_POSITION);
-  void AddAction(const std::string& id, int pos = ACTION_ANY_POSITION);
+  void AddAction(const extensions::Extension* extension);
+  void AddAction(const std::string& id);
+  bool ShouldAddBraveRewardsAction() const;
+  void AddActionStubForRewards();
   void RemoveAction(const std::string& id);
   void ShowAction(const std::string& id, bool show);
   bool IsActionShown(const std::string& id) const;
   void UpdateActionState(const std::string& id);
+  void AttachAction(BraveActionInfo &action);
+
+  // BraveActionAPI::Observer
+  void OnBraveActionShouldTrigger(const std::string& extension_id,
+      std::unique_ptr<std::string> ui_relative_path) override;
 
   bool should_hide_ = false;
+
+  bool is_rewards_pressed_ = false;
 
   // The Browser this LocationBarView is in.  Note that at least
   // chromeos::SimpleWebViewDialog uses a LocationBarView outside any browser
@@ -130,9 +161,11 @@ class BraveActionsContainer : public views::View,
 
   void OnExtensionSystemReady();
 
+  extensions::ExtensionSystem* extension_system_;
   extensions::ExtensionActionAPI* extension_action_api_;
   extensions::ExtensionRegistry* extension_registry_;
   extensions::ExtensionActionManager* extension_action_manager_;
+  extensions::BraveActionAPI* brave_action_api_;
 
   // Listen to extension load, unloaded notifications.
   ScopedObserver<extensions::ExtensionRegistry,
@@ -144,9 +177,18 @@ class BraveActionsContainer : public views::View,
                  extensions::ExtensionActionAPI::Observer>
       extension_action_observer_;
 
+  // Listen to when we need to open a popup
+  ScopedObserver<extensions::BraveActionAPI,
+                 extensions::BraveActionAPI::Observer>
+      brave_action_observer_;
+
   // Listen for Brave Rewards preferences changes.
   BooleanPrefMember brave_rewards_enabled_;
   BooleanPrefMember hide_brave_rewards_button_;
+
+  std::unique_ptr<EmptyExtensionsContainer> empty_extensions_container_;
+
+  brave_rewards::RewardsService* rewards_service_;
 
   base::WeakPtrFactory<BraveActionsContainer> weak_ptr_factory_;
 

@@ -13,16 +13,18 @@ class Profile;
 
 namespace brave_ads {
 class AdsService;
+class AdsServiceImpl;
 
 // Singleton that owns all AdsService and associates them with Profiles.
 class AdsServiceFactory : public BrowserContextKeyedServiceFactory {
  public:
+  AdsServiceFactory(const AdsServiceFactory&) = delete;
+  AdsServiceFactory& operator=(const AdsServiceFactory&) = delete;
+
   static brave_ads::AdsService* GetForProfile(Profile* profile);
+  static brave_ads::AdsServiceImpl* GetImplForProfile(Profile* profile);
 
   static AdsServiceFactory* GetInstance();
-
-  void RegisterProfilePrefs(
-      user_prefs::PrefRegistrySyncable* registry) override;
 
  private:
   friend struct base::DefaultSingletonTraits<AdsServiceFactory>;
@@ -33,11 +35,7 @@ class AdsServiceFactory : public BrowserContextKeyedServiceFactory {
   // BrowserContextKeyedServiceFactory:
   KeyedService* BuildServiceInstanceFor(
       content::BrowserContext* context) const override;
-  content::BrowserContext* GetBrowserContextToUse(
-      content::BrowserContext* context) const override;
   bool ServiceIsNULLWhileTesting() const override;
-
-  DISALLOW_COPY_AND_ASSIGN(AdsServiceFactory);
 };
 
 }  // namespace brave_ads

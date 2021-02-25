@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "بدون هیچ محافظ حریم خصوصی و امنیتی این سایت را مرور می‌کنید.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "بدون محافظ حریم خصوصی و امنیتی Brave این سایت را مرور می‌کنید. آیا این سایت با فعال بودن «سپر امنیتی» به‌درستی کار نمی‌کند؟",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "گزارش خرابی سایت",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "موارد مسدودشده",
@@ -51,6 +55,22 @@
     "message": "ردیاب‌های بین سایتی مسدود شدند",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "ردیاب‌ها و آگهی‌ها مسدود شده‌اند",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "ردیاب‌ها و آگهی‌ها مسدود شده‌اند (تهاجمی)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "ردیاب‌ها و آگهی‌ها مسدود شده‌اند (استاندارد)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "مجاز بودن همه ردیاب‌ها و آگهی‌ها",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "اتصال‌ها به HTTPS ارتقا داده شدند",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "همه کوکی‌ها مجاز هستند",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "تشخیص دستگاه بین سایتی مسدود شد",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "اثر انگشت مسدود شده است",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "تلاش‌های تشخیص دستگاه مسدود شدند",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "تشخیص اثر انگشت مسدود شد (استاندارد)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "همه تلاش‌های تشخیص دستگاه مجاز شدند",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "تشخیص اثر انگشت مسدود شد (شدید، ممکن است منجر به خرابی سایت‌ها شود)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "مجاز بودن انواع انگشت‌نگاری",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "تلاش‌های تشخیص دستگاه",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "تلاش‌های تشخیص اثر انگشت",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "اسکریپت‌های این سایت",

@@ -6,11 +6,23 @@ import * as React from 'react'
 import { StyledWidget, StyledWidgetContainer } from './styles'
 import WidgetMenu from './widgetMenu'
 
+type HideWidgetFunction = () => void
+
 export interface WidgetProps {
-  showWidget: boolean
   menuPosition: 'right' | 'left'
-  hideWidget: () => void
+  hideWidget?: HideWidgetFunction
+  preventFocus?: boolean
   textDirection: string
+  isCrypto?: boolean
+  isCryptoTab?: boolean
+  widgetTitle?: string
+  hideMenu?: boolean
+  isForeground?: boolean
+  lightWidget?: boolean
+  paddingType: 'none' | 'right' | 'default'
+  onLearnMore?: () => void
+  onDisconnect?: () => void
+  onRefreshData?: () => void
 }
 
 export interface WidgetState {
@@ -22,38 +34,68 @@ const createWidget = <P extends object>(WrappedComponent: React.ComponentType<P>
     constructor (props: P & WidgetProps) {
       super(props)
       this.state = {
-        widgetMenuPersist: false
+        widgetMenuPersist: !!props.isForeground
       }
     }
 
-    toggleWidgetHover = () => {
-      this.setState({ widgetMenuPersist: !this.state.widgetMenuPersist })
+    persistWidget = () => {
+      this.setState({ widgetMenuPersist: true })
     }
 
-    unpersistWidgetHover = () => {
+    unpersistWidget = () => {
       this.setState({ widgetMenuPersist: false })
     }
 
     render () {
-      const { showWidget, menuPosition, hideWidget, textDirection } = this.props
+      const {
+        menuPosition,
+        hideWidget,
+        textDirection,
+        preventFocus,
+        isCrypto,
+        isCryptoTab,
+        widgetTitle,
+        hideMenu,
+        isForeground,
+        lightWidget,
+        paddingType,
+        onLearnMore,
+        onDisconnect,
+        onRefreshData
+      } = this.props
       const { widgetMenuPersist } = this.state
+
       return (
         <StyledWidgetContainer
-          showWidget={showWidget}
           menuPosition={menuPosition}
           textDirection={textDirection}
         >
-          <StyledWidget widgetMenuPersist={widgetMenuPersist}>
+          <StyledWidget
+            isCrypto={isCrypto}
+            isCryptoTab={isCryptoTab}
+            widgetMenuPersist={widgetMenuPersist}
+            preventFocus={preventFocus}
+            paddingType={paddingType}
+          >
             <WrappedComponent {...this.props as P}/>
           </StyledWidget>
+          {hideWidget && !hideMenu && !preventFocus &&
           <WidgetMenu
+            widgetTitle={widgetTitle}
+            onLearnMore={onLearnMore}
+            onDisconnect={onDisconnect}
+            onRefreshData={onRefreshData}
+            isForeground={isForeground}
             widgetMenuPersist={widgetMenuPersist}
-            toggleWidgetHover={this.toggleWidgetHover}
             textDirection={textDirection}
             menuPosition={menuPosition}
-            hideWidget={hideWidget}
-            unpersistWidgetHover={this.unpersistWidgetHover}
+            hideWidget={hideWidget as HideWidgetFunction}
+            persistWidget={this.persistWidget}
+            unpersistWidget={this.unpersistWidget}
+            lightWidget={lightWidget}
+            paddingType={paddingType}
           />
+          }
         </StyledWidgetContainer>
       )
     }

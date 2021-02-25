@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Unaperuzi tovuti hii bila faraga na ulinzi usalama wowote.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Unavinjari tovuti hii bila ulinzi wa faragha na usalama wa Brave. Haifanyi kazi vizuri na Shields?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Ripoti tovuti yenye hitilafu",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Vitu vimezuiwa",
@@ -51,6 +55,22 @@
     "message": "Vifuatiliaji vya kwenye tovuti vimezuiwa",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Vifuatiliaji na matangazo yamezuiwa",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Vifuatiliaji na matangazo yamezuiwa (hima)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Vifuatiliaji na matangazo yamezuiwa (wastani)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Ruhusu vifuatiliaji na matangazo yote",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Miunganisho imepandishwa kwenye HTTPS",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "Vidakuzi vyote vimeruhusiwa",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Utambuzi wa kifaa kwenye tovuti umezuiwa",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Alama za vidole zimezuiwa",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Majaribio ya kutambua kifaa yamezuia",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Alama ya kidole imezuiwa (kawaida)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Majaribio yote ya utambuzi wa vifaa yameruhusiwa",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Alama ya kidole imezuiwa (inasisitizwa, inaweza kuathiri utendaji wa tovuti)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Ruhusu uchapishaji wote wa alama za vidole",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Majaribio ya kutambua kifaa",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Majaribio ya kuchukua alama za vidole",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Maandishi kwenye tovuti hii",

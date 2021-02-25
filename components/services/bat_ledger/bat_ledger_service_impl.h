@@ -8,37 +8,47 @@
 
 #include <memory>
 
+#include "bat/ledger/ledger.h"
 #include "brave/components/services/bat_ledger/public/interfaces/bat_ledger.mojom.h"
-#include "services/service_manager/public/cpp/service_context_ref.h"
+#include "mojo/public/cpp/bindings/pending_associated_receiver.h"
+#include "mojo/public/cpp/bindings/pending_associated_remote.h"
+#include "mojo/public/cpp/bindings/pending_receiver.h"
+#include "mojo/public/cpp/bindings/receiver.h"
+#include "mojo/public/cpp/bindings/unique_associated_receiver_set.h"
 
 namespace bat_ledger {
 
 class BatLedgerServiceImpl : public mojom::BatLedgerService {
  public:
   explicit BatLedgerServiceImpl(
-      std::unique_ptr<service_manager::ServiceContextRef> service_ref);
+      mojo::PendingReceiver<mojom::BatLedgerService> receiver);
+
   ~BatLedgerServiceImpl() override;
 
-  // bat_ledger::mojom::BatLedgerService
-  void Create(mojom::BatLedgerClientAssociatedPtrInfo client_info,
-              mojom::BatLedgerAssociatedRequest bat_ledger) override;
+  BatLedgerServiceImpl(const BatLedgerServiceImpl&) = delete;
+  BatLedgerServiceImpl& operator=(const BatLedgerServiceImpl&) = delete;
 
-  void SetProduction(bool isProduction) override;
+  // bat_ledger::mojom::BatLedgerService
+  void Create(
+      mojo::PendingAssociatedRemote<mojom::BatLedgerClient> client_info,
+      mojo::PendingAssociatedReceiver<mojom::BatLedger> bat_ledger,
+      CreateCallback callback) override;
+
+  void SetEnvironment(ledger::type::Environment environment) override;
   void SetDebug(bool isDebug) override;
-  void SetReconcileTime(int32_t time) override;
+  void SetReconcileInterval(const int32_t interval) override;
   void SetShortRetries(bool short_retries) override;
   void SetTesting() override;
 
-  void GetProduction(GetProductionCallback callback) override;
+  void GetEnvironment(GetEnvironmentCallback callback) override;
   void GetDebug(GetDebugCallback callback) override;
-  void GetReconcileTime(GetReconcileTimeCallback callback) override;
+  void GetReconcileInterval(GetReconcileIntervalCallback callback) override;
   void GetShortRetries(GetShortRetriesCallback callback) override;
 
  private:
-  const std::unique_ptr<service_manager::ServiceContextRef> service_ref_;
+  mojo::Receiver<mojom::BatLedgerService> receiver_;
   bool initialized_;
-
-  DISALLOW_COPY_AND_ASSIGN(BatLedgerServiceImpl);
+  mojo::UniqueAssociatedReceiverSet<mojom::BatLedger> associated_receivers_;
 };
 
 }  // namespace bat_ledger

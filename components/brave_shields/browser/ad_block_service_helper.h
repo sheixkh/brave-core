@@ -6,10 +6,12 @@
 #ifndef BRAVE_COMPONENTS_BRAVE_SHIELDS_BROWSER_AD_BLOCK_SERVICE_HELPER_H_
 #define BRAVE_COMPONENTS_BRAVE_SHIELDS_BROWSER_AD_BLOCK_SERVICE_HELPER_H_
 
+#include <stdint.h>
 #include <string>
 #include <vector>
 
-#include "brave/vendor/adblock_rust_ffi/src/wrapper.hpp"
+#include "base/values.h"
+#include "brave/vendor/adblock_rust_ffi/src/wrapper.h"
 
 namespace brave_shields {
 
@@ -19,6 +21,11 @@ std::vector<adblock::FilterList>::const_iterator FindAdBlockFilterListByUUID(
 std::vector<adblock::FilterList>::const_iterator FindAdBlockFilterListByLocale(
     const std::vector<adblock::FilterList>& region_lists,
     const std::string& locale);
+
+std::vector<adblock::FilterList> RegionalCatalogFromJSON(
+    const std::string& catalog_json);
+
+void MergeResourcesInto(base::Value from, base::Value* into, bool force_hide);
 
 }  // namespace brave_shields
 

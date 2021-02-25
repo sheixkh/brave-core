@@ -1,23 +1,21 @@
 declare namespace RewardsExtension {
   interface State {
     balance: Balance
-    currentGrant?: GrantInfo
     currentNotification?: string
     enabledAC: boolean
-    enabledMain: boolean
     notifications: Record<string, Notification>
     publishers: Record<string, Publisher>
-    report: Report
-    grants?: GrantInfo[]
+    balanceReport: BalanceReport
+    promotions?: Promotion[]
     pendingContributionTotal: number
-    walletCorrupted: boolean
-    walletCreated: boolean
-    walletCreating: boolean
-    walletCreateFailed: boolean
-    walletProperties: WalletProperties
+    parameters: RewardsParameters
     recurringTips: Record<string, number>[]
     tipAmounts: Record<string, number[]>
     externalWallet?: ExternalWallet
+    initializing: boolean
+    showOnboarding: boolean
+    adsPerHour: number
+    autoContributeAmount: number
   }
 
   interface ApplicationState {
@@ -37,8 +35,8 @@ declare namespace RewardsExtension {
 
   interface Publisher {
     excluded?: boolean
-    favicon_url?: string
-    publisher_key?: string
+    favIconUrl?: string
+    publisherKey?: string
     name?: string
     percentage?: number
     provider?: string
@@ -48,39 +46,43 @@ declare namespace RewardsExtension {
     status?: PublisherStatus
   }
 
-  export interface Grant {
-    altcurrency: string
-    probi: string
-    expiryTime: number
-    type: string
+  export type CaptchaStatus = 'start' | 'wrongPosition' | 'generalError' | 'finished' | null
+
+  export enum PromotionTypes {
+    UGP = 0,
+    ADS = 1
   }
 
-  export type GrantStatus = 'wrongPosition' | 'grantGone' | 'generalError' | 'grantAlreadyClaimed' | number | null
+  export enum PromotionStatus {
+    ACTIVE = 0,
+    ATTESTED = 1,
+    FINISHED = 4,
+    OVER = 5
+  }
 
-  export interface GrantInfo {
-    promotionId?: string
-    altcurrency?: string
-    probi: string
-    expiryTime: number
-    captcha?: string
+  export interface Promotion {
+    promotionId: string
+    amount: number
+    expiresAt: number
+    status: PromotionStatus
+    type: PromotionTypes
+    captchaStatus: CaptchaStatus
+    captchaImage?: string
+    captchaId?: string
     hint?: string
-    status?: GrantStatus
-    type?: string
     finishTitle?: string
     finishText?: string
     finishTokenTitle?: string
   }
 
-  export interface GrantResponse {
-    promotionId?: string
-    status?: number
-    type?: string
+  export interface PromotionResponse {
+    result: number
+    promotions: Promotion[]
   }
 
-  export interface GrantFinish {
+  export interface PromotionFinish {
     result: Result,
-    statusCode: number,
-    expiryTime: number
+    promotion: Promotion
   }
 
   export const enum Result {
@@ -97,29 +99,28 @@ declare namespace RewardsExtension {
     REGISTRATION_VERIFICATION_FAILED = 10,
     BAD_REGISTRATION_RESPONSE = 11,
     WALLET_CREATED = 12,
-    GRANT_NOT_FOUND = 13,
     WALLET_CORRUPT = 17
   }
 
   export interface Captcha {
-    image: string
+    result: number
+    promotionId: string
+    captchaImage: string
     hint: string
   }
 
-  export interface WalletProperties {
-    grants?: Grant[]
+  export interface RewardsParameters {
+    rate: number
+    monthlyTipChoices: number[]
+    autoContributeChoices: number[]
   }
 
-  export interface Report {
-    ads: string
-    closing: string
-    contribute: string
-    deposit: string
-    donation: string
-    grant: string
-    tips: string
-    opening: string
-    total: string
+  export interface BalanceReport {
+    ads: number
+    contribute: number
+    monthly: number
+    grant: number
+    tips: number
   }
 
   export interface Notification {
@@ -130,13 +131,13 @@ declare namespace RewardsExtension {
   }
 
   interface PublisherNormalized {
-    publisher_key: string
+    publisherKey: string
     percentage: number
     status: PublisherStatus
   }
 
   interface ExcludedSitesChanged {
-    publisher_key: string
+    publisherKey: string
     excluded: boolean
   }
 
@@ -157,9 +158,10 @@ declare namespace RewardsExtension {
     status: PublisherStatus
   }
 
+  export type TipDialogEntryPoint = 'one-time' | 'set-monthly' | 'clear-monthly'
+
   export interface Balance {
     total: number
-    rates: Record<string, number>
     wallets: Record<string, number>
   }
 
@@ -170,7 +172,8 @@ declare namespace RewardsExtension {
     CONNECTED = 1,
     VERIFIED = 2,
     DISCONNECTED_NOT_VERIFIED = 3,
-    DISCONNECTED_VERIFIED = 4
+    DISCONNECTED_VERIFIED = 4,
+    PENDING = 5
   }
 
   export interface ExternalWallet {
@@ -183,5 +186,6 @@ declare namespace RewardsExtension {
     withdrawUrl: string
     userName: string
     accountUrl: string
+    loginUrl: string
   }
 }

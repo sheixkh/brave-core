@@ -1,12 +1,17 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
+/* Copyright (c) 2019 The Brave Authors. All rights reserved.
+ * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include <memory>
 
 #include "brave/browser/net/brave_httpse_network_delegate_helper.h"
 
 #include "brave/browser/net/url_context.h"
 #include "brave/common/network_constants.h"
 #include "chrome/test/base/chrome_render_view_host_test_harness.h"
+#include "content/public/test/browser_task_environment.h"
+#include "net/cookies/site_for_cookies.h"
 #include "net/traffic_annotation/network_traffic_annotation_test_helper.h"
 #include "net/url_request/url_request_test_util.h"
 
@@ -15,7 +20,7 @@ namespace {
 class BraveHTTPSENetworkDelegateHelperTest: public testing::Test {
  public:
   BraveHTTPSENetworkDelegateHelperTest()
-      : thread_bundle_(content::TestBrowserThreadBundle::IO_MAINLOOP),
+      : task_environment_(content::BrowserTaskEnvironment::IO_MAINLOOP),
         context_(new net::TestURLRequestContext(true)) {
   }
   ~BraveHTTPSENetworkDelegateHelperTest() override {}
@@ -25,7 +30,7 @@ class BraveHTTPSENetworkDelegateHelperTest: public testing::Test {
   net::TestURLRequestContext* context() { return context_.get(); }
 
  private:
-  content::TestBrowserThreadBundle thread_bundle_;
+  content::BrowserTaskEnvironment task_environment_;
   std::unique_ptr<net::TestURLRequestContext> context_;
 };
 
@@ -38,8 +43,8 @@ TEST_F(BraveHTTPSENetworkDelegateHelperTest, AlreadySetNewURLNoOp) {
                                TRAFFIC_ANNOTATION_FOR_TESTS);
   std::shared_ptr<brave::BraveRequestInfo>
       brave_request_info(new brave::BraveRequestInfo());
-  request->set_site_for_cookies(
-      GURL("http://brad.brave.com/hide_all_primes_in_ui/composites_forever"));
+  request->set_site_for_cookies(net::SiteForCookies::FromUrl(
+      GURL("http://brad.brave.com/hide_all_primes_in_ui/composites_forever")));
   brave_request_info->new_url_spec = "data:image/png;base64,iVB";
   brave::ResponseCallback callback;
   int ret =

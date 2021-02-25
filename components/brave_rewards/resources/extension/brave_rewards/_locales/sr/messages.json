@@ -1,6 +1,6 @@
 {
   "braveRewards": {
-    "message": "Brejv nagrade",
+    "message": "Brave Rewards",
     "description": "Title in welcome screen for the panel"
   },
   "welcomeButtonTextOne": {
@@ -8,7 +8,7 @@
     "description": "CTA on welcome screen in the panel, existing users"
   },
   "welcomeButtonTextTwo": {
-    "message": "Pridružite se Rewards-u",
+    "message": "Spoji nagrade",
     "description": "CTA on welcome screen in the panel, new users"
   },
   "welcomeDescOne": {
@@ -19,12 +19,16 @@
     "message": "Sada možete zaraditi žetone za gledanje oglasa koji se pridržavaju poštovanja privatnosti.",
     "description": "Entry text for welcome screen in the panel, new user"
   },
+  "welcomeDescPoints": {
+    "message": "Sada možete da zarađuje poene gledanjem oglasa koji poštuju privatnost.",
+    "description": "Entry text for welcome screen in the panel, points"
+  },
   "welcomeFooterTextOne": {
     "message": "Pogledajte šta je poboljšano",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, existing user"
   },
   "welcomeFooterTextTwo": {
-    "message": "Saznajte više",
+    "message": "Više informacija",
     "description": "Link in the footer (takes you to rewards settings page) for welcome screen in the panel, new user"
   },
   "welcomeHeaderOne": {
@@ -43,6 +47,22 @@
     "message": "Grants",
     "description": "Title for grant section in wallet summary"
   },
+  "details": {
+    "message": "Detalji",
+    "description": "Title for grant section in wallet panel summary"
+  },
+  "yourBalance": {
+    "message": "Vaše stanje",
+    "description": "Wallet panel title for anon wallets"
+  },
+  "batPoints": {
+    "message": "BAT poeni",
+    "description": "BAT Points text"
+  },
+  "batPointsMessage": {
+    "message": "se može koristiti u Brave nagradama da doprinesete omiljenim kreatorima sadržaja. BAT bodovi se ne mogu zameniti za BAT.",
+    "description": "Text for BAT Point helper message"
+  },
   "on": {
     "message": "uključeno",
     "description": "The whole string is 'Enable tips on YouTube for like.'"
@@ -56,7 +76,7 @@
     "description": "Label for auto contribute table attention for the publisher"
   },
   "donateMonthly": {
-    "message": "Doniraj mesečno ovu veb lokaciju",
+    "message": "Mesečni doprinos",
     "description": "Label for drop down menu where user select amount for monthly contribution for particular publisher"
   },
   "includeInAuto": {
@@ -104,7 +124,7 @@
     "description": "Month"
   },
   "monthJun": {
-    "message": "Jun",
+    "message": "jun",
     "description": "Month"
   },
   "monthMar": {
@@ -112,7 +132,7 @@
     "description": "Month"
   },
   "monthMay": {
-    "message": "Maj",
+    "message": "maj",
     "description": "Month"
   },
   "monthNov": {
@@ -124,23 +144,33 @@
     "description": "Month"
   },
   "monthSep": {
-    "message": "Septembar",
+    "message": "septembar",
     "description": "Month"
   },
   "tokenGrant": {
-    "message": "Žeton Grants",
-    "description": "Title for grant notification"
+    "message": "Dodela $currency$",
+    "description": "Title for grant notification",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "Token"
+      }
+    }
   },
   "tokenGrantClaimed": {
     "message": "Traženi tokeni odobrenja",
     "description": "Title for grant section in wallet summary"
+  },
+  "pointGrantClaimed": {
+    "message": "Zahtevano je odobrenje poena",
+    "description": "Title for point grant section in wallet summary"
   },
   "earningsAds": {
     "message": "Zarade od oglasa",
     "description": "Title for ads section in wallet summary"
   },
   "rewardsContribute": {
-    "message": "Samo-doprinos",
+    "message": "Automatski doprinosi",
     "description": "Title for auto contribute section in wallet summary"
   },
   "oneTimeDonation": {
@@ -148,15 +178,15 @@
     "description": "Title for one time tips section in wallet summary"
   },
   "expiresOn": {
-    "message": "ističe",
+    "message": "ističe ",
     "description": "Used for grant representation. Whole string is '30.0 BAT expires on 08/05/2022'"
   },
   "recurringDonations": {
-    "message": "Mesečne donacije",
-    "description": "Title for monthly tips section in wallet summary"
+    "message": "Mesečni doprinosi",
+    "description": "Title for monthly contributions section in wallet summary"
   },
   "off": {
-    "message": "Isključeno",
+    "message": "Искључено",
     "description": "Label used in toggle indicating that toggle is off"
   },
   "ok": {
@@ -164,12 +194,8 @@
     "description": "Used in notification to dismiss notification"
   },
   "braveAdsLaunchMsg": {
-    "message": "Sada možete da zarađujete pregleđivanjem reklama.",
+    "message": "Sada možete zarađivati gledajući oglase.",
     "description": "Message for ads launch notification"
-  },
-  "braveAdsLaunchTitle": {
-    "message": "Brave Ads je stigao!",
-    "description": "Message used in notification to let users know Ads is available"
   },
   "braveAdsTitle": {
     "message": "Brave oglasi",
@@ -180,12 +206,16 @@
     "description": "Notification title when we display info about auto contribution"
   },
   "contributeNotificationSuccess": {
-    "message": "Doprineli ste iznosu od $amount$ BAT-a",
+    "message": "Vaš doprinos je $amount$ $currency$",
     "description": "We show this string in the notification when contribution is successful",
     "placeholders": {
       "amount": {
         "content": "$1",
         "example": "10.0"
+      },
+      "currency": {
+        "content": "$2",
+        "example": "BAT"
       }
     }
   },
@@ -222,7 +252,7 @@
     "description": "We show this string in notification when contribution fails"
   },
   "contributeNotificationNotEnoughFunds": {
-    "message": "Vaša zakazano mesečno plaćanje za Samo-doprinos i mesečne donacije nisu mogle biti dovršene zbog nedovoljnog fonda. Probaćemo ponovo za 30 dana.",
+    "message": "Vaša zakazana mesečna uplata za Automatski doprinos i mesečne doprinose nije mogla biti dovršena zbog nedovoljnih sredstava. Pokušaćemo opet za 30 dana.",
     "description": "We show this string in the notification when you don't have enough funds for contribution"
   },
   "contributeNotificationTipError": {
@@ -261,12 +291,8 @@
     "message": "Datum isteka odobrenja\n",
     "description": "Grant expiry label"
   },
-  "grantAlreadyClaimedText": {
-    "message": "Izvinite, izgleda da je ovo odobrenje već traženo.",
-    "description": "Description of the error when grant is already claimed."
-  },
   "grantGeneralErrorButton": {
-    "message": "U redu",
+    "message": "Потврди",
     "description": "Button text for clearing the error."
   },
   "grantGeneralErrorText": {
@@ -276,18 +302,6 @@
   "grantGeneralErrorTitle": {
     "message": "Ups, nešto nije u redu. Molimo Vas pokušajte ponovo kasnije.",
     "description": "Error title when user is having problems claiming a grant."
-  },
-  "grantGoneButton": {
-    "message": "U redu",
-    "description": "Button text for clearing the error."
-  },
-  "grantGoneText": {
-    "message": "Izvinite, izgleda da je ovo odobrenje već isteklo.",
-    "description": "Error text when user missed a grant."
-  },
-  "grantGoneTitle": {
-    "message": "Ovo odobrenje više nije dostupno.",
-    "description": "Error title when user missed a grant."
   },
   "unVerifiedCheck": {
     "message": "Osveži status",
@@ -306,7 +320,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "reservedAmountText": {
-    "message": "Odredili ste {{reservedAmount}} BAT za kreatore koji se još nisu prijavili za primanje doprinosa. Vaš pretraživač će nastaviti da pokušava da doprinese dok ne potvrde, ili dok ne prođe 90 dana.",
+    "message": "Odredili ste {{reservedAmount}} {{currency}} za kreatore koji se još nisu prijavili za primanje doprinosa. Vaš pregledač će nastaviti da pokušava da doprinese sve dok oni ne potvrde ili dok ne protekne 90 dana.",
     "description": "Notification about how much BAT do you have reserved"
   },
   "reservedMoreLink": {
@@ -314,7 +328,7 @@
     "description": "Text for the link that explains more about reserved amount"
   },
   "disabledPanelOff": {
-    "message": "Isključi",
+    "message": "Искључено",
     "description": "Off state text for Panel's disabled state"
   },
   "disabledPanelSettings": {
@@ -326,7 +340,7 @@
     "description": "Text for Panel's disabled state"
   },
   "disabledPanelTitle": {
-    "message": "Brave nagrade je",
+    "message": "Brave  nagrade je",
     "description": "Title for Panel's disabled state"
   },
   "walletFailedTitle": {
@@ -334,7 +348,7 @@
     "description": "Failure title for wallet creation"
   },
   "walletFailedButton": {
-    "message": "Пробај поново",
+    "message": "Пробајте поново",
     "description": "Button for re-try after wallet creation failed"
   },
   "addFunds": {
@@ -382,12 +396,12 @@
     "description": "Title message for wallet disabled panel"
   },
   "tipsProcessedNotification": {
-    "message": "Vaše mesečne napojnice su obrađene!",
-    "description": "Message for monthly tips processed notification"
+    "message": "Vaši mesečni doprinosi su procesuirani!",
+    "description": "Message for monthly contributions processed notification"
   },
   "contributionTips": {
     "message": "Doprinosi i napojnice",
-    "description": "Title for monthly tips processed notification"
+    "description": "Title for monthly contributions processed notification"
   },
   "serviceTextPanelWelcome": {
     "message": "Klikom na „Pridruži se Nagradama”, naznačavate da ste pročitali i da se slažete sa",
@@ -397,8 +411,12 @@
     "message": "BAT",
     "description": "BAT text for displaying converted tip amount."
   },
+  "bap": {
+    "message": "BAP",
+    "description": "BAT Points abbreviation text"
+  },
   "turnOnAds": {
-    "message": "Uključite Ads",
+    "message": "Uključi oglase",
     "description": "Prompt to turn on Ads via notification"
   },
   "adsEarnings": {
@@ -452,23 +470,33 @@
     "description": "Cosmetic text upon captcha success"
   },
   "grantFinishTextUGP": {
-    "message": "Vaš token odobrenja je na putu.",
-    "description": "Cosmetic text indicating grant funds are on the way"
+    "message": "Uskoro stiže vaša dodela $currency$.",
+    "description": "Cosmetic text indicating grant funds are on the way",
+    "placeholders": {
+      "currency": {
+        "content": "$1",
+        "example": "token"
+      }
+    }
   },
   "grantFinishTokenTitleUGP": {
     "message": "Besplatan token odobrenja.",
     "description": "Token title on success screen"
   },
+  "grantFinishPointTitleUGP": {
+    "message": "Dodeljeni besplatni poeni",
+    "description": "Point title on success screen"
+  },
   "grantFinishTitleAds": {
-    "message": "Nagrade od Brave oglasa!",
+    "message": "Zaradili ste nagradu za oglase!",
     "description": "Cosmetic text upon captcha success for ads"
   },
   "grantFinishTextAds": {
-    "message": "Vaše nagrade dodeljene od Brave reklama su na putu ka vama.",
+    "message": "Vaša nagrada je na putu do vašeg Brave nagrade novčanika.",
     "description": "Cosmetic text indicating ads funds are on the way"
   },
   "grantFinishTokenTitleAds": {
-    "message": "Odobren je vaš token za Brave reklame",
+    "message": "Iznos vaše nagrade",
     "description": "Token title on success screen for ads"
   },
   "rewardsPanelTextVerify":  {
@@ -522,11 +550,195 @@
     "description": "Title for notification when wallet is disconnected"
   },
   "connectedText":  {
-    "message": "Ovaj verifikovani autor još uvek nije verifikovao (KYC) svoj nalog kako bi primio napojnice iz Vašeg verifikovanog novčanika. Napojnice će ostati u Vašem novčaniku sve dok ne završe verifikaciju",
+    "message": "Ovaj Brave Stvaralac Verifikacija nije još uvek konfigurisao njihove naloge da bi dobijali doprinose od Brave korisnika. Svaki bakšiš koji pošaljete će ostati u vašem novčaniku dok ne završe ovaj proces.",
     "description": "Text shown for connected publishers that are not fully verified in the panel"
   },
   "walletGoToVerifyPage":  {
     "message": "Dovršite verifikaciju novčanika",
     "description": "CTA for completing wallet verification"
+  },
+  "set": {
+    "message": "Postavi...",
+    "description": "Button text for setting monthly contribution"
+  },
+  "tokens":  {
+    "message": "tokeni",
+    "description": "Standard tokens text"
+  },
+  "point":  {
+    "message": "Poen",
+    "description": "BAT Point text"
+  },
+  "token":  {
+    "message": "Token",
+    "description": "BAT Token text"
+  },
+  "points":  {
+    "message": "poeni",
+    "description": "BAT Points text"
+  },
+  "tokenGrants":  {
+    "message": "Žeton Grants",
+    "description": "BAT Tokens Grant Text"
+  },
+  "pointGrants":  {
+    "message": "Dodela poena",
+    "description": "BAT Points Grant Text"
+  },
+  "greetingsVerified":  {
+    "message": "Zdravo, $name$!",
+    "description": "Greetings for external wallet popup",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John"
+      }
+    }
+  },
+  "cancel":  {
+    "message": "Otkaži",
+    "description": "Text for cancel button"
+  },
+  "changeAmount":  {
+    "message": "Izmenite iznos",
+    "description": "Button text for changing monthly contribution amount"
+  },
+  "login":  {
+    "message": "Пријављивање",
+    "description": "Text for login button"
+  },
+  "loginMessageTitle":  {
+    "message": "Verifikovanje novčanika omogućava vam efikasnije upravljanje vašim sredstvima.",
+    "description": "Text for login button"
+  },
+  "loginMessageText":  {
+    "message": "Potrebno je da imate najmanje 25 BAT-a da biste kreirali nalog na Uphold-u. Pokušajte ponovo kasnije. \n Ako već imate verifikovani nalog na Uphold-u, nastavite da biste se prijavili.",
+    "description": "Text for login button"
+  },
+  "walletConnected":  {
+    "message": "Повезан",
+    "description": "Status button that tells user that he is connected"
+  },
+  "walletPending":  {
+    "message": "U toku",
+    "description": "Status button that tells user that he is currently pending"
+  },
+  "walletVerificationNote3":  {
+    "message": "Napomena: Vaše transakcije će biti vidljive Uphold-u čim budete dali ovlašćenje; na primer, moći će da se vidi primalac i iznos napojnice.",
+    "description": "Displayed in login modal for uphold"
+  },
+  "onboardingEarnHeader": {
+    "message": "Zaradi tokene & Uzvrati isto",
+    "description": ""
+  },
+  "onboardingEarnText": {
+    "message": "Zaradite tokene gledajući reklame koje poštuju privatnost i podržavajte automatski vaše omiljene veb lokacije i kreatore sadržaja.",
+    "description": ""
+  },
+  "onboardingStartUsingRewards": {
+    "message": "Počnite da koristite Brave nagrade",
+    "description": ""
+  },
+  "onboardingTakeTour": {
+    "message": "Krenite u brzi obilazak",
+    "description": ""
+  },
+  "onboardingTerms": {
+    "message": "Nastavljajući, pristajete na $tos_link_begin$Uslovi korišćenja $tos_link_end$ and $pp_link_begin$Privatnost polise$pp_link_end$.",
+    "description": "",
+    "placeholders": {
+      "tos_link_begin": {
+        "content": "$1"
+      },
+      "tos_link_end": {
+        "content": "$2"
+      },
+      "pp_link_begin": {
+        "content": "$3"
+      },
+      "pp_link_end": {
+        "content": "$4"
+      }
+    }
+  },
+  "onboardingTourBack": {
+    "message": "Idite nazad",
+    "description": ""
+  },
+  "onboardingTourBegin": {
+    "message": "Krenimo u kratku turneju",
+    "description": ""
+  },
+  "onboardingTourContinue": {
+    "message": "Nastavi",
+    "description": ""
+  },
+  "onboardingTourDone": {
+    "message": "Gotovo",
+    "description": ""
+  },
+  "onboardingTourSkip": {
+    "message": "Прескочи",
+    "description": ""
+  },
+  "onboardingTourSkipForNow": {
+    "message": "Preskoči za sada",
+    "description": ""
+  },
+  "onboardingPanelWelcomeHeader": {
+    "message": "Dobrodošli u Brave nagrade!",
+    "description": ""
+  },
+  "onboardingPanelWelcomeText": {
+    "message": "Brave privatni oglasi nagrađuju vas sa tokenima da biste podržali sadržaj kreatora za razliku od tradicionalnih oglasa, u isto vreme zadržavajući privatnim vaše privatne podatke.",
+    "description": ""
+  },
+  "onboardingPanelAdsHeader": {
+    "message": "Gde se prikazuju reklame?",
+    "description": ""
+  },
+  "onboardingPanelAdsText": {
+    "message": "Brave privatni oglasi će se pojaviti kao normalno obaveštenje. U podešavanjima možete da kontrolišete koliko često vidite ove oglase.",
+    "description": ""
+  },
+  "onboardingPanelScheduleHeader": {
+    "message": "Kada dobijate nagrade",
+    "description": ""
+  },
+  "onboardingPanelScheduleText": {
+    "message": "Vaši zarađeni tokeni od ovog meseca od Bravo privatnih reklama će stići 5og sledećeg meseca.",
+    "description": ""
+  },
+  "onboardingPanelAcHeader": {
+    "message": "Uzvraćanje zajednici je nikad lakše",
+    "description": ""
+  },
+  "onboardingPanelAcText": {
+    "message": "Kreatori primaju vaš token doprinosa automatski na osnovu vašeg nivoa angažmana koji mi merimo kao  „Pažnja”.",
+    "description": ""
+  },
+  "onboardingPanelTippingHeader": {
+    "message": "Zahvalite se pomoću napojnica",
+    "description": ""
+  },
+  "onboardingPanelTippingText": {
+    "message": "Napojnice su način da privatno ohrabrite i podržavate sadržaj ili kreatore koje volite. Krenite da dajete napojnice!",
+    "description": ""
+  },
+  "onboardingPanelRedeemHeader": {
+    "message": "Šta možeš da uradiš sa tokenima?",
+    "description": ""
+  },
+  "onboardingPanelRedeemText": {
+    "message": "Tokeni se mogu koristiti i van podržavanja kreatora. Možete kupiti digitalni sadržaj i drugu robu kako se prodavci pridružuju.",
+    "description": ""
+  },
+  "onboardingPanelCompleteHeader": {
+    "message": "Vuuhuu, potpuno ste spremni!",
+    "description": ""
+  },
+  "onboardingPanelCompleteText": {
+    "message": "Korišćenjem Brave nagrada pomažete da veb bude bolje mesto za sve. I to je sjajno!",
+    "description": ""
   }
 }

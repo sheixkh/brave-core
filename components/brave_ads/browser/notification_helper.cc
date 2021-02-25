@@ -7,21 +7,41 @@
 
 namespace brave_ads {
 
+NotificationHelper* g_notification_helper_for_testing = nullptr;
+
 NotificationHelper::NotificationHelper() = default;
 
 NotificationHelper::~NotificationHelper() = default;
 
-bool NotificationHelper::ShouldShowNotifications() const {
+void NotificationHelper::set_for_testing(
+    NotificationHelper* notification_helper) {
+  g_notification_helper_for_testing = notification_helper;
+}
+
+bool NotificationHelper::ShouldShowNotifications() {
   return true;
 }
 
-bool NotificationHelper::ShowMyFirstAdNotification() const {
+bool NotificationHelper::ShowMyFirstAdNotification() {
   return false;
 }
 
-#if !defined(OS_MACOSX) && !defined(OS_WIN) && !defined(OS_LINUX) && !defined(OS_ANDROID)  // NOLINT
+bool NotificationHelper::CanShowBackgroundNotifications() const {
+  return true;
+}
+
 NotificationHelper* NotificationHelper::GetInstance() {
-  // just return a dummy notification helper for all other platforms
+  if (g_notification_helper_for_testing) {
+    return g_notification_helper_for_testing;
+  }
+
+  return GetInstanceImpl();
+}
+
+#if !defined(OS_MAC) && !defined(OS_WIN) && !defined(OS_LINUX) && \
+    !defined(OS_ANDROID)
+NotificationHelper* NotificationHelper::GetInstanceImpl() {
+  // Return a default notification helper for unsupported platforms
   return base::Singleton<NotificationHelper>::get();
 }
 #endif

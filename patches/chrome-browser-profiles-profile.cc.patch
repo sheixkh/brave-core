@@ -1,8 +1,16 @@
 diff --git a/chrome/browser/profiles/profile.cc b/chrome/browser/profiles/profile.cc
-index 28d3c597acc9e58bab439badb1d1dc9baa139048..4e4a3742f9133dcba49a2ec68a1181a345c5f63b 100644
+index c5999dc92fdcb148e9f813892b59b2bf398b799c..a0b5ba74a64eb3d8e1483663259fe8cbc661e36a 100644
 --- a/chrome/browser/profiles/profile.cc
 +++ b/chrome/browser/profiles/profile.cc
-@@ -140,7 +140,7 @@ const char Profile::kProfileKey[] = "__PROFILE__";
+@@ -90,6 +90,7 @@ bool Profile::OTRProfileID::AllowsBrowserWindows() const {
+   // DevTools::BrowserContext and MediaRouter::Presentation are an
+   // exception to this ban.
+   return *this == PrimaryID() ||
++         BRAVE_ALLOWS_BROWSER_WINDOWS
+          base::StartsWith(profile_id_, kDevToolsOTRProfileIDPrefix,
+                           base::CompareCase::SENSITIVE) ||
+          base::StartsWith(profile_id_, kMediaRouterOTRProfileIDPrefix,
+@@ -248,7 +249,7 @@ const char Profile::kProfileKey[] = "__PROFILE__";
  void Profile::RegisterProfilePrefs(user_prefs::PrefRegistrySyncable* registry) {
    registry->RegisterBooleanPref(
        prefs::kSearchSuggestEnabled,
@@ -11,12 +19,3 @@ index 28d3c597acc9e58bab439badb1d1dc9baa139048..4e4a3742f9133dcba49a2ec68a1181a3
        user_prefs::PrefRegistrySyncable::SYNCABLE_PREF);
  #if defined(OS_ANDROID)
    registry->RegisterStringPref(
-@@ -257,7 +257,7 @@ bool Profile::IsGuestSession() const {
-           chromeos::switches::kGuestSession);
-   return is_guest_session;
- #else
--  return is_guest_profile_;
-+  return is_guest_profile_ || brave::IsTorProfile(this);
- #endif
- }
- 

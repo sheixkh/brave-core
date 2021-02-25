@@ -9,20 +9,24 @@
 #include "chrome/browser/ui/views/profiles/incognito_menu_view.h"
 
 class BraveIncognitoMenuView : public IncognitoMenuView {
- private:
-  friend class IncognitoMenuView;
-
+ public:
   using IncognitoMenuView::IncognitoMenuView;
   ~BraveIncognitoMenuView() override = default;
 
-  // views::ButtonListener:
-  void ButtonPressed(views::Button* sender, const ui::Event& event) override;
+  // ProfileMenuViewBase:
+  void BuildMenu() override;
 
-  void Reset() override;
+ private:
+  friend class IncognitoMenuView;
+
+  // views::BubbleDialogDelegateView:
+  base::string16 GetAccessibleWindowTitle() const override;
+
+    // Button actions.
+  void OnExitButtonClicked() override;
 
   void AddTorButton();
-
-  views::Button* tor_profile_button_;
+  void OnTorProfileButtonClicked();
 
   DISALLOW_COPY_AND_ASSIGN(BraveIncognitoMenuView);
 };

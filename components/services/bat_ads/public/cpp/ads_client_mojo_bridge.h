@@ -1,4 +1,4 @@
-/* Copyright (c) 2019 The Brave Authors. All rights reserved.
+/* Copyright (c) 2020 The Brave Authors. All rights reserved.
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -18,69 +18,55 @@
 
 namespace bat_ads {
 
-class AdsClientMojoBridge : public mojom::BatAdsClient,
-                         public base::SupportsWeakPtr<AdsClientMojoBridge> {
+class AdsClientMojoBridge
+    : public mojom::BatAdsClient,
+      public base::SupportsWeakPtr<AdsClientMojoBridge> {
  public:
-  explicit AdsClientMojoBridge(ads::AdsClient* ads_client);
+  explicit AdsClientMojoBridge(
+      ads::AdsClient* ads_client);
+
   ~AdsClientMojoBridge() override;
 
+  AdsClientMojoBridge(const AdsClientMojoBridge&) = delete;
+  AdsClientMojoBridge& operator=(const AdsClientMojoBridge&) = delete;
+
   // Overridden from BatAdsClient:
-  bool IsEnabled(
-      bool* out_is_enabled) override;
-  void IsEnabled(
-      IsEnabledCallback callback) override;
   bool IsForeground(
       bool* out_is_foreground) override;
   void IsForeground(
       IsForegroundCallback callback) override;
-  bool GetLocale(
-      std::string* out_locale) override;
-  void GetLocale(
-      GetLocaleCallback callback) override;
-  bool GetUserModelLanguages(
-      std::vector<std::string>* out_languages) override;
-  void GetUserModelLanguages(
-      GetUserModelLanguagesCallback callback) override;
-  bool GetAdsPerHour(
-      uint64_t* out_ads_per_hour) override;
-  void GetAdsPerHour(
-      GetAdsPerHourCallback callback) override;
-  bool GetAdsPerDay(
-      uint64_t* out_ads_per_day) override;
-  void GetAdsPerDay(
-      GetAdsPerDayCallback callback) override;
   bool IsNetworkConnectionAvailable(
       bool* out_available) override;
   void IsNetworkConnectionAvailable(
       IsNetworkConnectionAvailableCallback callback) override;
+  bool CanShowBackgroundNotifications(
+      bool* out_can_show) override;
+  void CanShowBackgroundNotifications(
+      CanShowBackgroundNotificationsCallback callback) override;
   bool ShouldShowNotifications(
       bool* out_should_show) override;
   void ShouldShowNotifications(
       ShouldShowNotificationsCallback callback) override;
-  bool SetTimer(
-      uint64_t time_offset,
-      uint32_t* out_timer_id) override;
-  void SetTimer(
-      uint64_t time_offset,
-      SetTimerCallback callback) override;
-  bool LoadJsonSchema(
+  bool LoadResourceForId(
+      const std::string& id,
+      std::string* out_value) override;
+  void LoadResourceForId(
+      const std::string& id,
+      LoadResourceForIdCallback callback) override;
+  void Log(
+      const std::string& file,
+      const int32_t line,
+      const int32_t verbose_level,
+      const std::string& message) override;
+  void LoadUserModelForId(
+      const std::string& id,
+      LoadCallback callback) override;
+
+  void RecordP2AEvent(
       const std::string& name,
-      std::string* out_json) override;
-  void LoadJsonSchema(
-      const std::string& name,
-      LoadJsonSchemaCallback callback) override;
-  bool GetClientInfo(
-      const std::string& client_info,
-      std::string* out_client_info) override;
-  void GetClientInfo(
-      const std::string& client_info,
-      GetClientInfoCallback callback) override;
-  void EventLog(
-      const std::string& json) override;
-  void SetIdleThreshold(
-      int32_t threshold) override;
-  void KillTimer(
-      uint32_t timer_id) override;
+      const ads::P2AEventType type,
+      const std::string& out_value) override;
+
   void Load(
       const std::string& name,
       LoadCallback callback) override;
@@ -88,92 +74,106 @@ class AdsClientMojoBridge : public mojom::BatAdsClient,
       const std::string& name,
       const std::string& value,
       SaveCallback callback) override;
-  void Reset(
-      const std::string& name,
-      ResetCallback callback) override;
-  void LoadUserModelForLanguage(
-      const std::string& locale,
-      LoadUserModelForLanguageCallback callback) override;
-  void URLRequest(
-      const std::string& url,
-      const std::vector<std::string>& headers,
-      const std::string& content,
-      const std::string& content_type,
-      int32_t method,
-      URLRequestCallback callback) override;
-  void LoadSampleBundle(
-      LoadSampleBundleCallback callback) override;
+  void UrlRequest(
+      ads::UrlRequestPtr url_request,
+      UrlRequestCallback callback) override;
   void ShowNotification(
-      const std::string& notification_info) override;
+      const std::string& json) override;
   void CloseNotification(
-      const std::string& id) override;
-  void SetCatalogIssuers(
-      const std::string& issuers_info) override;
-  void ConfirmAd(
-      const std::string& notification_info) override;
-  void ConfirmAction(
-      const std::string& uuid,
-      const std::string& creative_set_id,
-      const std::string& type) override;
-  void SaveBundleState(
-      const std::string& bundle_state,
-      SaveBundleStateCallback callback) override;
-  void GetAds(
-      const std::string& category,
-      GetAdsCallback callback) override;
+      const std::string& uuid) override;
+  void RunDBTransaction(
+      ads::DBTransactionPtr transaction,
+      RunDBTransactionCallback callback) override;
+  void OnAdRewardsChanged() override;
+
+  void GetBooleanPref(
+      const std::string& path,
+      GetBooleanPrefCallback callback) override;
+  void SetBooleanPref(
+      const std::string& path,
+      const bool value) override;
+  void GetIntegerPref(
+      const std::string& path,
+      GetIntegerPrefCallback callback) override;
+  void SetIntegerPref(
+      const std::string& path,
+      const int value) override;
+  void GetDoublePref(
+      const std::string& path,
+      GetDoublePrefCallback callback) override;
+  void SetDoublePref(
+      const std::string& path,
+      const double value) override;
+  void GetStringPref(
+      const std::string& path,
+      GetStringPrefCallback callback) override;
+  void SetStringPref(
+      const std::string& path,
+      const std::string& value) override;
+  void GetInt64Pref(
+      const std::string& path,
+      GetInt64PrefCallback callback) override;
+  void SetInt64Pref(
+      const std::string& path,
+      const int64_t value) override;
+  void GetUint64Pref(
+      const std::string& path,
+      GetUint64PrefCallback callback) override;
+  void SetUint64Pref(
+      const std::string& path,
+      const uint64_t value) override;
+  void ClearPref(
+      const std::string& path) override;
 
  private:
   // workaround to pass base::OnceCallback into std::bind
   template <typename Callback>
   class CallbackHolder {
    public:
-    CallbackHolder(base::WeakPtr<AdsClientMojoBridge> client, Callback callback)
+    CallbackHolder(
+        base::WeakPtr<AdsClientMojoBridge> client,
+        Callback callback)
         : client_(client),
           callback_(std::move(callback)) {}
+
     ~CallbackHolder() = default;
-    bool is_valid() { return !!client_.get(); }
-    Callback& get() { return callback_; }
+
+    bool is_valid() {
+      return !!client_.get();
+    }
+
+    Callback& get() {
+      return callback_;
+    }
 
    private:
     base::WeakPtr<AdsClientMojoBridge> client_;
     Callback callback_;
   };
 
+  static void OnLoadUserModelForId(
+      CallbackHolder<LoadCallback>* holder,
+      const ads::Result result,
+      const std::string& value);
+
   static void OnLoad(
       CallbackHolder<LoadCallback>* holder,
-      ads::Result result,
+      const ads::Result result,
       const std::string& value);
+
   static void OnSave(
       CallbackHolder<SaveCallback>* holder,
-      ads::Result result);
-  static void OnReset(
-      CallbackHolder<ResetCallback>* holder,
-      ads::Result result);
-  static void OnLoadUserModelForLanguage(
-      CallbackHolder<LoadUserModelForLanguageCallback>* holder,
-      ads::Result result,
-      const std::string& value);
+      const ads::Result result);
+
   static void OnURLRequest(
-      CallbackHolder<URLRequestCallback>* holder,
-      const int status_code,
-      const std::string& content,
-      const std::map<std::string, std::string>& headers);
-  static void OnLoadSampleBundle(
-      CallbackHolder<LoadSampleBundleCallback>* holder,
-      ads::Result result,
-      const std::string& value);
-  static void OnSaveBundleState(
-      CallbackHolder<SaveBundleStateCallback>* holder,
-      ads::Result result);
-  static void OnGetAds(
-      CallbackHolder<GetAdsCallback>* holder,
-      ads::Result result,
-      const std::string& category,
-      const std::vector<ads::AdInfo>& ad_info);
+      CallbackHolder<UrlRequestCallback>* holder,
+      const ads::UrlResponse& url_response);
 
-  ads::AdsClient* ads_client_;
+  static void OnRunDBTransaction(
+      CallbackHolder<RunDBTransactionCallback>* holder,
+      ads::DBCommandResponsePtr response);
 
-  DISALLOW_COPY_AND_ASSIGN(AdsClientMojoBridge);
+  ads::AdsClient* ads_client_;  // NOT OWNED
 };
 
 }  // namespace bat_ads

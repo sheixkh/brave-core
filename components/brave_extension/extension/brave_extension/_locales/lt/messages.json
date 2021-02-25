@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Šioje svetainėje naršote be jokios privatumo ir saugumo apsaugos.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Šioje svetainėje naršote be „Brave“ privatumo ir saugumo apsaugos. Ar ji tinkamai veikia padidinus skydų apsaugą?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Pranešti apie neveikiančią svetainę",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Užblokuoti elementai",
@@ -51,6 +55,22 @@
     "message": "Kelių svetainių sekikliai užblokuoti",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Sekikliai ir reklamos užblokuoti",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Sekikliai ir reklamos blokuojami (agresyvus)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Sekikliai ir reklamos blokuojami (standartinis)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Leisti visus sekiklius ir reklamas",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Ryšiai pakeisti į HTTPS",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "Leidžiami visi slapukai",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Kelių svetainių įrenginio atpažinimo bandymai užblokuoti",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Kontrolinių kodų kūrimas užblokuotas",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Įrenginio atpažinimo bandymai užblokuoti",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Kontrolinių kodų kūrimas blokuojamas (standartiškai)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Visi įrenginio atpažinimo bandymai leidžiami",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Kontrolinių kodų kūrimas blokuojamas (griežtai, gali neveikti svetainės)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Leisti visus kontrolinius kodus",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Bandymai atpažinti įrenginį",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Kontrolinių kodų kūrimo bandymai",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Scenarijai šioje svetainėje",

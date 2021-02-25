@@ -3,136 +3,94 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef BAT_ADS_INTERNAL_ADS_CLIENT_MOCK_H_
-#define BAT_ADS_INTERNAL_ADS_CLIENT_MOCK_H_
-
-#include <stdint.h>
-#include <string>
-#include <vector>
-#include <memory>
-#include <iostream>
-#include <ostream>
+#ifndef BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_ADS_CLIENT_MOCK_H_
+#define BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_ADS_CLIENT_MOCK_H_
 
 #include "bat/ads/ads_client.h"
-#include "bat/ads/ads.h"
+
+#include <stdint.h>
+
+#include <string>
 
 #include "testing/gmock/include/gmock/gmock.h"
 
 namespace ads {
 
-class MockLogStreamImpl : public LogStream {
+class AdsClientMock : public AdsClient {
  public:
-  MockLogStreamImpl(
-      const char* file,
-      const int line,
-      const LogLevel log_level);
+  AdsClientMock();
 
-  std::ostream& stream() override;
-
- private:
-  // Not copyable, not assignable
-  MockLogStreamImpl(const MockLogStreamImpl&) = delete;
-  MockLogStreamImpl& operator=(const MockLogStreamImpl&) = delete;
-};
-
-class MockAdsClient : public AdsClient {
- public:
-  MockAdsClient();
-  ~MockAdsClient() override;
-
-  MOCK_CONST_METHOD0(IsEnabled, bool());
-
-  MOCK_CONST_METHOD0(GetLocale, const std::string());
-
-  MOCK_CONST_METHOD0(GetAdsPerHour, uint64_t());
-
-  MOCK_CONST_METHOD0(GetAdsPerDay, uint64_t());
-
-  MOCK_METHOD1(SetIdleThreshold, void(
-      const int threshold));
+  ~AdsClientMock() override;
 
   MOCK_CONST_METHOD0(IsNetworkConnectionAvailable, bool());
 
-  MOCK_CONST_METHOD1(GetClientInfo, void(
-      ClientInfo* info));
-
-  MOCK_CONST_METHOD0(GetUserModelLanguages, const std::vector<std::string>());
-
-  MOCK_CONST_METHOD2(LoadUserModelForLanguage, void(
-      const std::string& language,
-      OnLoadCallback callback));
-
   MOCK_CONST_METHOD0(IsForeground, bool());
 
-  MOCK_CONST_METHOD0(ShouldShowNotifications, bool());
+  MOCK_METHOD0(ShouldShowNotifications, bool());
 
-  MOCK_METHOD1(ShowNotification, void(
-      std::unique_ptr<NotificationInfo> info));
+  MOCK_CONST_METHOD0(CanShowBackgroundNotifications, bool());
 
-  MOCK_METHOD1(CloseNotification, void(
-      const std::string& id));
+  MOCK_METHOD1(ShowNotification,
+               void(const AdNotificationInfo& ad_notification));
 
-  MOCK_METHOD1(SetCatalogIssuers, void(
-      std::unique_ptr<IssuersInfo> info));
+  MOCK_METHOD1(CloseNotification, void(const std::string& uuid));
 
-  MOCK_METHOD1(ConfirmAd, void(
-      std::unique_ptr<NotificationInfo> info));
+  MOCK_METHOD2(UrlRequest,
+               void(UrlRequestPtr url_request, UrlRequestCallback callback));
 
-  MOCK_METHOD3(ConfirmAction, void(
-      const std::string& uuid,
-      const std::string& creative_set_id,
-      const ConfirmationType& type));
+  MOCK_METHOD3(Save,
+               void(const std::string& name,
+                    const std::string& value,
+                    ResultCallback callback));
 
-  MOCK_METHOD1(SetTimer, uint32_t(
-      const uint64_t time_offset));
+  MOCK_METHOD2(Load, void(const std::string& name, LoadCallback callback));
 
-  MOCK_METHOD1(KillTimer, void(
-      uint32_t timer_id));
+  MOCK_METHOD2(LoadUserModelForId,
+               void(const std::string& id, LoadCallback callback));
 
-  MOCK_METHOD6(URLRequest, void(
-      const std::string& url,
-      const std::vector<std::string>& headers,
-      const std::string& content,
-      const std::string& content_type,
-      const URLRequestMethod method,
-      URLRequestCallback callback));
+  MOCK_METHOD1(LoadResourceForId, std::string(const std::string& id));
 
-  MOCK_METHOD3(Save, void(
-      const std::string& name,
-      const std::string& value,
-      OnSaveCallback callback));
+  MOCK_METHOD2(RunDBTransaction,
+               void(DBTransactionPtr, RunDBTransactionCallback));
 
-  MOCK_METHOD2(SaveBundleState, void(
-      std::unique_ptr<BundleState> state,
-      OnSaveCallback callback));
+  MOCK_METHOD0(OnAdRewardsChanged, void());
 
-  MOCK_METHOD2(Load, void(
-      const std::string& name,
-      OnLoadCallback callback));
+  MOCK_METHOD3(RecordP2AEvent,
+               void(const std::string& name,
+                    const ads::P2AEventType type,
+                    const std::string& value));
 
-  MOCK_METHOD1(LoadJsonSchema, const std::string(
-      const std::string& name));
+  MOCK_METHOD4(Log,
+               void(const char* file,
+                    const int line,
+                    const int verbose_level,
+                    const std::string& message));
 
-  MOCK_METHOD1(LoadSampleBundle, void(
-      OnLoadSampleBundleCallback callback));
+  MOCK_CONST_METHOD1(GetBooleanPref, bool(const std::string& path));
+  MOCK_METHOD2(SetBooleanPref, void(const std::string& path, const bool value));
 
-  MOCK_METHOD2(Reset, void(
-      const std::string& name,
-      OnResetCallback callback));
+  MOCK_CONST_METHOD1(GetIntegerPref, int(const std::string& path));
+  MOCK_METHOD2(SetIntegerPref, void(const std::string& path, const int value));
 
-  MOCK_METHOD2(GetAds, void(
-      const std::string& category,
-      OnGetAdsCallback callback));
+  MOCK_CONST_METHOD1(GetDoublePref, double(const std::string& path));
+  MOCK_METHOD2(SetDoublePref,
+               void(const std::string& path, const double value));
 
-  MOCK_CONST_METHOD1(EventLog, void(
-      const std::string& json));
+  MOCK_CONST_METHOD1(GetStringPref, std::string(const std::string& path));
+  MOCK_METHOD2(SetStringPref,
+               void(const std::string& path, const std::string& value));
 
-  std::unique_ptr<LogStream> Log(
-      const char* file,
-      const int line,
-      const LogLevel log_level) const;
+  MOCK_CONST_METHOD1(GetInt64Pref, int64_t(const std::string& path));
+  MOCK_METHOD2(SetInt64Pref,
+               void(const std::string& path, const int64_t value));
+
+  MOCK_CONST_METHOD1(GetUint64Pref, uint64_t(const std::string& path));
+  MOCK_METHOD2(SetUint64Pref,
+               void(const std::string& path, const uint64_t value));
+
+  MOCK_METHOD1(ClearPref, void(const std::string& path));
 };
 
 }  // namespace ads
 
-#endif  // BAT_ADS_TEST_ADS_CLIENT_MOCK_H_
+#endif  // BRAVE_VENDOR_BAT_NATIVE_ADS_SRC_BAT_ADS_INTERNAL_ADS_CLIENT_MOCK_H_

@@ -9,6 +9,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+OBJC_EXPORT
 @interface PublisherInfo : NSManagedObject
 
 + (NSFetchRequest<PublisherInfo *> *)fetchRequest;
@@ -19,7 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, copy) NSString *provider;
 @property (nonatomic, copy) NSString *publisherID;
 @property (nonatomic, copy) NSString *url;
-@property (nonatomic) BOOL verified;
 @property (nullable, nonatomic, retain) NSSet<ActivityInfo *> *activities;
 @property (nullable, nonatomic, retain) NSSet<ContributionInfo *> *contributions;
 @property (nullable, nonatomic, retain) NSSet<RecurringDonation *> *recurringDonations;

@@ -9,9 +9,11 @@ import * as storageAPI from '../api/storageAPI'
 import * as shieldsPanelTypes from '../../constants/shieldsPanelTypes'
 import * as windowTypes from '../../constants/windowTypes'
 import * as tabTypes from '../../constants/tabTypes'
+import * as settingsTypes from '../../constants/settingsTypes'
 import * as webNavigationTypes from '../../constants/webNavigationTypes'
 import { State, PersistentData } from '../../types/state/shieldsPannelState'
 import { Actions } from '../../types/actions/index'
+import { SettingsData } from '../../types/other/settingsTypes'
 
 // State helpers
 import * as shieldsPanelState from '../../state/shieldsPanelState'
@@ -22,12 +24,15 @@ import {
   setAllowBraveShields,
   setAllowAds,
   setAllowTrackers,
+  setAllowCosmeticFiltering,
   setAllowHTTPUpgradableResources,
   setAllowJavaScript,
   setAllowFingerprinting,
   setAllowCookies,
   toggleShieldsValue,
   requestShieldPanelData,
+  onShieldsPanelShown,
+  reportBrokenSite,
   setAllowScriptOriginsOnce
 } from '../api/shieldsAPI'
 import { reloadTab } from '../api/tabsAPI'
@@ -39,6 +44,7 @@ import { areObjectsEqual } from '../../helpers/objectUtils'
 export default function shieldsPanelReducer (
   state: State = {
     persistentData: storageAPI.loadPersistentData(),
+    settingsData: storageAPI.initialSettingsData,
     tabs: {},
     windows: {},
     currentWindowId: -1
@@ -100,6 +106,9 @@ export default function shieldsPanelReducer (
     case shieldsPanelTypes.SHIELDS_PANEL_DATA_UPDATED: {
       state = shieldsPanelState.updateTabShieldsData(state, action.details.id, action.details)
       shieldsPanelState.updateShieldsIcon(state)
+      if (chrome.test && shieldsPanelState.getActiveTabData(state)) {
+        chrome.test.sendMessage('brave-extension-shields-data-ready')
+      }
       break
     }
     case shieldsPanelTypes.SHIELDS_TOGGLED: {
@@ -114,13 +123,21 @@ export default function shieldsPanelReducer (
           reloadTab(tabId, true).catch(() => {
             console.error('Tab reload was not successful')
           })
-          requestShieldPanelData(shieldsPanelState.getActiveTabId(state))
+          return requestShieldPanelData(shieldsPanelState.getActiveTabId(state))
         })
         .catch(() => {
           console.error('Could not set shields')
         })
       state = shieldsPanelState
         .updateTabShieldsData(state, tabId, { braveShields: action.setting })
+      break
+    }
+    case shieldsPanelTypes.REPORT_BROKEN_SITE: {
+      chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        if (tabs[0] && tabs[0].id) {
+          reportBrokenSite(tabs[0].id)
+        }
+      })
       break
     }
     case shieldsPanelTypes.HTTPS_EVERYWHERE_TOGGLED: {
@@ -182,16 +199,22 @@ export default function shieldsPanelReducer (
         break
       }
 
-      const setting = toggleShieldsValue(action.setting)
-      const p1 = setAllowAds(tabData.origin, setting)
+      const adsTrackersSetting = (action.setting === 'allow' ? 'allow' : 'block')
+      const cosmeticFilteringSetting = action.setting
+
+      const p1 = setAllowAds(tabData.origin, adsTrackersSetting)
         .catch(() => {
           console.error('Could not set ad block setting')
         })
-      const p2 = setAllowTrackers(tabData.origin, setting)
+      const p2 = setAllowTrackers(tabData.origin, adsTrackersSetting)
         .catch(() => {
           console.error('Could not set tracking protection setting')
         })
-      Promise.all([p1, p2])
+      const p3 = setAllowCosmeticFiltering(tabData.origin, cosmeticFilteringSetting)
+        .catch(() => {
+          console.error('Could not set cosmetic filtering setting')
+        })
+      Promise.all([p1, p2, p3])
         .then(() => {
           reloadTab(tabId, true).catch(() => {
             console.error('Tab reload was not successful')
@@ -279,6 +302,11 @@ export default function shieldsPanelReducer (
         })
       break
     }
+    case settingsTypes.SET_STORE_SETTINGS_CHANGE: {
+      const settingsData: Partial<SettingsData> = action.settingsData
+      state = { ...state, settingsData: { ...state.settingsData, ...settingsData } }
+      break
+    }
     // NoScriptInfo is the name we call for the list of scripts that are either
     // blocked or allowed by the user. Each script have three properties:
     // ....................................................................................
@@ -319,6 +347,12 @@ export default function shieldsPanelReducer (
     // Advanced/simple view functionality
     case shieldsPanelTypes.SET_ADVANCED_VIEW_FIRST_ACCESS: {
       state = shieldsPanelState.updatePersistentData(state, { isFirstAccess: false })
+      break
+    }
+    case shieldsPanelTypes.SHIELDS_READY: {
+      onShieldsPanelShown().catch(() => {
+        console.error('error calling `chrome.braveShields.onShieldsPanelShown()`')
+      })
       break
     }
   }

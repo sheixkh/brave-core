@@ -11,7 +11,6 @@
 #include "chrome/browser/themes/theme_service_factory.h"
 #include "chrome/browser/ui/browser.h"
 #include "chrome/browser/ui/views/frame/browser_view.h"
-#include "ui/native_theme/native_theme_dark_aura.h"
 
 BraveBrowserFrame::BraveBrowserFrame(BrowserView* browser_view)
     : BrowserFrame(browser_view),
@@ -20,14 +19,12 @@ BraveBrowserFrame::BraveBrowserFrame(BrowserView* browser_view)
 // Tor/Guest profile should use DarkAura. If not, their native ui is affected by
 // normal windows theme change.
 const ui::NativeTheme* BraveBrowserFrame::GetNativeTheme() const {
-#if defined(OS_WIN) || defined(OS_MACOSX)
   if ((view_->browser()->profile()->IsIncognitoProfile() ||
-       brave::IsTorProfile(view_->browser()->profile()) ||
+       view_->browser()->profile()->IsTor() ||
        brave::IsGuestProfile(view_->browser()->profile())) &&
       ThemeServiceFactory::GetForProfile(view_->browser()->profile())
           ->UsingDefaultTheme()) {
-    return ui::NativeThemeDarkAura::instance();
+    return ui::NativeTheme::GetInstanceForDarkUI();
   }
-#endif
   return views::Widget::GetNativeTheme();
 }

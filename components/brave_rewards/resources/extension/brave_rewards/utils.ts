@@ -3,16 +3,16 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import BigNumber from 'bignumber.js'
-import { getMessage } from './background/api/locale_api'
-import { WalletState } from 'brave-ui/features/rewards/walletWrapper'
 
-export const convertBalance = (tokens: string, rates: Record<string, number> | undefined, currency: string = 'USD'): string => {
-  const tokensNum = parseFloat(tokens)
-  if (tokensNum === 0 || !rates || !rates[currency]) {
+import { getMessage } from './background/api/locale_api'
+import { WalletState } from '../../ui/components/walletWrapper'
+
+export const convertBalance = (tokens: number, rate: number): string => {
+  if (tokens === 0) {
     return '0.00'
   }
 
-  const converted = tokensNum * rates[currency]
+  const converted = tokens * rate
 
   if (isNaN(converted)) {
     return '0.00'
@@ -25,47 +25,44 @@ export const formatConverted = (converted: string, currency: string = 'USD'): st
   return `${converted} ${currency}`
 }
 
-export const convertProbiToFixed = (probi: string, places: number = 1) => {
-  const result = new BigNumber(probi).dividedBy('1e18').toFixed(places, BigNumber.ROUND_DOWN)
+export const handleContributionAmount = (amount: string) => {
+  let result = '0.000'
+  const amountSplit = amount.split('.')
+  if (amountSplit && amountSplit[0].length > 18) {
+    const result = new BigNumber(amount).dividedBy('1e18').toFixed(3, BigNumber.ROUND_UP)
+
+    return result
+  } else {
+    result = parseFloat(amount).toFixed(3)
+  }
 
   if (result === 'NaN') {
-    return '0.0'
+    return '0.000'
   }
 
   return result
 }
 
-export const getGrants = (grants?: RewardsExtension.Grant[]) => {
-  if (!grants) {
-    return []
+export const getPromotion = (promotion: RewardsExtension.Promotion, onlyAnonWallet: boolean) => {
+  if (!promotion) {
+    return promotion
   }
 
-  return grants.map((grant: RewardsExtension.Grant) => {
-    return {
-      tokens: convertProbiToFixed(grant.probi),
-      expireDate: new Date(grant.expiryTime * 1000).toLocaleDateString(),
-      type: grant.type || 'ugp'
-    }
-  })
-}
+  const tokenString = onlyAnonWallet ? getMessage('point') : getMessage('token')
+  promotion.finishTitle = getMessage('grantFinishTitleUGP')
+  promotion.finishText = getMessage('grantFinishTextUGP', [tokenString])
+  promotion.finishTokenTitle = onlyAnonWallet
+    ? getMessage('grantFinishPointTitleUGP')
+    : getMessage('grantFinishTokenTitleUGP')
 
-export const getGrant = (grant?: RewardsExtension.GrantInfo) => {
-  if (!grant) {
-    return grant
+  if (promotion.type === 1) { // Rewards.PromotionTypes.ADS
+    promotion.expiresAt = 0
+    promotion.finishTitle = getMessage('grantFinishTitleAds')
+    promotion.finishText = getMessage('grantFinishTextAds')
+    promotion.finishTokenTitle = getMessage('grantFinishTokenTitleAds')
   }
 
-  grant.finishTitle = getMessage('grantFinishTitleUGP')
-  grant.finishText = getMessage('grantFinishTextUGP')
-  grant.finishTokenTitle = getMessage('grantFinishTokenTitleUGP')
-
-  if (grant.type === 'ads') {
-    grant.expiryTime = 0
-    grant.finishTitle = getMessage('grantFinishTitleAds')
-    grant.finishText = getMessage('grantFinishTextAds')
-    grant.finishTokenTitle = getMessage('grantFinishTokenTitleAds')
-  }
-
-  return grant
+  return promotion
 }
 
 export const isPublisherVerified = (status?: RewardsExtension.PublisherStatus) => {
@@ -100,40 +97,53 @@ export const isPublisherNotVerified = (status?: RewardsExtension.PublisherStatus
   return status === 0
 }
 
-export const getWalletStatus = (externalWallet?: RewardsExtension.ExternalWallet): WalletState => {
+export const getWalletStatus = (externalWallet?: RewardsExtension.ExternalWallet): WalletState | undefined => {
   if (!externalWallet) {
-    return 'unverified'
+    return undefined
   }
 
   switch (externalWallet.status) {
-    // ledger::WalletStatus::CONNECTED
+    // ledger::type::WalletStatus::CONNECTED
     case 1:
       return 'connected'
-    // ledger::WalletStatus::VERIFIED
+    // ledger::type::WalletStatus::VERIFIED
     case 2:
       return 'verified'
-    // ledger::WalletStatus::DISCONNECTED_NOT_VERIFIED
+    // ledger::type::WalletStatus::DISCONNECTED_NOT_VERIFIED
     case 3:
       return 'disconnected_unverified'
-    // ledger::WalletStatus::DISCONNECTED_VERIFIED
+    // ledger::type::WalletStatus::DISCONNECTED_VERIFIED
     case 4:
       return 'disconnected_verified'
+    // ledger::type::WalletStatus::PENDING
+    case 5:
+      return 'pending'
     default:
       return 'unverified'
   }
 }
 
-export const getUserName = (externalWallet?: RewardsExtension.ExternalWallet) => {
-  if (!externalWallet) {
+export const getGreetings = (externalWallet?: RewardsExtension.ExternalWallet) => {
+  if (!externalWallet || !externalWallet.userName) {
     return ''
   }
 
-  return externalWallet.userName
+  return getMessage('greetingsVerified', [externalWallet.userName])
 }
 
-export const handleUpholdLink = (link: string, externalWallet?: RewardsExtension.ExternalWallet) => {
+export const handleUpholdLink = (balance: RewardsExtension.Balance, externalWallet?: RewardsExtension.ExternalWallet) => {
+  if (!externalWallet) {
+    return
+  }
+
+  let link = externalWallet.verifyUrl
+
   if (!externalWallet || (externalWallet && externalWallet.status === 0)) {
     link = 'brave://rewards/#verify'
+  }
+
+  if (balance.total < 25) {
+    link = externalWallet.loginUrl
   }
 
   chrome.tabs.create({
@@ -141,27 +151,14 @@ export const handleUpholdLink = (link: string, externalWallet?: RewardsExtension
   })
 }
 
-export const getExternalWallet = (actions: any, externalWallet?: RewardsExtension.ExternalWallet, open: boolean = false) => {
+export const getExternalWallet = (actions: any, externalWallet?: RewardsExtension.ExternalWallet) => {
   chrome.braveRewards.getExternalWallet('uphold', (result: number, wallet: RewardsExtension.ExternalWallet) => {
     // EXPIRED TOKEN
     if (result === 24) {
-      getExternalWallet(actions, externalWallet, open)
+      getExternalWallet(actions, externalWallet)
       return
     }
 
     actions.onExternalWallet(wallet)
-
-    if (open && wallet.verifyUrl) {
-      handleUpholdLink(wallet.verifyUrl)
-    }
   })
-}
-
-export const onVerifyClick = (actions: any, externalWallet?: RewardsExtension.ExternalWallet) => {
-  if (!externalWallet || externalWallet.verifyUrl) {
-    getExternalWallet(actions, externalWallet, true)
-    return
-  }
-
-  handleUpholdLink(externalWallet.verifyUrl)
 }

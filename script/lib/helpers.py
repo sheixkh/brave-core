@@ -13,16 +13,15 @@ BRAVE_CORE_REPO = "brave/brave-core"
 
 
 def channels():
-    return ['nightly', 'dev', 'beta', 'release']
+    return ['nightly', 'beta', 'release']
 
 
 def get_channel_display_name():
     raw = channels()
     d = {
         raw[0]: 'Nightly',
-        raw[1]: 'Dev',
-        raw[2]: 'Beta',
-        raw[3]: 'Release'
+        raw[1]: 'Beta',
+        raw[2]: 'Release'
     }
 
     return d[release_channel()]
@@ -46,9 +45,9 @@ def get_releases_by_tag(repo, tag_name, include_drafts=False):
     GITHUB_URL = 'https://api.github.com'
 
     next_request = ""
-    headers = {'Accept': 'application/vnd.github+json'}
-    release_url = GITHUB_URL + "/repos/" + BRAVE_REPO + "/releases" + '?access_token=' + \
-        get_env_var('GITHUB_TOKEN') + '&page=1&per_page=100'
+    headers = {'Accept': 'application/vnd.github+json',
+               'Authorization': 'token ' + get_env_var('GITHUB_TOKEN')}
+    release_url = GITHUB_URL + "/repos/" + BRAVE_REPO + "/releases?page=1&per_page=100"
     r = call_github_api(release_url, headers=headers)
     next_request = ""
     # The GitHub API returns paginated results of 100 items maximum per

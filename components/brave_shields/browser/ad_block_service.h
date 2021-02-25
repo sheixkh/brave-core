@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include "base/optional.h"
+#include "base/values.h"
 #include "brave/components/brave_shields/browser/ad_block_base_service.h"
 #include "components/keyed_service/core/keyed_service.h"
 #include "components/prefs/pref_registry_simple.h"
@@ -25,7 +27,10 @@ using brave_component_updater::BraveComponent;
 
 namespace brave_shields {
 
-const char kAdBlockResourcesFilename [] = "resources.txt";
+class AdBlockRegionalServiceManager;
+class AdBlockCustomFiltersService;
+
+const char kAdBlockResourcesFilename[] = "resources.json";
 const char kAdBlockComponentName[] = "Brave Ad Block Updater";
 const char kAdBlockComponentId[] = "cffkpbalmllkdoenhmdmpbkajipdjfam";
 const char kAdBlockComponentBase64PublicKey[] =
@@ -43,12 +48,30 @@ class AdBlockService : public AdBlockBaseService {
   explicit AdBlockService(BraveComponent::Delegate* delegate);
   ~AdBlockService() override;
 
+  void ShouldStartRequest(const GURL& url,
+                          blink::mojom::ResourceType resource_type,
+                          const std::string& tab_host,
+                          bool* did_match_rule,
+                          bool* did_match_exception,
+                          bool* did_match_important,
+                          std::string* mock_data_url) override;
+  base::Optional<base::Value> UrlCosmeticResources(
+      const std::string& url) override;
+  base::Optional<base::Value> HiddenClassIdSelectors(
+      const std::vector<std::string>& classes,
+      const std::vector<std::string>& ids,
+      const std::vector<std::string>& exceptions) override;
+
+  AdBlockRegionalServiceManager* regional_service_manager();
+  AdBlockCustomFiltersService* custom_filters_service();
+
  protected:
   bool Init() override;
   void OnComponentReady(const std::string& component_id,
                         const base::FilePath& install_dir,
                         const std::string& manifest) override;
-  void OnResourcesFileDataReady(std::string resources);
+  void OnResourcesFileDataReady(const std::string& resources);
+  void OnRegionalCatalogFileDataReady(const std::string& catalog_json);
 
  private:
   friend class ::AdBlockServiceTest;
@@ -59,7 +82,14 @@ class AdBlockService : public AdBlockBaseService {
       const std::string& component_id,
       const std::string& component_base64_public_key);
 
-  base::WeakPtrFactory<AdBlockService> weak_factory_;
+  std::unique_ptr<brave_shields::AdBlockRegionalServiceManager>
+      regional_service_manager_;
+  std::unique_ptr<brave_shields::AdBlockCustomFiltersService>
+      custom_filters_service_;
+
+  BraveComponent::Delegate* component_delegate_;
+
+  base::WeakPtrFactory<AdBlockService> weak_factory_{this};
   DISALLOW_COPY_AND_ASSIGN(AdBlockService);
 };
 

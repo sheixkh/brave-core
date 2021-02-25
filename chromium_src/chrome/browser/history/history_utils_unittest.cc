@@ -4,19 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "chrome/browser/history/history_utils.h"
-#include "components/previews/core/previews_experiments.h"
 #include "net/base/url_util.h"
 #include "testing/gtest/include/gtest/gtest.h"
 #include "url/gurl.h"
-
-namespace {
-// Refered IsLitePageRedirectPreviewDomain() to make sample lite page url.
-GURL GetSampleLitePageUrl() {
-  return net::AppendQueryParameter(
-      previews::params::GetLitePagePreviewsDomainURL(),
-      "u", "1234");
-}
-}  // namespace
+#include "extensions/buildflags/buildflags.h"
 
 // This test covers all cases that upstream and our version of
 // CanAddURLToHistory().
@@ -32,5 +23,8 @@ TEST(HistoryUtilsTest, VariousURLTest) {
   EXPECT_FALSE(CanAddURLToHistory(GURL("chrome-native://test")));
   EXPECT_FALSE(CanAddURLToHistory(GURL("chrome-search://test")));
   EXPECT_FALSE(CanAddURLToHistory(GURL("chrome-distiller://test")));
-  EXPECT_FALSE(CanAddURLToHistory(GetSampleLitePageUrl()));
+#if BUILDFLAG(ENABLE_EXTENSIONS)
+  EXPECT_FALSE(CanAddURLToHistory(
+      GURL("chrome-extension://odbfpeeihdkbihmopkbjmoonfanlbfcl/home.html")));
+#endif
 }

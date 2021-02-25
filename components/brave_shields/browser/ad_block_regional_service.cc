@@ -18,10 +18,12 @@
 #include "base/strings/string_number_conversions.h"
 #include "base/strings/utf_string_conversions.h"
 #include "base/threading/thread_restrictions.h"
+#include "brave/browser/brave_browser_process_impl.h"
 #include "brave/common/pref_names.h"
+#include "brave/components/brave_shields/browser/ad_block_regional_service_manager.h"
 #include "brave/components/brave_shields/browser/ad_block_service.h"
 #include "brave/components/brave_shields/browser/ad_block_service_helper.h"
-#include "brave/vendor/adblock_rust_ffi/src/wrapper.hpp"
+#include "brave/vendor/adblock_rust_ffi/src/wrapper.h"
 #include "components/prefs/pref_service.h"
 
 namespace brave_shields {
@@ -31,32 +33,35 @@ std::string
     AdBlockRegionalService::g_ad_block_regional_component_base64_public_key_;  // NOLINT
 
 AdBlockRegionalService::AdBlockRegionalService(
-    const std::string& uuid,
+    const adblock::FilterList& catalog_entry,
     brave_component_updater::BraveComponent::Delegate* delegate)
     : AdBlockBaseService(delegate),
-      uuid_(uuid) {
+      uuid_(catalog_entry.uuid),
+      title_(catalog_entry.title),
+      component_id_(catalog_entry.component_id),
+      base64_public_key_(catalog_entry.base64_public_key) {
 }
 
 AdBlockRegionalService::~AdBlockRegionalService() {
 }
 
+void AdBlockRegionalService::SetCatalogEntry(const adblock::FilterList& entry) {
+  DCHECK(entry.uuid == uuid_);
+  title_ = entry.title;
+  component_id_ = entry.component_id;
+  base64_public_key_ = entry.base64_public_key;
+}
+
 bool AdBlockRegionalService::Init() {
   AdBlockBaseService::Init();
-  std::vector<adblock::FilterList>&  region_lists =
-    adblock::FilterList::GetRegionalLists();
-  auto it = brave_shields::FindAdBlockFilterListByUUID(region_lists, uuid_);
-  if (it == region_lists.end())
-    return false;
 
-  Register(it->title,
+  Register(title_,
            !g_ad_block_regional_component_id_.empty()
                ? g_ad_block_regional_component_id_
-               : it->component_id,
+               : component_id_,
            !g_ad_block_regional_component_base64_public_key_.empty()
                ? g_ad_block_regional_component_base64_public_key_
-               : it->base64_public_key);
-
-  title_ = it->title;
+               : base64_public_key_);
 
   return true;
 }
@@ -69,6 +74,21 @@ void AdBlockRegionalService::OnComponentReady(
       install_dir.AppendASCII(std::string("rs-") + uuid_)
           .AddExtension(FILE_PATH_LITERAL(".dat"));
   GetDATFileData(dat_file_path);
+  base::FilePath resources_file_path =
+      install_dir.AppendASCII(kAdBlockResourcesFilename);
+
+  base::PostTaskAndReplyWithResult(
+      GetTaskRunner().get(), FROM_HERE,
+      base::BindOnce(&brave_component_updater::GetDATFileAsString,
+                     resources_file_path),
+      base::BindOnce(&AdBlockRegionalService::OnResourcesFileDataReady,
+                     weak_factory_.GetWeakPtr()));
+}
+
+void AdBlockRegionalService::OnResourcesFileDataReady(
+    const std::string& resources) {
+  g_brave_browser_process->ad_block_regional_service_manager()->AddResources(
+      resources);
 }
 
 // static
@@ -83,9 +103,9 @@ void AdBlockRegionalService::SetComponentIdAndBase64PublicKeyForTest(
 ///////////////////////////////////////////////////////////////////////////////
 
 std::unique_ptr<AdBlockRegionalService> AdBlockRegionalServiceFactory(
-    const std::string& uuid,
+    const adblock::FilterList& catalog_entry,
     brave_component_updater::BraveComponent::Delegate* delegate) {
-  return std::make_unique<AdBlockRegionalService>(uuid, delegate);
+  return std::make_unique<AdBlockRegionalService>(catalog_entry, delegate);
 }
 
 }  // namespace brave_shields

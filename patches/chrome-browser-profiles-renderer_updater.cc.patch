@@ -1,21 +1,12 @@
 diff --git a/chrome/browser/profiles/renderer_updater.cc b/chrome/browser/profiles/renderer_updater.cc
-index 9dd42523f9704f57279abec23efb8bd07c4e8cfa..b6df2558a703c4c461910ee811a3177d79899115 100644
+index 04bbd816692bf994e87dd765ad9d10b45d7fe547..8d96b34247ee68a1f608479663f1528413c97653 100644
 --- a/chrome/browser/profiles/renderer_updater.cc
 +++ b/chrome/browser/profiles/renderer_updater.cc
-@@ -53,6 +53,16 @@ void GetGuestViewDefaultContentSettingRules(
+@@ -51,6 +51,7 @@ void GetGuestViewDefaultContentSettingRules(
        base::Value::FromUniquePtrValue(
            content_settings::ContentSettingToValue(CONTENT_SETTING_BLOCK)),
        std::string(), incognito));
-+  rules->fingerprinting_rules.push_back(ContentSettingPatternSource(
-+      ContentSettingsPattern::Wildcard(), ContentSettingsPattern::Wildcard(),
-+      base::Value::FromUniquePtrValue(
-+        content_settings::ContentSettingToValue(CONTENT_SETTING_ALLOW)),
-+      std::string(), incognito));
-+  rules->brave_shields_rules.push_back(ContentSettingPatternSource(
-+      ContentSettingsPattern::Wildcard(), ContentSettingsPattern::Wildcard(),
-+      base::Value::FromUniquePtrValue(
-+        content_settings::ContentSettingToValue(CONTENT_SETTING_ALLOW)),
-+      std::string(), incognito));
++  BRAVE_GET_GUEST_VIEW_DEFAULT_CONTENT_SETTING_RULES
  }
  
  #endif  // BUILDFLAG(ENABLE_EXTENSIONS)

@@ -3,17 +3,133 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#define SetFeatureEntryEnabled SetFeatureEntryEnabled_ChromiumImpl
-#include "../../../../chrome/browser/about_flags.cc"       // NOLINT
-#include "../../../../components/flags_ui/flags_state.cc"  // NOLINT
-#undef SetFeatureEntryEnabled
+#include "chrome/browser/about_flags.h"
 
 #include "base/strings/string_util.h"
+#include "brave/common/brave_features.h"
 #include "brave/common/pref_names.h"
+#include "brave/components/brave_component_updater/browser/features.h"
+#include "brave/components/brave_shields/common/features.h"
+#include "brave/components/brave_sync/buildflags/buildflags.h"
+#include "brave/components/brave_wallet/buildflags/buildflags.h"
+#include "brave/components/ipfs/buildflags/buildflags.h"
+#include "brave/components/ntp_background_images/browser/features.h"
+#include "brave/components/sidebar/buildflags/buildflags.h"
+#include "brave/components/speedreader/buildflags.h"
 #include "chrome/browser/profiles/profile.h"
 #include "chrome/browser/profiles/profile_manager.h"
-#include "components/flags_ui/flags_state.h"
 #include "components/prefs/pref_service.h"
+#include "net/base/features.h"
+
+using brave_shields::features::kBraveAdblockCosmeticFiltering;
+using ntp_background_images::features::kBraveNTPBrandedWallpaper;
+using ntp_background_images::features::kBraveNTPBrandedWallpaperDemo;
+using ntp_background_images::features::kBraveNTPSuperReferralWallpaper;
+
+// clang-format seems to have a lot of issues with the macros in this
+// file so we turn it off for the macro sections.
+// clang-format off
+
+#if BUILDFLAG(ENABLE_SIDEBAR)
+#include "brave/components/sidebar/features.h"
+
+#define SIDEBAR_FEATURE_ENTRIES \
+    {"sidebar",                                                            \
+     flag_descriptions::kBraveSidebarName,                                 \
+     flag_descriptions::kBraveSidebarDescription,                          \
+     kOsMac | kOsWin | kOsLinux,                                           \
+     FEATURE_VALUE_TYPE(sidebar::kSidebarFeature)},
+#else
+#define SIDEBAR_FEATURE_ENTRIES
+#endif
+
+#if BUILDFLAG(ENABLE_SPEEDREADER)
+#include "brave/components/speedreader/features.h"
+
+#define SPEEDREADER_FEATURE_ENTRIES \
+    {"brave-speedreader",                                                  \
+     flag_descriptions::kBraveSpeedreaderName,                             \
+     flag_descriptions::kBraveSpeedreaderDescription, kOsDesktop,          \
+     FEATURE_VALUE_TYPE(speedreader::kSpeedreaderFeature)},
+#else
+#define SPEEDREADER_FEATURE_ENTRIES
+#endif
+
+#if BUILDFLAG(ENABLE_BRAVE_SYNC)
+#include "brave/components/brave_sync/features.h"
+
+#define BRAVE_SYNC_FEATURE_ENTRIES                                         \
+    {"brave-sync-v2",                                                      \
+     flag_descriptions::kBraveSyncName,                                    \
+     flag_descriptions::kBraveSyncDescription, kOsDesktop,                 \
+     FEATURE_VALUE_TYPE(brave_sync::features::kBraveSync)},
+#else
+#define BRAVE_SYNC_FEATURE_ENTRIES
+#endif
+
+#if BUILDFLAG(IPFS_ENABLED)
+#include "brave/components/ipfs/features.h"
+
+#define BRAVE_IPFS_FEATURE_ENTRIES                                         \
+    {"brave-ipfs",                                                         \
+     flag_descriptions::kBraveIpfsName,                                    \
+     flag_descriptions::kBraveIpfsDescription, kOsDesktop,                 \
+     FEATURE_VALUE_TYPE(ipfs::features::kIpfsFeature)},
+#else
+#define BRAVE_IPFS_FEATURE_ENTRIES
+#endif
+
+#if BUILDFLAG(BRAVE_WALLET_ENABLED)
+#include "brave/components/brave_wallet/features.h"
+
+#define BRAVE_NATIVE_WALLET_FEATURE_ENTRIES                                  \
+    {"native-brave-wallet",                                                  \
+     flag_descriptions::kNativeBraveWalletName,                              \
+     flag_descriptions::kNativeBraveWalletDescription,                       \
+     kOsDesktop | flags_ui::kOsAndroid,                                      \
+     FEATURE_VALUE_TYPE(brave_wallet::features::kNativeBraveWalletFeature)},
+#else
+#define BRAVE_NATIVE_WALLET_FEATURE_ENTRIES
+#endif
+
+#define BRAVE_FEATURE_ENTRIES \
+    {"use-dev-updater-url",                                                \
+     flag_descriptions::kUseDevUpdaterUrlName,                             \
+     flag_descriptions::kUseDevUpdaterUrlDescription, kOsAll,              \
+     FEATURE_VALUE_TYPE(brave_component_updater::kUseDevUpdaterUrl)},      \
+    {"brave-ntp-branded-wallpaper",                                        \
+     flag_descriptions::kBraveNTPBrandedWallpaperName,                     \
+     flag_descriptions::kBraveNTPBrandedWallpaperDescription, kOsAll,      \
+     FEATURE_VALUE_TYPE(kBraveNTPBrandedWallpaper)},                       \
+    {"brave-ntp-branded-wallpaper-demo",                                   \
+     flag_descriptions::kBraveNTPBrandedWallpaperDemoName,                 \
+     flag_descriptions::kBraveNTPBrandedWallpaperDemoDescription, kOsAll,  \
+     FEATURE_VALUE_TYPE(kBraveNTPBrandedWallpaperDemo)},                   \
+    {"brave-adblock-cosmetic-filtering",                                   \
+     flag_descriptions::kBraveAdblockCosmeticFilteringName,                \
+     flag_descriptions::kBraveAdblockCosmeticFilteringDescription, kOsAll, \
+     FEATURE_VALUE_TYPE(kBraveAdblockCosmeticFiltering)},                  \
+    SPEEDREADER_FEATURE_ENTRIES                                            \
+    BRAVE_SYNC_FEATURE_ENTRIES                                             \
+    BRAVE_IPFS_FEATURE_ENTRIES                                             \
+    BRAVE_NATIVE_WALLET_FEATURE_ENTRIES                                    \
+    SIDEBAR_FEATURE_ENTRIES                                                \
+    {"brave-super-referral",                                               \
+     flag_descriptions::kBraveSuperReferralName,                           \
+     flag_descriptions::kBraveSuperReferralDescription,                    \
+     flags_ui::kOsMac | flags_ui::kOsWin | flags_ui::kOsAndroid,           \
+     FEATURE_VALUE_TYPE(kBraveNTPSuperReferralWallpaper)},                 \
+    {"brave-ephemeral-storage",                                            \
+     flag_descriptions::kBraveEphemeralStorageName,                        \
+     flag_descriptions::kBraveEphemeralStorageDescription, kOsAll,         \
+     FEATURE_VALUE_TYPE(net::features::kBraveEphemeralStorage)},
+
+#define SetFeatureEntryEnabled SetFeatureEntryEnabled_ChromiumImpl
+#include "../../../../chrome/browser/about_flags.cc"  // NOLINT
+#undef SetFeatureEntryEnabled
+#undef BRAVE_FEATURE_ENTRIES
+
+// clang-format on
 
 namespace about_flags {
 

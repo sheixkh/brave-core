@@ -9,7 +9,6 @@ import ImportImage from './welcome_import.svg'
 import RewardsImage from './welcome_rewards.svg'
 import SearchImage from './welcome_search.svg'
 import ShieldsImage from './welcome_shields.svg'
-import ThemeImage from './welcome_theme.svg'
 import WelcomeImage from './welcome_bg.svg'
 
 const BaseImage = styled<{}, 'img'>('img')`
@@ -35,11 +34,7 @@ export const WelcomeSearchImage = styled(BaseImage).attrs({ src: SearchImage })`
 `
 
 export const WelcomeShieldsImage = styled(BaseImage).attrs({ src: ShieldsImage })`
-  height: 210px;
-`
-
-export const WelcomeThemeImage = styled(BaseImage).attrs({ src: ThemeImage })`
-  height: 190px;
+  height: 140px;
 `
 
 export const topToBottom = keyframes`
@@ -52,28 +47,26 @@ export const topToBottom = keyframes`
   }
 `
 
+export const backgroundHeight = 136
+
 export const BackgroundContainer = styled<{}, 'div'>('div')`
   box-sizing: border-box;
   width: inherit;
-  height: inherit;
-  position: absolute;
+  height: ${backgroundHeight}px;
+  position: relative;
   animation-delay: 0s;
   animation-name: ${topToBottom};
   animation-duration: 2000ms;
   animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
   animation-iteration-count: 1;
-  overflow: hidden;
 `
 
 export const Background = styled<{}, 'div'>('div')`
   box-sizing: border-box;
   background: url('${WelcomeImage}');
   width: 100%;
-  height: 136px;
+  height: ${backgroundHeight}px;
   background-size: cover;
   background-position-x: center;
-  position: absolute;
-  bottom: 0;
-  overflow: hidden;
 `

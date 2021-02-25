@@ -3,25 +3,24 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "bat/ledger/internal/media/media.h"
-#include "bat/ledger/internal/ledger_impl.h"
-#include "bat/ledger/internal/rapidjson_bat_helper.h"
 #include "bat/ledger/ledger.h"
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
+#include "bat/ledger/internal/ledger_impl.h"
+#include "bat/ledger/internal/legacy/media/media.h"
+#include "bat/ledger/internal/legacy/static_values.h"
+#include "bat/ledger/internal/constants.h"
 
 namespace ledger {
 
-bool is_production = true;
+type::Environment _environment = type::Environment::PRODUCTION;
+
 bool is_debug = false;
 bool is_testing = false;
-int reconcile_time = 0;  // minutes
+int reconcile_interval = 0;  // minutes
 bool short_retries = false;
 
 // static
-ledger::Ledger* Ledger::CreateInstance(LedgerClient* client) {
-  return new bat_ledger::LedgerImpl(client);
+Ledger* Ledger::CreateInstance(LedgerClient* client) {
+  return new LedgerImpl(client);
 }
 
 bool Ledger::IsMediaLink(const std::string& url,

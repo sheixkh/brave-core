@@ -18,10 +18,10 @@
 #include "base/time/time.h"
 #include "base/values.h"
 #include "crypto/random.h"
-#include "net/base/registry_controlled_domains/registry_controlled_domain.h"
+#include "net/base/network_isolation_key.h"
+#include "net/base/schemeful_site.h"
 #include "net/proxy_resolution/proxy_config_with_annotation.h"
 #include "net/proxy_resolution/proxy_resolution_service.h"
-#include "url/origin.h"
 
 namespace net {
 
@@ -101,14 +101,27 @@ const int kTorPasswordLength = 16;
 // Default tor circuit life time is 10 minutes
 constexpr base::TimeDelta kTenMins = base::TimeDelta::FromMinutes(10);
 
+ProxyConfigServiceTor::ProxyConfigServiceTor() {}
+
 ProxyConfigServiceTor::ProxyConfigServiceTor(const std::string& proxy_uri) {
-  ProxyServer proxy_server =
-      ProxyServer::FromURI(proxy_uri, ProxyServer::SCHEME_SOCKS5);
-  DCHECK(proxy_server.is_valid());
-  proxy_server_ = proxy_server;
+  UpdateProxyURI(proxy_uri);
 }
 
 ProxyConfigServiceTor::~ProxyConfigServiceTor() {}
+
+void ProxyConfigServiceTor::UpdateProxyURI(const std::string& uri) {
+  ProxyServer proxy_server =
+      ProxyServer::FromURI(uri, ProxyServer::SCHEME_SOCKS5);
+  DCHECK(proxy_server.is_valid());
+  proxy_server_ = proxy_server;
+
+  net::ProxyConfigWithAnnotation proxy_config;
+  auto config_valid = GetLatestProxyConfig(&proxy_config);
+
+  for (auto& observer : observers_)
+    observer.OnProxyConfigChanged(proxy_config,
+                                  config_valid);
+}
 
 // static
 std::string ProxyConfigServiceTor::CircuitIsolationKey(const GURL& url) {
@@ -124,13 +137,14 @@ std::string ProxyConfigServiceTor::CircuitIsolationKey(const GURL& url) {
   //
   // In particular, we need not isolate by the scheme,
   // username/password, port, path, or query part of the URL.
-  url::Origin origin = url::Origin::Create(url);
-  std::string domain = net::registry_controlled_domains::GetDomainAndRegistry(
-      origin.host(),
-      net::registry_controlled_domains::INCLUDE_PRIVATE_REGISTRIES);
-  if (domain.size() == 0)
-    domain = origin.host();
-  return domain;
+  const net::SchemefulSite url_site(url);
+  const net::NetworkIsolationKey network_isolation_key(url_site, url_site);
+
+  const base::Optional<net::SchemefulSite>& schemeful_site =
+      network_isolation_key.GetTopFrameSite();
+  DCHECK(schemeful_site.has_value());
+  std::string host = GURL(schemeful_site->Serialize()).host();
+  return host;
 }
 
 void ProxyConfigServiceTor::SetNewTorCircuit(const GURL& url) {

@@ -14,7 +14,14 @@
 #include "base/observer_list.h"
 #include "components/keyed_service/core/keyed_service.h"
 #include "extensions/browser/extension_registry_observer.h"
+#include "extensions/common/extension_id.h"
 #include "url/gurl.h"
+
+class GreaselionServiceTest;
+
+namespace base {
+class Version;
+}
 
 namespace greaselion {
 
@@ -22,6 +29,11 @@ enum GreaselionFeature {
   FIRST_FEATURE = 0,
   REWARDS = FIRST_FEATURE,
   TWITTER_TIPS,
+  REDDIT_TIPS,
+  GITHUB_TIPS,
+  AUTO_CONTRIBUTION,
+  ADS,
+  SUPPORTS_MINIMUM_BRAVE_VERSION,
   LAST_FEATURE
 };
 
@@ -34,6 +46,8 @@ class GreaselionService : public KeyedService,
 
   virtual void SetFeatureEnabled(GreaselionFeature feature, bool enabled) = 0;
   virtual void UpdateInstalledExtensions() = 0;
+  virtual bool IsGreaselionExtension(const std::string& id) = 0;
+  virtual std::vector<extensions::ExtensionId> GetExtensionIdsForTesting() = 0;
   virtual bool ready() = 0;
 
   // implementation of our own observers
@@ -46,6 +60,8 @@ class GreaselionService : public KeyedService,
   virtual void RemoveObserver(Observer* observer) = 0;
 
  private:
+  friend class ::GreaselionServiceTest;
+  virtual void SetBrowserVersionForTesting(const base::Version& version) = 0;
   DISALLOW_COPY_AND_ASSIGN(GreaselionService);
 };
 

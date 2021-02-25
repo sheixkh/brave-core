@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Mindenféle adatvédelem és biztonság nélkül böngészed ezt az oldalt.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "A Brave adatvédelmi és biztonsági beállítási nélkül böngészik ezen az oldalon. Nem működik megfelelően a Shields alatt?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Nem működő oldal jelentése",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Tárgyak letiltva",
@@ -51,6 +55,22 @@
     "message": "Letiltott webhelyközi nyomkövetők",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Blokkolt követők és hirdetések",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Követők és reklámok letiltva (agresszív)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Követők és reklámok letiltva (standard)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Összes követő és reklám engedélyezése",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Kapcsolat HTTPS-re bővítve",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "Minden süti engedélyezett",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Webhelyközi eszközfelismerés letiltva",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Ujjlenyomat-olvasás letiltva",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Letiltott eszközfelismerési próbálkozások",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Ujjlenyomat-felismerés letiltva (standard)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Minden eszközfelismerési próbálkozás engedélyezve",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Ujjlenyomat-felismerés letiltva (szigorú, a webhelyek összeomolhatnak)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Minden ujjlenyomat-beállítás engedélyezése",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Készülék felismerésére irányuló próbálkozások",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Ujjlenyomatos azonosítási kísérletek",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Parancsfájlok ezen az oldalon",

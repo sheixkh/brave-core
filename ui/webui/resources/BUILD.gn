@@ -1,12 +1,15 @@
 import("//tools/grit/grit_rule.gni")
+import("//tools/polymer/polymer.gni")
 import("//ui/webui/webui_features.gni")
 
 grit("resources") {
   defines = [ "optimize_webui=$optimize_webui" ]
   source = "brave_webui_resources.grd"
 
+  deps = [ ":modulize" ]
+
   # The .grd contains references to generated files.
-  source_is_generated = true
+  enable_input_discovery_for_gn_analyze = true
 
   outputs = [
     "grit/brave_webui_resources.h",
@@ -20,5 +23,35 @@ grit("resources") {
   grit_flags = [
     "-E",
     "root_gen_dir=" + rebase_path(root_gen_dir, root_build_dir),
+  ]
+}
+
+copy("rollup_resources") {
+  visibility = [ ":*" ]
+
+  sources = [ "polymer_overriding.js" ]
+
+  outputs = [ "$root_gen_dir/brave/ui/webui/resources/{{source_file_part}}" ]
+}
+
+copy("override_resources") {
+  visibility = [ ":*" ]
+
+  sources = [
+    "overrides/cr_button.js",
+    "overrides/cr_toggle.js",
+  ]
+
+  outputs = [
+    "$root_gen_dir/brave/ui/webui/resources/overrides/{{source_file_part}}",
+  ]
+}
+
+group("modulize") {
+  deps = [
+    ":override_resources",
+    ":rollup_resources",
+    "br_elements:polymer3_elements",
+    "page_specific:polymer3_elements",
   ]
 }

@@ -6,6 +6,7 @@
 #ifndef BRAVE_BROWSER_UI_BRAVE_BROWSER_COMMAND_CONTROLLER_H_
 #define BRAVE_BROWSER_UI_BRAVE_BROWSER_COMMAND_CONTROLLER_H_
 
+#include "brave/components/tor/buildflags/buildflags.h"
 #include "chrome/browser/ui/browser_command_controller.h"
 
 // This namespace is needed for a chromium_src override
@@ -14,6 +15,10 @@ namespace chrome {
 class BraveBrowserCommandController : public chrome::BrowserCommandController {
  public:
   explicit BraveBrowserCommandController(Browser* browser);
+
+#if BUILDFLAG(ENABLE_TOR)
+  void UpdateCommandForTor();
+#endif
 
  private:
   // Overriden from CommandUpdater:
@@ -31,12 +36,14 @@ class BraveBrowserCommandController : public chrome::BrowserCommandController {
   void InitBraveCommandState();
   void UpdateCommandForBraveRewards();
   void UpdateCommandForBraveAdblock();
-  void UpdateCommandForTor();
+  void UpdateCommandForWebcompatReporter();
   void UpdateCommandForBraveSync();
   void UpdateCommandForBraveWallet();
+  void UpdateCommandForSidebar();
 
   bool ExecuteBraveCommandWithDisposition(int id,
-                                          WindowOpenDisposition disposition);
+                                          WindowOpenDisposition disposition,
+                                          base::TimeTicks time_stamp);
 
   Browser* const browser_;
 

@@ -76,22 +76,29 @@ static void TearDownPipeHack() {
 namespace tor {
 
 TorLauncherImpl::TorLauncherImpl(
-    std::unique_ptr<service_manager::ServiceContextRef> service_ref)
-    : service_ref_(std::move(service_ref)) {
+    mojo::PendingReceiver<mojom::TorLauncher> receiver)
+    : main_task_runner_(base::SequencedTaskRunnerHandle::Get()),
+      receiver_(this, std::move(receiver)) {
+  receiver_.set_disconnect_handler(
+      base::BindOnce(&TorLauncherImpl::Cleanup, base::Unretained(this)));
 #if defined(OS_POSIX)
   SetupPipeHack();
 #endif
 }
 
-TorLauncherImpl::~TorLauncherImpl() {
+void TorLauncherImpl::Cleanup() {
+  if (in_shutdown_) return;
+  in_shutdown_ = true;
+
   if (tor_process_.IsValid()) {
     tor_process_.Terminate(0, true);
 #if defined(OS_POSIX)
     TearDownPipeHack();
 #endif
-#if defined(OS_MACOSX)
-    base::PostTaskWithTraits(
-        FROM_HERE, {base::MayBlock(), base::TaskPriority::BEST_EFFORT},
+#if defined(OS_MAC)
+    base::PostTask(
+        FROM_HERE,
+        {base::ThreadPool(), base::MayBlock(), base::TaskPriority::BEST_EFFORT},
         base::BindOnce(&base::EnsureProcessTerminated, Passed(&tor_process_)));
 #else
     base::EnsureProcessTerminated(std::move(tor_process_));
@@ -99,19 +106,27 @@ TorLauncherImpl::~TorLauncherImpl() {
   }
 }
 
-void TorLauncherImpl::Launch(const TorConfig& config,
+TorLauncherImpl::~TorLauncherImpl() {
+  Cleanup();
+}
+
+void TorLauncherImpl::Shutdown() {
+  Cleanup();
+}
+
+void TorLauncherImpl::Launch(mojom::TorConfigPtr config,
                              LaunchCallback callback) {
-  base::CommandLine args(config.binary_path());
+  base::CommandLine args(config->binary_path);
   args.AppendArg("--ignore-missing-torrc");
   args.AppendArg("-f");
   args.AppendArg("/nonexistent");
   args.AppendArg("--defaults-torrc");
   args.AppendArg("/nonexistent");
   args.AppendArg("--SocksPort");
-  args.AppendArg(config.proxy_host() + ":" + config.proxy_port());
+  args.AppendArg("auto");
   args.AppendArg("--TruncateLogFile");
   args.AppendArg("1");
-  base::FilePath tor_data_path = config.tor_data_path();
+  base::FilePath tor_data_path = config->tor_data_path;
   if (!tor_data_path.empty()) {
     if (!base::DirectoryExists(tor_data_path))
       base::CreateDirectory(tor_data_path);
@@ -123,7 +138,7 @@ void TorLauncherImpl::Launch(const TorConfig& config,
     args.AppendArgNative(log_file +
                          tor_data_path.AppendASCII("tor.log").value());
   }
-  base::FilePath tor_watch_path = config.tor_watch_path();
+  base::FilePath tor_watch_path = config->tor_watch_path;
   if (!tor_watch_path.empty()) {
     if (!base::DirectoryExists(tor_watch_path))
       base::CreateDirectory(tor_watch_path);
@@ -170,15 +185,6 @@ void TorLauncherImpl::SetCrashHandler(SetCrashHandlerCallback callback) {
   crash_handler_callback_ = std::move(callback);
 }
 
-void TorLauncherImpl::ReLaunch(const TorConfig& config,
-                               ReLaunchCallback callback) {
-  if (tor_process_.IsValid())
-    tor_process_.Terminate(0, true);
-
-  tor_process_.WaitForExit(nullptr);
-  Launch(config, std::move(callback));
-}
-
 void TorLauncherImpl::MonitorChild() {
 #if defined(OS_POSIX)
   char buf[PIPE_BUF];
@@ -197,11 +203,12 @@ void TorLauncherImpl::MonitorChild() {
             LOG(ERROR) << "tor exit (" << WEXITSTATUS(status) << ")";
           }
           tor_process_.Close();
-          if (crash_handler_callback_) {
-            base::ThreadTaskRunnerHandle::Get()->PostTask(
+          if (receiver_.is_bound() && crash_handler_callback_) {
+            main_task_runner_->PostTask(
               FROM_HERE, base::BindOnce(std::move(crash_handler_callback_),
                                         pid));
           }
+          break;
         }
       } else {
         // pipes closed
@@ -210,8 +217,8 @@ void TorLauncherImpl::MonitorChild() {
   }
 #elif defined(OS_WIN)
   WaitForSingleObject(tor_process_.Handle(), INFINITE);
-  if (crash_handler_callback_)
-    base::ThreadTaskRunnerHandle::Get()->PostTask(
+  if (receiver_.is_bound() && crash_handler_callback_)
+    main_task_runner_->PostTask(
       FROM_HERE, base::BindOnce(std::move(crash_handler_callback_),
                                 base::GetProcId(tor_process_.Handle())));
 #else

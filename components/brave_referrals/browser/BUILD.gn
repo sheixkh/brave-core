@@ -1,11 +1,9 @@
 import("//brave/components/brave_referrals/buildflags/buildflags.gni")
 
-declare_args() {
-  brave_referrals_api_key = ""
-}
-
 source_set("browser") {
-  deps = [
+  # Remove when https://github.com/brave/brave-browser/issues/10646 is resolved
+  check_includes = false
+  public_deps = [
     "//brave/components/brave_referrals/buildflags",
   ]
 
@@ -15,11 +13,11 @@ source_set("browser") {
       "brave_referrals_service.h",
     ]
 
-    defines = [ "BRAVE_REFERRALS_API_KEY=\"$brave_referrals_api_key\"" ]
-
-    deps += [
+    deps = [
       "//base",
       "//brave/common",
+      "//brave/components/brave_referrals/common",
+      "//brave/components/brave_stats/browser",
       "//brave/vendor/brave_base",
       "//chrome/common",
       "//components/prefs",
@@ -27,5 +25,9 @@ source_set("browser") {
       "//net",
       "//services/network/public/cpp",
     ]
+
+    if (is_android) {
+      deps += [ "//brave/components/safetynet:android" ]
+    }
   }
 }

@@ -7,8 +7,8 @@ import { render } from 'react-dom'
 import { bindActionCreators } from 'redux'
 import { Provider } from 'react-redux'
 
-import welcomeDarkTheme from 'brave-ui/theme/welcome-dark'
-import welcomeLightTheme from 'brave-ui/theme/welcome-light'
+import welcomeDarkTheme from './theme/welcome-dark'
+import welcomeLightTheme from './theme/welcome-light'
 import BraveCoreThemeProvider from '../common/BraveCoreThemeProvider'
 
 // Components
@@ -25,7 +25,6 @@ window.cr.define('brave_welcome', function () {
     const actions = bindActionCreators(welcomeActions, store.dispatch.bind(store))
     actions.getSearchEngineProviders()
     actions.getBrowserProfiles()
-    actions.getBrowserThemes()
   }
 
   function initialize () {

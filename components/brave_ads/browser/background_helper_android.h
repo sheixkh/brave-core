@@ -8,35 +8,38 @@
 
 #include <memory>
 
+#include "base/android/application_status_listener.h"
 #include "base/macros.h"
 #include "base/memory/singleton.h"
 #include "base/memory/weak_ptr.h"
 #include "brave/components/brave_ads/browser/background_helper.h"
-#include "base/android/application_status_listener.h"
 
 namespace brave_ads {
 
-class BackgroundHelperAndroid :
-    public BackgroundHelper,
-    public base::SupportsWeakPtr<BackgroundHelperAndroid> {
+class BackgroundHelperAndroid
+    : public BackgroundHelper,
+      public base::SupportsWeakPtr<BackgroundHelperAndroid> {
  public:
-  BackgroundHelperAndroid();
-  ~BackgroundHelperAndroid() override;
+  BackgroundHelperAndroid(const BackgroundHelperAndroid&) = delete;
+  BackgroundHelperAndroid& operator=(const BackgroundHelperAndroid&) = delete;
 
   static BackgroundHelperAndroid* GetInstance();
 
  private:
-  std::unique_ptr<ApplicationStatusListener> app_status_listener_;
+  friend struct base::DefaultSingletonTraits<BackgroundHelperAndroid>;
 
-  ApplicationState last_state_;
+  BackgroundHelperAndroid();
+  ~BackgroundHelperAndroid() override;
 
-  void OnApplicationStateChange(ApplicationState state);
+  std::unique_ptr<base::android::ApplicationStatusListener>
+      app_status_listener_;
+
+  base::android::ApplicationState last_state_;
+
+  void OnApplicationStateChange(base::android::ApplicationState state);
 
   // BackgroundHelper impl
   bool IsForeground() const override;
-
-  friend struct base::DefaultSingletonTraits<BackgroundHelperAndroid>;
-  DISALLOW_COPY_AND_ASSIGN(BackgroundHelperAndroid);
 };
 
 }  // namespace brave_ads

@@ -7,9 +7,7 @@
 
 #include <utility>
 
-#include "bat/ledger/ledger.h"
 #include "brave/components/services/bat_ledger/bat_ledger_impl.h"
-#include "mojo/public/cpp/bindings/strong_associated_binding.h"
 
 namespace {
 
@@ -22,26 +20,27 @@ bool testing() {
 namespace bat_ledger {
 
 BatLedgerServiceImpl::BatLedgerServiceImpl(
-    std::unique_ptr<service_manager::ServiceContextRef> service_ref)
-  : service_ref_(std::move(service_ref)),
-    initialized_(false) {
-}
+    mojo::PendingReceiver<mojom::BatLedgerService> receiver)
+    : receiver_(this, std::move(receiver)),
+    initialized_(false) {}
 
-BatLedgerServiceImpl::~BatLedgerServiceImpl() {
-}
+BatLedgerServiceImpl::~BatLedgerServiceImpl() = default;
 
 void BatLedgerServiceImpl::Create(
-    mojom::BatLedgerClientAssociatedPtrInfo client_info,
-    mojom::BatLedgerAssociatedRequest bat_ledger) {
-  mojo::MakeStrongAssociatedBinding(
+    mojo::PendingAssociatedRemote<mojom::BatLedgerClient> client_info,
+    mojo::PendingAssociatedReceiver<mojom::BatLedger> bat_ledger,
+    CreateCallback callback) {
+  associated_receivers_.Add(
       std::make_unique<BatLedgerImpl>(std::move(client_info)),
-                                      std::move(bat_ledger));
+      std::move(bat_ledger));
   initialized_ = true;
+  std::move(callback).Run();
 }
 
-void BatLedgerServiceImpl::SetProduction(bool is_production) {
+void BatLedgerServiceImpl::SetEnvironment(
+    ledger::type::Environment environment) {
   DCHECK(!initialized_ || testing());
-  ledger::is_production = is_production;
+  ledger::_environment = environment;
 }
 
 void BatLedgerServiceImpl::SetDebug(bool is_debug) {
@@ -49,9 +48,9 @@ void BatLedgerServiceImpl::SetDebug(bool is_debug) {
   ledger::is_debug = is_debug;
 }
 
-void BatLedgerServiceImpl::SetReconcileTime(int32_t time) {
+void BatLedgerServiceImpl::SetReconcileInterval(const int32_t interval) {
   DCHECK(!initialized_ || testing());
-  ledger::reconcile_time = time;
+  ledger::reconcile_interval = interval;
 }
 
 void BatLedgerServiceImpl::SetShortRetries(bool short_retries) {
@@ -63,16 +62,17 @@ void BatLedgerServiceImpl::SetTesting() {
   ledger::is_testing = true;
 }
 
-void BatLedgerServiceImpl::GetProduction(GetProductionCallback callback) {
-  std::move(callback).Run(ledger::is_production);
+void BatLedgerServiceImpl::GetEnvironment(GetEnvironmentCallback callback) {
+  std::move(callback).Run(ledger::_environment);
 }
 
 void BatLedgerServiceImpl::GetDebug(GetDebugCallback callback) {
   std::move(callback).Run(ledger::is_debug);
 }
 
-void BatLedgerServiceImpl::GetReconcileTime(GetReconcileTimeCallback callback) {
-  std::move(callback).Run(ledger::reconcile_time);
+void BatLedgerServiceImpl::GetReconcileInterval(
+    GetReconcileIntervalCallback callback) {
+  std::move(callback).Run(ledger::reconcile_interval);
 }
 
 void BatLedgerServiceImpl::GetShortRetries(GetShortRetriesCallback callback) {

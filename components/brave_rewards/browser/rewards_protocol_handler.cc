@@ -6,11 +6,12 @@
 #include "brave/components/brave_rewards/browser/rewards_protocol_handler.h"
 
 #include <string>
+#include <utility>
 
 #include "base/strings/strcat.h"
 #include "base/strings/string_util.h"
 #include "base/task/post_task.h"
-#include "brave/common/url_constants.h"
+#include "brave/components/brave_rewards/common/url_constants.h"
 #include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "net/base/escape.h"
@@ -44,10 +45,10 @@ GURL TranslateUrl(const GURL& url) {
 
 void LoadRewardsURL(
     const GURL& url,
-    const content::ResourceRequestInfo::WebContentsGetter& web_contents_getter,
+    content::WebContents::OnceGetter web_contents_getter,
     ui::PageTransition page_transition,
     bool has_user_gesture) {
-  content::WebContents* web_contents = web_contents_getter.Run();
+  content::WebContents* web_contents = std::move(web_contents_getter).Run();
   if (!web_contents) {
     return;
   }
@@ -72,19 +73,19 @@ void LoadRewardsURL(
 
 namespace brave_rewards {
 
-bool HandleRewardsProtocol(
-    const GURL& url,
-    content::ResourceRequestInfo::WebContentsGetter web_contents_getter,
-    ui::PageTransition page_transition,
-    bool has_user_gesture) {
-  if (url.SchemeIs(kRewardsScheme)) {
-    base::PostTaskWithTraits(FROM_HERE, {content::BrowserThread::UI},
-        base::BindOnce(&LoadRewardsURL, url, web_contents_getter,
-        page_transition, has_user_gesture));
-    return true;
-  }
+void HandleRewardsProtocol(const GURL& url,
+                           content::WebContents::OnceGetter web_contents_getter,
+                           ui::PageTransition page_transition,
+                           bool has_user_gesture) {
+  DCHECK(url.SchemeIs(kRewardsScheme));
+  base::PostTask(
+      FROM_HERE, {content::BrowserThread::UI},
+      base::BindOnce(&LoadRewardsURL, url, std::move(web_contents_getter),
+                     page_transition, has_user_gesture));
+}
 
-  return false;
+bool IsRewardsProtocol(const GURL& url) {
+  return url.SchemeIs(kRewardsScheme);
 }
 
 }  // namespace brave_rewards

@@ -11,7 +11,7 @@
 
 <dom-module id="settings-brave-default-extensions-page">
   <template>
-    <style include="settings-shared iron-flex">
+    <style include="settings-shared md-select iron-flex">
       .settings-row:not(:first-child) {
         border-top: var(--cr-separator-line);
       }
@@ -65,45 +65,75 @@
         padding: 14px 38px;
       }
     </style>
-    <settings-toggle-button id="braveWalletEnabled"
-        class="first"
-        pref="{{prefs.brave.wallet.enabled}}"
-        label="Brave Wallet"
-        sub-label="$i18n{braveWalletEnabledDesc}"
-        on-settings-boolean-control-change="onBraveWalletEnabledChange_">
-    </settings-toggle-button>
-    <settings-toggle-button id="webTorrentEnabled"
-        pref="{{prefs.brave.webtorrent_enabled}}"
-        label="WebTorrent"
-        sub-label="$i18n{webTorrentEnabledDesc}"
-        on-settings-boolean-control-change="onWebTorrentEnabledChange_">
+
+    <settings-toggle-button id="googleLoginForExtensions"
+        class="cr-row first"
+        pref="{{prefs.signin.allowed_on_next_startup}}"
+        learn-more-url="$i18n{googleLoginLearnMoreURL}"
+        label="$i18n{googleLoginForExtensionsDesc}">
+        <template is="dom-if" if="[[shouldShowRestartForGoogleLogin_(
+          prefs.signin.allowed_on_next_startup.value)]]">
+        <cr-button on-click="restartBrowser_" slot="more-actions">
+          $i18n{restart}
+        </cr-button>
+        </template>
     </settings-toggle-button>
     <settings-toggle-button id="hangoutsEnabled"
+        class="cr-row"
         pref="{{prefs.brave.hangouts_enabled}}"
         label="Hangouts"
         sub-label="$i18n{hangoutsEnabledDesc}"
         on-settings-boolean-control-change="onHangoutsEnabledChange_">
     </settings-toggle-button>
-    <settings-toggle-button id="ipfsCompanionEnabled"
-        pref="{{prefs.brave.ipfs_companion_enabled}}"
-        label="IPFS Companion"
-        sub-label="$i18n{ipfsCompanionEnabledDesc}"
-        on-settings-boolean-control-change="onIPFSCompanionEnabledChange_">
-    </settings-toggle-button>
-    <settings-toggle-button
-        pref="{{prefs.brave.ask_widevine_install}}"
-        label="Widevine"
-        sub-label="$i18n{appearanceSettingsAskWidevineInstallDesc}">
-    </settings-toggle-button>
     <settings-toggle-button id="mediaRouterEnabled"
+        class="cr-row"
         pref="{{prefs.brave.enable_media_router}}"
         label="Media Router"
         sub-label="$i18n{mediaRouterEnabledDesc}"
         on-settings-boolean-control-change="onMediaRouterEnabledChange_">
     </settings-toggle-button>
+    <if expr="enable_tor">
+    <settings-toggle-button id="torEnabled"
+        class="cr-row"
+        pref=""
+        checked="[[torEnabled_]]"
+        label="$i18n{torEnabledLabel}"
+        sub-label="$i18n{torEnabledDesc}"
+        disabled="[[disableTorOption_]]"
+        on-settings-boolean-control-change="onTorEnabledChange_">
+    </settings-toggle-button>
+    <settings-toggle-button
+        pref="{{prefs.tor.auto_onion_location}}"
+        class="cr-row"
+        label="$i18n{autoOnionLocationLabel}"
+        sub-label="$i18n{autoOnionLocationDesc}"
+        disabled="[[!torEnabled_]]">
+    </settings-toggle-button>
+    </if>
+    <settings-toggle-button id="webTorrentEnabled"
+        class="cr-row"
+        pref="{{prefs.brave.webtorrent_enabled}}"
+        label="WebTorrent"
+        sub-label="$i18n{webTorrentEnabledDesc}"
+        on-settings-boolean-control-change="onWebTorrentEnabledChange_">
+    </settings-toggle-button>
+    <settings-toggle-button
+        id="widevineEnabled"
+        class="cr-row"
+        pref=""
+        label="Widevine"
+        sub-label="$i18n{widevineEnabledDesc}"
+        on-settings-boolean-control-change="onWidevineEnabledChange_"
+        checked="[[widevineEnabled_]]">
+    </settings-toggle-button>
     <div class="settings-row" id="manageExtensionsRow">
       <cr-link-row icon-class="icon-external"
         label="$i18n{manageExtensionsLabel}" on-click="openExtensionsPage_">
+      </cr-link-row>
+    </div>
+    <div class="settings-row" id="manageKeyboardShortcutsRow">
+      <cr-link-row icon-class="icon-external"
+        label="$i18n{keyboardShortcuts}" on-click="openKeyboardShortcutsPage_">
       </cr-link-row>
     </div>
     <div class="settings-row" id="getMoreExtensionsRow">
@@ -113,7 +143,7 @@
         on-click="openWebStoreUrl_" external>
       </cr-link-row>
     </div>
-  <template is="dom-if" if="{{ showRestartToast }}">
+  <template is="dom-if" if="{{ showRestartToast_ }}">
     <div id="needsRestart">
         <div class="flex-container">
           <div class="flex restart-notice" jstcache="0">$i18n{restartNotice}</div>

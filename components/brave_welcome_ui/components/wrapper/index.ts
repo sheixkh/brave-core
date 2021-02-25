@@ -3,6 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import styled, { css, keyframes } from 'styled-components'
+import { backgroundHeight } from '../images'
+
+const contentMaxWidth = 580
+const slideContentHeight = 540
+const footerHeight = 52
+const footerTopMargin = 24
 
 const fadeIn = keyframes`
   from {
@@ -35,9 +41,10 @@ export const SelectGrid = styled(BaseGrid)`
 
 export const Footer = styled(BaseGrid.withComponent('footer'))`
   grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 52px;
+  grid-template-rows: ${footerHeight}px;
   max-width: 540px;
-  margin: 24px 0 0 0;
+  margin: ${footerTopMargin}px auto 0;
+  height: auto;
 `
 
 export const FooterLeftColumn = styled(BaseColumn)`
@@ -67,15 +74,31 @@ export const Content = styled<ContentProps, 'section'>('section')`
   will-change: transform;
   transform: translateX(${p => p.isPrevious ? '-' + p.screenPosition : p.screenPosition}) scale(0.8);
   transition: opacity 600ms, transform 600ms ease-in-out;
-  position: absolute;
-  z-index: ${p => p.zIndex};
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   flex: 1;
-  max-width: 580px;
+  max-width: ${contentMaxWidth}px;
   padding: 24px;
+  margin: auto;
+  /*
+    inactive elements need to be absolute positioned to prevent pilling up
+    in the background making visible elements misaligned. In this case display:none
+    would prevent us from seeing the ransition animation. See comment below.
+  */
+  position: ${p => p.active ? 'static' : 'absolute'};
+
+  /*
+    prevents focus on all content's child elements if the parent is not active.
+    this is needed because due to our animation transition, the parent container
+    cannot have "display: none" and is using "opacity: 0" instead, making invisible
+    elements still accessible via keyboard, creating an a11y issue.
+    see https://github.com/brave/brave-browser/issues/5504
+  */
+  > * {
+    display: ${p => p.active === false && 'none'};
+  }
 
   ${p => p.active && css`
     opacity: 1;
@@ -83,16 +106,16 @@ export const Content = styled<ContentProps, 'section'>('section')`
   `}
 `
 
-export const Page = styled<{}, 'div'>('div')`
-  position: absolute;
+interface PageProps {
+  shouldUpdateElementOverflow: boolean
+}
+
+export const Page = styled<PageProps, 'div'>('div')`
   width: inherit;
   height: inherit;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
   background: ${p => p.theme.color.panelBackground};
-  overflow: hidden;
-  transition: background 0.3s linear;
+  overflow-x: hidden;
+  overflow-y: ${p => p.shouldUpdateElementOverflow ? 'initial' : 'hidden' };
 `
 
 export const Panel = styled('div')`
@@ -107,23 +130,15 @@ export const Panel = styled('div')`
   animation-fill-mode: forwards;
   /* end of animation stuff */
   box-sizing: border-box;
-  position: relative;
-  overflow: visible;
-  max-width: 800px;
+  max-width: ${contentMaxWidth}px;
   width: 100%;
-  display: flex;
-  flex-direction: column;
-  padding: 0;
-  margin: 64px 0 0 0;
+  margin: 0 auto;
   font-size: inherit;
-  align-items: center;
+  min-height: ${slideContentHeight + footerTopMargin + footerHeight}px;
+  height: calc(100vh - ${backgroundHeight}px);
 `
 
 export const SlideContent = styled<{}, 'div'>('div')`
-  max-width: inherit;
-  width: inherit;
-  min-height: 540px;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  height: ${slideContentHeight}px;
 `

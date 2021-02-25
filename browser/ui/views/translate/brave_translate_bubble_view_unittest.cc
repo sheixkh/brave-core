@@ -4,9 +4,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "brave/browser/ui/views/translate/brave_translate_bubble_view.h"
-
+#include "base/test/scoped_feature_list.h"
 #include "chrome/test/views/chrome_views_test_base.h"
 #include "ui/events/keycodes/dom/dom_code.h"
+#include "ui/views/controls/button/button.h"
 #include "ui/views/controls/button/label_button.h"
 
 namespace {
@@ -28,7 +29,7 @@ class MockTranslateBubbleModel : public TranslateBubbleModel {
         translation_declined_(false),
         original_language_index_on_translation_(-1),
         target_language_index_on_translation_(-1),
-        can_blacklist_site_(true) {}
+        can_blocklist_site_(true) {}
 
   TranslateBubbleModel::ViewState GetViewState() const override {
     return view_state_transition_.view_state();
@@ -68,9 +69,15 @@ class MockTranslateBubbleModel : public TranslateBubbleModel {
 
   void DeclineTranslation() override { translation_declined_ = true; }
 
+  bool ShouldNeverTranslateLanguage() override {
+    return never_translate_language_;
+  }
+
   void SetNeverTranslateLanguage(bool value) override {
     never_translate_language_ = value;
   }
+
+  bool ShouldNeverTranslateSite() override { return never_translate_site_; }
 
   void SetNeverTranslateSite(bool value) override {
     never_translate_site_ = value;
@@ -107,9 +114,11 @@ class MockTranslateBubbleModel : public TranslateBubbleModel {
            target_language_index_on_translation_ == target_language_index_;
   }
 
-  bool CanBlacklistSite() override { return can_blacklist_site_; }
+  bool CanBlocklistSite() override { return can_blocklist_site_; }
 
-  void SetCanBlacklistSite(bool value) { can_blacklist_site_ = value; }
+  void ReportUIInteraction(translate::UIInteraction ui_interaction) override {}
+
+  void SetCanBlocklistSite(bool value) { can_blocklist_site_ = value; }
 
   TranslateBubbleViewStateTransition view_state_transition_;
   translate::TranslateErrors::Type error_type_;
@@ -125,7 +134,7 @@ class MockTranslateBubbleModel : public TranslateBubbleModel {
   bool translation_declined_;
   int original_language_index_on_translation_;
   int target_language_index_on_translation_;
-  bool can_blacklist_site_;
+  bool can_blocklist_site_;
 };
 
 class MockBraveTranslateBubbleView : public BraveTranslateBubbleView {
@@ -191,12 +200,11 @@ class BraveTranslateBubbleViewTest : public ChromeViewsTestBase {
   }
 
   void PressButton(TranslateBubbleView::ButtonID id) {
-    views::LabelButton button(nullptr, base::ASCIIToUTF16("dummy"));
+    views::LabelButton button(views::Button::PressedCallback(),
+                              base::ASCIIToUTF16("dummy"));
     button.SetID(id);
 
-    bubble_->ButtonPressed(&button,
-        ui::KeyEvent(ui::ET_KEY_PRESSED, ui::VKEY_RETURN,
-          ui::DomCode::ENTER, ui::EF_NONE));
+    bubble_->ButtonPressed(id);
   }
 
   void TearDown() override {
@@ -209,15 +217,16 @@ class BraveTranslateBubbleViewTest : public ChromeViewsTestBase {
   std::unique_ptr<views::Widget> anchor_widget_;
   MockTranslateBubbleModel* mock_model_;
   MockBraveTranslateBubbleView* bubble_;
+  base::test::ScopedFeatureList scoped_feature_list_;
 };
 
 TEST_F(BraveTranslateBubbleViewTest, BraveBeforeTranslateView) {
   CreateAndShowBubble();
   views::Button* accept_button = static_cast<views::Button*>(
-      bubble_->GetViewByID(TranslateBubbleView::BUTTON_ID_TRANSLATE));
+      bubble_->GetViewByID(TranslateBubbleView::BUTTON_ID_DONE));
   EXPECT_TRUE(accept_button);
   views::Button* cancel_button = static_cast<views::Button*>(
-      bubble_->GetViewByID(TranslateBubbleView::BUTTON_ID_SHOW_ORIGINAL));
+      bubble_->GetViewByID(TranslateBubbleView::BUTTON_ID_CLOSE));
   EXPECT_TRUE(cancel_button);
 }
 
@@ -227,7 +236,7 @@ TEST_F(BraveTranslateBubbleViewTest, TranslateButton) {
   EXPECT_FALSE(bubble_->install_google_translate_called());
 
   // Press the "Translate" button.
-  PressButton(TranslateBubbleView::BUTTON_ID_TRANSLATE);
+  PressButton(TranslateBubbleView::BUTTON_ID_DONE);
   EXPECT_FALSE(mock_model_->translate_called_);
   EXPECT_TRUE(bubble_->install_google_translate_called());
 }
@@ -237,7 +246,7 @@ TEST_F(BraveTranslateBubbleViewTest, CancelButton) {
   EXPECT_FALSE(bubble_->GetWidget()->IsClosed());
 
   // Press the "Cancel" button.
-  PressButton(TranslateBubbleView::BUTTON_ID_CANCEL);
+  PressButton(TranslateBubbleView::BUTTON_ID_CLOSE);
   EXPECT_TRUE(bubble_->GetWidget()->IsClosed());
 }
 

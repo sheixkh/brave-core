@@ -24,8 +24,12 @@
     "description": "Message telling the user to disable shields if a site appears broken"
   },
   "disabledMessage": {
-    "message": "Bạn đang duyệt trang này mà không có bất kỳ sự bảo vệ quyền riêng tư và bảo mật nào.",
-    "description": "Message telling the user that shields are disabled"
+    "message": "Bạn đang duyệt qua trang web này mà không sử dụng biện pháp bảo vệ quyền riêng tư và bảo mật của Brave. Trang web có không hoạt động đúng cách khi bạn bật Shields không?",
+    "description": "Message telling the user that shields are disabled, and prompting them towards reporting an issue if necessary"
+  },
+  "reportBrokenSite": {
+    "message": "Báo cáo trang web bị hỏng",
+    "description": "Message for the button allowing users to report a broken site to Brave developers"
   },
   "itemsBlocked": {
     "message": "Mục đã chặn",
@@ -51,6 +55,22 @@
     "message": "Đã chặn các bộ theo dõi trên mọi website",
     "description": "Message for the scripts blocked row label"
   },
+  "readOnlyAdsTrackersBlocking": {
+    "message": "Trình theo dõi và quảng cáo bị chặn",
+    "description": "Message for the option in the ads and trackers blocking select field in read only view"
+  },
+  "aggressiveAdsTrackersBlocking": {
+    "message": "Trình theo dõi và quảng cáo đã bị chặn (tích cực)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with aggressive heuristics"
+  },
+  "standardAdsTrackersBlocking": {
+    "message": "Trình theo dõi và quảng cáo đã bị chặn (tiêu chuẩn)",
+    "description": "Message for the option in the ads and trackers blocking select field to block ads and trackers with standard heuristics"
+  },
+  "allowAdsTrackers": {
+    "message": "Cho phép tất cả trình theo dõi và quảng cáo",
+    "description": "Message for the option in the ads and trackers blocking select field to allow all ads and trackers"
+  },
   "connectionsUpgradedHTTPS": {
     "message": "Kết nối đã được nâng cấp lên HPPTS",
     "description": "Message for the connections upgraded row label and for the main blocked resources text when there is more than one connection upgraded (plural) and no other ads/trackers blocked"
@@ -75,21 +95,25 @@
     "message": "Đã cho phép toàn bộ cookie",
     "description": "Message for the option in the cookies select field to allow all cookies"
   },
-  "thirdPartyFingerprintingBlocked": {
-    "message": "Đã chặn nhận diện thiết bị trên mọi website",
-    "description": "Message for the option in the device recognition select field to block all 3rd party recognition attempts"
+  "readOnlyFingerprinting": {
+    "message": "Đã chặn tính năng tạo dấu vân tay",
+    "description": "Message for the option in the fingerprinting field in read only view"
   },
-  "allFingerprintingBlocked": {
-    "message": "Đã chặn các nỗ lực nhận diện thiết bị",
-    "description": "Message for the option in the device recognition select field to block all device recognition attempts"
+  "standardFingerprinting": {
+    "message": "Vân tay bị chặn (tiêu chuẩn)",
+    "description": "Message for the option in the fingerprinting select field to block all 3rd party recognition attempts"
   },
-  "allFingerprintingAllowed": {
-    "message": "Đã cho phép mọi nỗ lực nhận diện thiết bị",
-    "description": "Message for the option in the device recognition select field to allow all device recognition attempts"
+  "strictFingerprinting": {
+    "message": "Vân tay bị chặn (chặt chẽ, có thể khiến các website bị lỗi)",
+    "description": "Message for the option in the fingerprinting select field to block all fingerprinting attempts"
+  },
+  "allowAllFingerprinting": {
+    "message": "Cho phép tất cả vân tay",
+    "description": "Message for the option in the fingerprinting select field to allow all fingerprinting attempts"
   },
   "deviceRecognitionAttempts": {
-    "message": "Các nỗ lực nhận dạng thiết bị",
-    "description": "Message for the device recognition attempts blocked panel"
+    "message": "Ý định theo dõi dấu vân tay",
+    "description": "Message for the fingerprinting attempts blocked panel"
   },
   "scriptsOnThisSite": {
     "message": "Các script trên trang web này",

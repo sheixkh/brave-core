@@ -6,12 +6,17 @@
 #ifndef BRAVE_CHROMIUM_SRC_UI_NATIVE_THEME_NATIVE_THEME_H_
 #define BRAVE_CHROMIUM_SRC_UI_NATIVE_THEME_NATIVE_THEME_H_
 
-namespace ui {
-class BraveThemeUtils;
-}  // namespace ui
+#define BRAVE_UI_NATIVE_THEME_NATIVE_THEME_H_     \
+  friend void SetUseDarkColors(bool dark_mode);   \
+  friend void ReCalcAndSetPreferredColorScheme(); \
+  static NativeTheme* BraveGetInstanceForNativeUi();
 
-#define BRAVE_UI_NATIVE_THEME_NATIVE_THEME_H_ friend class ui::BraveThemeUtils;
+#define GetSystemButtonPressedColor                                   \
+  GetSystemButtonPressedColor_ChromiumImpl(SkColor base_color) const; \
+  virtual SkColor GetSystemButtonPressedColor
+
 #include "../../../../ui/native_theme/native_theme.h"
+#undef GetSystemButtonPressedColor
 #undef BRAVE_UI_NATIVE_THEME_NATIVE_THEME_H_
 
 #endif  // BRAVE_CHROMIUM_SRC_UI_NATIVE_THEME_NATIVE_THEME_H_

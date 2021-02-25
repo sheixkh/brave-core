@@ -6,54 +6,49 @@
 #ifndef BRAVELEDGER_UPHOLD_UPHOLD_AUTHORIZATION_H_
 #define BRAVELEDGER_UPHOLD_UPHOLD_AUTHORIZATION_H_
 
-#include <map>
+#include <memory>
 #include <string>
 
-#include "bat/ledger/ledger.h"
-#include "bat/ledger/internal/uphold/uphold.h"
+#include "base/containers/flat_map.h"
+#include "bat/ledger/internal/endpoint/uphold/uphold_server.h"
 #include "bat/ledger/internal/uphold/uphold_user.h"
+#include "bat/ledger/ledger.h"
 
-namespace bat_ledger {
+namespace ledger {
 class LedgerImpl;
-}
 
-namespace braveledger_uphold {
+namespace uphold {
 
 class UpholdAuthorization {
  public:
-  explicit UpholdAuthorization(bat_ledger::LedgerImpl* ledger, Uphold* uphold);
+  explicit UpholdAuthorization(LedgerImpl* ledger);
 
   ~UpholdAuthorization();
 
   void Authorize(
-    const std::map<std::string, std::string>& args,
-    std::map<std::string, ledger::ExternalWalletPtr> wallets,
-    ledger::ExternalWalletAuthorizationCallback callback);
+      const base::flat_map<std::string, std::string>& args,
+      ledger::ExternalWalletAuthorizationCallback callback);
 
  private:
   void OnAuthorize(
-    ledger::ExternalWalletAuthorizationCallback callback,
-    const ledger::ExternalWallet& wallet,
-    int response_status_code,
-    const std::string& response,
-    const std::map<std::string, std::string>& headers);
+      const type::Result result,
+      const std::string& token,
+      ledger::ExternalWalletAuthorizationCallback callback);
 
   void OnGetUser(
-    const ledger::Result result,
-    const User& user,
-    ledger::ExternalWalletAuthorizationCallback callback,
-    const ledger::ExternalWallet& wallet);
+      const type::Result result,
+      const User& user,
+      ledger::ExternalWalletAuthorizationCallback callback);
 
   void OnCardCreate(
-    ledger::Result result,
-    const std::string& address,
-    ledger::ExternalWalletAuthorizationCallback callback,
-    const ledger::ExternalWallet& wallet);
+      const type::Result result,
+      const std::string& address,
+      ledger::ExternalWalletAuthorizationCallback callback);
 
-
-  bat_ledger::LedgerImpl* ledger_;  // NOT OWNED
-  Uphold* uphold_;  // NOT OWNED
+  LedgerImpl* ledger_;  // NOT OWNED
+  std::unique_ptr<endpoint::UpholdServer> uphold_server_;
 };
 
-}  // namespace braveledger_uphold
+}  // namespace uphold
+}  // namespace ledger
 #endif  // BRAVELEDGER_UPHOLD_UPHOLD_AUTHORIZATION_H_

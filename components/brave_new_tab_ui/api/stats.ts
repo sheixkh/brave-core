@@ -13,8 +13,9 @@
 export type Stats = {
   adsBlockedStat: number,
   javascriptBlockedStat: number,
+  fingerprintingBlockedStat: number,
   httpsUpgradesStat: number,
-  fingerprintingBlockedStat: number
+  bandwidthSavedStat: number
 }
 
 type StatsUpdatedHandler = (statsData: Stats) => void

@@ -12,8 +12,10 @@
 
 #include "base/strings/string_util.h"
 #include "base/strings/utf_string_conversions.h"
+#include "brave/common/pref_names.h"
 #include "components/omnibox/browser/autocomplete_input.h"
 #include "components/omnibox/browser/history_provider.h"
+#include "components/prefs/pref_service.h"
 
 // As from autocomplete_provider.h:
 // Search Secondary Provider (suggestion)                              |  100++
@@ -21,13 +23,18 @@ const int TopSitesProvider::kRelevance = 100;
 
 
 TopSitesProvider::TopSitesProvider(AutocompleteProviderClient* client)
-    : AutocompleteProvider(AutocompleteProvider::TYPE_SEARCH) {
+    : AutocompleteProvider(AutocompleteProvider::TYPE_SEARCH), client_(client) {
 }
 
 void TopSitesProvider::Start(const AutocompleteInput& input,
                             bool minimal_changes) {
   matches_.clear();
-  if (input.from_omnibox_focus() ||
+  auto* prefs = client_->GetPrefs();
+  if (!prefs || !prefs->GetBoolean(kTopSiteSuggestionsEnabled)) {
+    return;
+  }
+
+  if (input.focus_type() != OmniboxFocusType::DEFAULT ||
       (input.type() == metrics::OmniboxInputType::EMPTY) ||
       (input.type() == metrics::OmniboxInputType::QUERY))
     return;
@@ -47,15 +54,17 @@ void TopSitesProvider::Start(const AutocompleteInput& input,
     }
   }
 
-  for (size_t i = 0; i < matches_.size(); ++i)
+  for (size_t i = 0; i < matches_.size(); ++i) {
     matches_[i].relevance = kRelevance + matches_.size() - (i + 1);
-  if (!HistoryProvider::PreventInlineAutocomplete(input) &&
-      (matches_.size() == 1) && !matches_[0].inline_autocompletion.empty()) {
+  }
+  if ((matches_.size() == 1) && !matches_[0].inline_autocompletion.empty()) {
     // If there's only one possible completion of the user's input and
-    // allowing completions is okay, give the match a high enough score to
-    // allow it to beat url-what-you-typed and be inlined.
-    matches_[0].relevance = 1250;
-    matches_[0].allowed_to_be_default_match = true;
+    // allowing completions truns out to be okay, give the match a high enough
+    // score to allow it to beat url-what-you-typed and be inlined.
+    matches_[0].SetAllowedToBeDefault(input);
+    if (matches_[0].allowed_to_be_default_match) {
+      matches_[0].relevance = 1250;
+    }
   }
 }
 

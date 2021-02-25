@@ -1,108 +1,92 @@
 diff --git a/chrome/BUILD.gn b/chrome/BUILD.gn
-index 0c52ff3c73580e38b2828fabdeb0e9c340428ca3..c99d78bb59960edf586b9079677dcbf0b7ea6f92 100644
+index c28309a07dd643523e4a6d52bf90a9291a521399..1ec8e01842d71078f12c0783c59f41bcd3c134b8 100644
 --- a/chrome/BUILD.gn
 +++ b/chrome/BUILD.gn
-@@ -190,6 +190,10 @@ if (!is_android && !is_mac) {
-           "common/crash_keys.cc",
-           "common/crash_keys.h",
-         ]
-+        if (brave_chromium_build) {
-+          sources -= [ "app/chrome_exe.rc", ]
-+          sources += [ "//brave/app/brave_exe.rc", ]
-+        }
- 
-         deps += [
-           ":chrome_dll",
-@@ -297,6 +301,7 @@ if (!is_android && !is_mac) {
-           "//headless:headless_shell_lib",
-           "//services/service_manager/embedder",
-         ]
-+        deps += [ "//components/unified_consent" ]
- 
-         public_deps = [
-           ":xdg_mime",  # Needs to be public for installer to consume files.
-@@ -431,6 +436,7 @@ if (is_win) {
-       "//third_party/wtl",
-       "//ui/views",
-     ]
-+    deps += [ "//components/unified_consent" ]
- 
-     ldflags = [
-       "/DELAYLOAD:advapi32.dll",
-@@ -566,6 +572,7 @@ if (is_win) {
-         "//headless:headless_shell_child_lib",
-         "//services/service_manager/embedder",
+@@ -166,6 +166,7 @@ if (!is_android && !is_mac) {
+         "common/crash_keys.cc",
+         "common/crash_keys.h",
        ]
-+      deps += [ "//components/unified_consent" ]
++      sources -= [ "app/chrome_exe.rc", ] sources += [ "//brave/app/brave_exe.rc", ]
  
-       ldflags = [
-         "/DELAYLOAD:comctl32.dll",
-@@ -677,6 +684,11 @@ if (is_win) {
-     ]
+       deps += [
+         ":chrome_dll",
+@@ -433,11 +434,12 @@ if (is_win) {
+       args += [ "--keystone=0" ]
+     }
    }
++  copy("brave_app_plist") { deps = [ "//brave:brave_app_plist" ] sources = [ "$root_gen_dir/brave/brave_app_plist_tweaked.plist" ] outputs = [ "$root_gen_dir/chrome/{{source_file_part}}" ] }
  
-+if (brave_chromium_build) {
-+  group("chrome_app") {
-+    public_deps = [ "//brave:chrome_app", ]
-+  }
-+} else {
    mac_app_bundle("chrome_app") {
      output_name = chrome_product_full_name
  
-@@ -710,6 +722,7 @@ if (is_win) {
-                   rebase_path("app/app.exports", root_build_dir) ]
-     }
-   }
-+}
+-    info_plist_target = ":chrome_app_plist"
++    info_plist_target = ":brave_app_plist"
+     extra_substitutions = [
+       "CHROMIUM_BUNDLE_ID=$chrome_mac_bundle_id",
+       "CHROMIUM_SHORT_NAME=$chrome_product_short_name",
+@@ -455,6 +457,7 @@ if (is_win) {
+       "//chrome/common:buildflags",
+       "//chrome/common:version_header",
+     ]
++    deps += [ "//brave:brave_app" ]
  
-   compiled_action("chrome_app_strings") {
-     tool = "//chrome/tools/build/mac:infoplist_strings_tool"
-@@ -739,7 +752,7 @@ if (is_win) {
+     if (enable_stripping) {
+       # At link time, preserve the global symbols specified in the .exports
+@@ -521,7 +524,7 @@ if (is_win) {
      args =
          [
            "-b",
 -          "${branding_path_component}_strings",
 +          _strings_file,
            "-v",
-           rebase_path(chrome_version_file, root_build_dir),
+           chrome_version_full,
            "-g",
-@@ -820,7 +833,7 @@ if (is_win) {
-       # framework itself, that would cause a cyclical dependency. Instead,
+@@ -590,6 +593,7 @@ if (is_win) {
        # this dependency directly copies the file into the framework's
        # resources directory.
--      public_deps += [ ":chrome_framework_widevine_signature" ]
-+      #public_deps += [ ":chrome_framework_widevine_signature" ]
+       public_deps += [ ":chrome_framework_widevine_signature" ]
++      public_deps -= [ ":chrome_framework_widevine_signature" ]
      }
    }
  
-@@ -1247,6 +1260,7 @@ if (is_win) {
-       "//services/service_manager/embedder",
-       "//third_party/cld_3/src/src:cld_3",
+@@ -622,9 +626,11 @@ if (is_win) {
+       "--scm=0",
      ]
-+    deps += [ "//components/unified_consent" ]
+   }
++  copy("brave_helper_plist") { deps = [ "//brave:brave_helper_plist" ] sources = [ "$root_gen_dir/brave/brave_helper_plist_tweaked.plist" ] outputs = [ "$root_gen_dir/chrome/{{source_file_part}}" ] }
  
-     if (is_component_build) {
-       libs = [ "Carbon.framework" ]
-@@ -1311,6 +1325,10 @@ if (is_win) {
+   compile_entitlements("entitlements") {
+     entitlements_templates = [ "app/app-entitlements.plist" ]
++    if (is_official_build) { entitlements_templates += [ "app/app-entitlements-chrome.plist" ] }
+     if (is_chrome_branded) {
+       # These entitlements are bound to the official Google Chrome signing
+       # certificate and will not necessarily work in any other build.
+@@ -645,7 +651,7 @@ if (is_win) {
+ 
+       output_name = chrome_helper_name + invoker.helper_name_suffix
+ 
+-      info_plist_target = ":chrome_helper_plist"
++      info_plist_target = ":brave_helper_plist"
+       extra_substitutions = [
+         "CHROMIUM_BUNDLE_ID=$chrome_mac_bundle_id",
+         "CHROMIUM_SHORT_NAME=$chrome_product_short_name",
+@@ -1045,6 +1051,7 @@ if (is_win) {
      if (is_chrome_branded) {
        deps += [ ":default_apps" ]
      }
-+    if (brave_chromium_build) {
-+      deps += [ "//brave:framework_bundle_data", ]
-+      if (defined(chrome_framework_version)) { framework_contents += [ "Frameworks", ] }
-+    }
++    deps += [ "//brave:framework_bundle_data" ] if (defined(chrome_framework_version)) { framework_contents += [ "Frameworks", ] }
  
      ldflags = [ "-Wl,-install_name,@executable_path/../Frameworks/$chrome_framework_name.framework/Versions/$chrome_version_full/$chrome_framework_name" ]
  
-@@ -1475,6 +1493,7 @@ if (is_win) {
+@@ -1206,6 +1213,7 @@ if (is_win) {
  
  group("browser_dependencies") {
    public_deps = [
 +    "//brave:browser_dependencies",
-     "//chrome/browser",
-     "//chrome/common",
-     "//components/gwp_asan/buildflags",
-@@ -1547,13 +1566,14 @@ group("child_dependencies") {
+     "//build:branding_buildflags",
+     "//build:chromeos_buildflags",
+     "//chrome/app:shutdown_signal_handlers",
+@@ -1307,12 +1315,13 @@ group("child_dependencies") {
        # this is OK because all of content is linked into one library.
        "//content/browser",
      ]
@@ -112,13 +96,12 @@ index 0c52ff3c73580e38b2828fabdeb0e9c340428ca3..c99d78bb59960edf586b9079677dcbf0
  
  if (is_win) {
    process_version_rc_template("chrome_exe_version") {
-     sources = [
--      "app/chrome_exe.ver",
-+      "//brave/app/brave_exe.ver",
-     ]
+-    sources = [ "app/chrome_exe.ver" ]
++    sources = [ "//brave/app/brave_exe.ver" ]
      output = "$target_gen_dir/chrome_exe_version.rc"
    }
-@@ -1626,6 +1646,7 @@ group("resources") {
+ 
+@@ -1366,6 +1375,7 @@ group("resources") {
      "//chrome/browser:resources",
      "//chrome/common:resources",
      "//chrome/renderer:resources",
@@ -126,11 +109,3 @@ index 0c52ff3c73580e38b2828fabdeb0e9c340428ca3..c99d78bb59960edf586b9079677dcbf0
    ]
  }
  
-@@ -1882,6 +1903,7 @@ if (is_android) {
-       "//content/public/common:service_names",
-       "//services/service_manager/embedder",
-     ]
-+    deps += [ "//components/unified_consent" ]
- 
-     # Explicit dependency required for JNI registration to be able to
-     # find the native side functions.

@@ -5,86 +5,100 @@
 
 #include "bat/ads/confirmation_type.h"
 
+#include "bat/ads/internal/logging.h"
+
 namespace ads {
 
-static const char kConfirmationTypeClick[] = "click";
-static const char kConfirmationTypeDismiss[] = "dismiss";
-static const char kConfirmationTypeView[] = "view";
-static const char kConfirmationTypeLanded[] = "landed";
-static const char kConfirmationTypeFlag[] = "flag";
-static const char kConfirmationTypeUpvote[] = "upvote";
-static const char kConfirmationTypeDownvote[] = "downvote";
+namespace {
+
+// Do not change the following string values as they are used for persisting and
+// restoring state
+const char kUndefinedConfirmationType[] = "";
+const char kClickedConfirmationType[] = "click";
+const char kDismissedConfirmationType[] = "dismiss";
+const char kViewedConfirmationType[] = "view";
+const char kTransferredConfirmationType[] = "landed";
+const char kFlaggedConfirmationType[] = "flag";
+const char kUpvotedConfirmationType[] = "upvote";
+const char kDownvotedConfirmationType[] = "downvote";
+const char kConversionConfirmationType[] = "conversion";
+
+}  // namespace
 
 ConfirmationType::ConfirmationType(const std::string& value) {
-  if (value == kConfirmationTypeClick) {
-    value_ = CLICK;
-  } else if (value == kConfirmationTypeDismiss) {
-    value_ = DISMISS;
-  } else if (value == kConfirmationTypeView) {
-    value_ = VIEW;
-  } else if (value == kConfirmationTypeLanded) {
-    value_ = LANDED;
-  } else if (value == kConfirmationTypeFlag) {
-    value_ = FLAG;
-  } else if (value == kConfirmationTypeUpvote) {
-    value_ = UPVOTE;
-  } else if (value == kConfirmationTypeDownvote) {
-    value_ = DOWNVOTE;
+  if (value == kUndefinedConfirmationType) {
+    value_ = kUndefined;
+  } else if (value == kClickedConfirmationType) {
+    value_ = kClicked;
+  } else if (value == kDismissedConfirmationType) {
+    value_ = kDismissed;
+  } else if (value == kViewedConfirmationType) {
+    value_ = kViewed;
+  } else if (value == kTransferredConfirmationType) {
+    value_ = kTransferred;
+  } else if (value == kFlaggedConfirmationType) {
+    value_ = kFlagged;
+  } else if (value == kUpvotedConfirmationType) {
+    value_ = kUpvoted;
+  } else if (value == kDownvotedConfirmationType) {
+    value_ = kDownvoted;
+  } else if (value == kConversionConfirmationType) {
+    value_ = kConversion;
   } else {
-    value_ = UNKNOWN;
+    NOTREACHED();
   }
 }
 
-bool ConfirmationType::IsSupported() const {
-  return value_ != UNKNOWN;
-}
-
-int ConfirmationType::value() const {
+ConfirmationType::Value ConfirmationType::value() const {
   return value_;
 }
 
 ConfirmationType::operator std::string() const {
   switch (value_) {
-    case UNKNOWN: {
-      return "";
+    case kUndefined: {
+      return kUndefinedConfirmationType;
     }
 
-    case CLICK: {
-      return kConfirmationTypeClick;
+    case kClicked: {
+      return kClickedConfirmationType;
     }
 
-    case DISMISS: {
-      return kConfirmationTypeDismiss;
+    case kDismissed: {
+      return kDismissedConfirmationType;
     }
 
-    case VIEW: {
-      return kConfirmationTypeView;
+    case kViewed: {
+      return kViewedConfirmationType;
     }
 
-    case LANDED: {
-      return kConfirmationTypeLanded;
+    case kTransferred: {
+      return kTransferredConfirmationType;
     }
 
-    case FLAG: {
-      return kConfirmationTypeFlag;
+    case kFlagged: {
+      return kFlaggedConfirmationType;
     }
 
-    case UPVOTE: {
-      return kConfirmationTypeUpvote;
+    case kUpvoted: {
+      return kUpvotedConfirmationType;
     }
 
-    case DOWNVOTE: {
-      return kConfirmationTypeDownvote;
+    case kDownvoted: {
+      return kDownvotedConfirmationType;
+    }
+
+    case kConversion: {
+      return kConversionConfirmationType;
     }
   }
 }
 
-bool ConfirmationType::operator==(ConfirmationType type) const {
-  return value_ == type.value_;
+bool ConfirmationType::operator==(const ConfirmationType& rhs) const {
+  return value_ == rhs.value_;
 }
 
-bool ConfirmationType::operator!=(ConfirmationType type) const {
-  return value_ != type.value_;
+bool ConfirmationType::operator!=(const ConfirmationType& rhs) const {
+  return value_ != rhs.value_;
 }
 
 }  // namespace ads

@@ -6,31 +6,36 @@
 #ifndef BRAVE_COMPONENTS_BRAVE_ADS_BROWSER_NOTIFICATION_HELPER_MAC_H_
 #define BRAVE_COMPONENTS_BRAVE_ADS_BROWSER_NOTIFICATION_HELPER_MAC_H_
 
-#include "base/macros.h"
-#include "base/memory/singleton.h"
 #include "base/memory/weak_ptr.h"
 
 #include "brave/components/brave_ads/browser/notification_helper.h"
 
 namespace brave_ads {
 
-class NotificationHelperMac :
-    public NotificationHelper,
-    public base::SupportsWeakPtr<NotificationHelperMac> {
+class NotificationHelperMac
+    : public NotificationHelper,
+      public base::SupportsWeakPtr<NotificationHelperMac> {
  public:
+  NotificationHelperMac(const NotificationHelperMac&) = delete;
+  NotificationHelperMac& operator=(const NotificationHelperMac&) = delete;
+
+  static NotificationHelperMac* GetInstanceImpl();
+
+ private:
+  friend struct base::DefaultSingletonTraits<NotificationHelperMac>;
+
   NotificationHelperMac();
   ~NotificationHelperMac() override;
 
-  static NotificationHelperMac* GetInstance();
+  bool IsEnabled() const;
+  bool IsAuthorized() const;
 
- private:
   // NotificationHelper impl
-  bool ShouldShowNotifications() const override;
+  bool ShouldShowNotifications() override;
 
-  bool ShowMyFirstAdNotification() const override;
+  bool ShowMyFirstAdNotification() override;
 
-  friend struct base::DefaultSingletonTraits<NotificationHelperMac>;
-  DISALLOW_COPY_AND_ASSIGN(NotificationHelperMac);
+  bool CanShowBackgroundNotifications() const override;
 };
 
 }  // namespace brave_ads

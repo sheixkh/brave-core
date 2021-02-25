@@ -88,7 +88,7 @@ void TrackingProtectionService::SetStartingSiteForRenderFrame(
 GURL TrackingProtectionService::GetStartingSiteForRenderFrame(
     int render_process_id,
     int render_frame_id) const {
-  DCHECK_CURRENTLY_ON(BrowserThread::IO);
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
   const RenderFrameIdKey key(render_process_id, render_frame_id);
   auto iter = render_frame_key_to_starting_site_url.find(key);
   if (iter != render_frame_key_to_starting_site_url.end()) {
@@ -122,9 +122,8 @@ void TrackingProtectionService::DeleteRenderFrameKey(int render_process_id,
 bool TrackingProtectionService::ShouldStoreState(HostContentSettingsMap* map,
                                                  int render_process_id,
                                                  int render_frame_id,
-                                                 const GURL& top_origin_url,
                                                  const GURL& origin_url) const {
-  DCHECK_CURRENTLY_ON(BrowserThread::IO);
+  DCHECK_CURRENTLY_ON(BrowserThread::UI);
   if (!IsSmartTrackingProtectionEnabled()) {
     return true;
   }
@@ -172,12 +171,11 @@ void TrackingProtectionService::OnGetSTPDATFileData(std::string contents) {
     return;
   }
 
-  base::PostTaskWithTraits(
+  base::PostTask(
       FROM_HERE, {BrowserThread::IO},
       base::BindOnce(
           &TrackingProtectionService::UpdateFirstPartyStorageTrackers,
-          weak_factory_io_thread_.GetWeakPtr(),
-          std::move(storage_trackers)));
+          weak_factory_io_thread_.GetWeakPtr(), std::move(storage_trackers)));
 }
 
 void TrackingProtectionService::UpdateFirstPartyStorageTrackers(
@@ -190,7 +188,6 @@ void TrackingProtectionService::UpdateFirstPartyStorageTrackers(
 bool TrackingProtectionService::ShouldStoreState(HostContentSettingsMap* map,
                                                  int render_process_id,
                                                  int render_frame_id,
-                                                 const GURL& top_origin_url,
                                                  const GURL& origin_url) const {
   return true;
 }
@@ -198,11 +195,9 @@ bool TrackingProtectionService::ShouldStoreState(HostContentSettingsMap* map,
 
 bool TrackingProtectionService::ShouldStartRequest(
     const GURL& url,
-    content::ResourceType resource_type,
+    blink::mojom::ResourceType resource_type,
     const std::string& tab_host,
-    bool* matching_exception_filter,
-    bool* cancel_request_explicitly,
-    std::string* redirect) {
+    bool* matching_exception_filter) {
   DCHECK_CURRENTLY_ON(BrowserThread::IO);
   // There are no exceptions in the TP service, but exceptions are
   // combined with brave/ad-block.

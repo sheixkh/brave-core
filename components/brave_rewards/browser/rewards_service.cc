@@ -43,23 +43,57 @@ void RewardsService::RemoveObserver(RewardsServiceObserver* observer) {
 
 // static
 void RewardsService::RegisterProfilePrefs(PrefRegistrySimple* registry) {
-  registry->RegisterStringPref(prefs::kRewardsNotifications, "");
-  registry->RegisterTimeDeltaPref(prefs::kRewardsNotificationTimerInterval,
+  registry->RegisterStringPref(prefs::kNotifications, "");
+  registry->RegisterTimeDeltaPref(prefs::kNotificationTimerInterval,
                                   base::TimeDelta::FromDays(1));
-  registry->RegisterTimeDeltaPref(prefs::kRewardsBackupNotificationFrequency,
-                                  base::TimeDelta::FromDays(7));
-  registry->RegisterTimeDeltaPref(prefs::kRewardsBackupNotificationInterval,
-                                  base::TimeDelta::FromDays(7));
-  registry->RegisterTimeDeltaPref(prefs::kRewardsNotificationStartupDelay,
+  registry->RegisterTimeDeltaPref(prefs::kBackupNotificationInterval,
+                                  base::TimeDelta::FromDays(30));
+  registry->RegisterTimeDeltaPref(prefs::kNotificationStartupDelay,
                                   base::TimeDelta::FromSeconds(30));
-  registry->RegisterBooleanPref(prefs::kRewardsBackupSucceeded, false);
-  registry->RegisterBooleanPref(prefs::kRewardsUserHasFunded, false);
-  registry->RegisterTimePref(prefs::kRewardsAddFundsNotification, base::Time());
-  registry->RegisterBooleanPref(prefs::kBraveRewardsEnabled, false);
-  registry->RegisterBooleanPref(prefs::kBraveRewardsEnabledMigrated, false);
-  registry->RegisterDictionaryPref(prefs::kRewardsExternalWallets);
-  registry->RegisterUint64Pref(prefs::kStateServerPublisherListStamp, 0ull);
-  registry->RegisterStringPref(prefs::kStateUpholdAnonAddress, "");
+  registry->RegisterBooleanPref(prefs::kBackupSucceeded, false);
+  registry->RegisterBooleanPref(prefs::kUserHasFunded, false);
+  registry->RegisterTimePref(prefs::kAddFundsNotification, base::Time());
+  registry->RegisterBooleanPref(prefs::kEnabled, false);
+  registry->RegisterDictionaryPref(prefs::kExternalWallets);
+  registry->RegisterUint64Pref(prefs::kServerPublisherListStamp, 0ull);
+  registry->RegisterStringPref(prefs::kUpholdAnonAddress, "");
+  registry->RegisterStringPref(prefs::kBadgeText, "1");
+#if defined(OS_ANDROID)
+  registry->RegisterBooleanPref(prefs::kUseRewardsStagingServer, false);
+#endif
+  registry->RegisterTimePref(prefs::kOnboarded, base::Time());
+  registry->RegisterUint64Pref(prefs::kPromotionLastFetchStamp, 0ull);
+  registry->RegisterBooleanPref(prefs::kPromotionCorruptedMigrated, false);
+  registry->RegisterBooleanPref(prefs::kAnonTransferChecked, false);
+  registry->RegisterIntegerPref(prefs::kVersion, 0);
+  registry->RegisterIntegerPref(prefs::kMinVisitTime, 8);
+  registry->RegisterIntegerPref(prefs::kMinVisits, 1);
+  registry->RegisterBooleanPref(prefs::kAllowNonVerified, true);
+  registry->RegisterBooleanPref(prefs::kAllowVideoContribution, true);
+  registry->RegisterDoublePref(prefs::kScoreA, 0.0);
+  registry->RegisterDoublePref(prefs::kScoreB, 0.0);
+  registry->RegisterBooleanPref(prefs::kAutoContributeEnabled, false);
+  registry->RegisterDoublePref(prefs::kAutoContributeAmount, 0.0);
+  registry->RegisterUint64Pref(prefs::kNextReconcileStamp, 0ull);
+  registry->RegisterUint64Pref(prefs::kCreationStamp, 0ull);
+  registry->RegisterStringPref(prefs::kRecoverySeed, "");
+  registry->RegisterStringPref(prefs::kPaymentId, "");
+  registry->RegisterBooleanPref(prefs::kInlineTipRedditEnabled, true);
+  registry->RegisterBooleanPref(prefs::kInlineTipTwitterEnabled, true);
+  registry->RegisterBooleanPref(prefs::kInlineTipGithubEnabled, true);
+  registry->RegisterDoublePref(prefs::kParametersRate, 0.0);
+  registry->RegisterDoublePref(
+      prefs::kParametersAutoContributeChoice,
+      0.0);
+  registry->RegisterStringPref(
+      prefs::kParametersAutoContributeChoices,
+      "");
+  registry->RegisterStringPref(prefs::kParametersTipChoices, "");
+  registry->RegisterStringPref(prefs::kParametersMonthlyTipChoices, "");
+  registry->RegisterBooleanPref(prefs::kFetchOldBalance, true);
+  registry->RegisterBooleanPref(prefs::kEmptyBalanceChecked, false);
+  registry->RegisterStringPref(prefs::kWalletBrave, "");
+  registry->RegisterStringPref(prefs::kWalletUphold, "");
 }
 
 }  // namespace brave_rewards

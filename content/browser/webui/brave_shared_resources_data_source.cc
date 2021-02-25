@@ -17,9 +17,7 @@
 #include "base/memory/ref_counted_memory.h"
 #include "base/strings/string_piece.h"
 #include "base/strings/string_util.h"
-#include "base/task/post_task.h"
 #include "build/build_config.h"
-#include "content/public/browser/browser_task_traits.h"
 #include "content/public/browser/browser_thread.h"
 #include "content/public/common/content_client.h"
 #include "content/public/common/content_features.h"
@@ -46,7 +44,9 @@ const std::map<std::string, std::string> CreatePathPrefixAliasesMap() {
   // GRD:../../resources/web/blah/X.
   // See chromium's SharedResourcesDataSource for an example
   // Format is {"../../somewhere/in/src/tree/", "request/path" }
-  std::map<std::string, std::string> aliases = { };
+  std::map<std::string, std::string> aliases = {
+      {"@out_folder@/gen/brave/ui/webui/resources/", ""},
+  };
   return aliases;
 }
 
@@ -108,9 +108,10 @@ std::string BraveSharedResourcesDataSource::GetSource() {
 }
 
 void BraveSharedResourcesDataSource::StartDataRequest(
-    const std::string& path,
-    const content::ResourceRequestInfo::WebContentsGetter& wc_getter,
-    const content::URLDataSource::GotDataCallback& callback) {
+    const GURL& url,
+    const content::WebContents::Getter& wc_getter,
+    content::URLDataSource::GotDataCallback callback) {
+  const std::string path = URLDataSource::URLToRequestPath(url);
   int idr = GetIdrForPath(path);
   DCHECK_NE(-1, idr) << " path: " << path;
   scoped_refptr<base::RefCountedMemory> bytes;
@@ -118,9 +119,9 @@ void BraveSharedResourcesDataSource::StartDataRequest(
   // Cannot access GetContentClient() from here as that is //content/public
   // only. Therefore, cannot access ContentClient::GetDataResourceBytes,
   // so go to the bundle directly. This will work for all content clients apart
-  // from in a test environment, where this shoudl be mocked.
+  // from in a test environment, where this should be mocked.
   bytes = ui::ResourceBundle::GetSharedInstance().LoadDataResourceBytes(idr);
-  callback.Run(bytes.get());
+  std::move(callback).Run(bytes.get());
 }
 
 bool BraveSharedResourcesDataSource::AllowCaching() {
@@ -166,18 +167,15 @@ std::string BraveSharedResourcesDataSource::GetMimeType(
   if (extension == "woff2")
     return "application/font-woff2";
 
+  if (extension == "ttf")
+    return "font/ttf";
+
   NOTREACHED() << path;
   return "text/plain";
 }
 
 bool BraveSharedResourcesDataSource::ShouldServeMimeTypeAsContentTypeHeader() {
   return true;
-}
-
-scoped_refptr<base::SingleThreadTaskRunner>
-BraveSharedResourcesDataSource::TaskRunnerForRequestPath(
-    const std::string& path) {
-  return nullptr;
 }
 
 std::string
@@ -194,13 +192,6 @@ BraveSharedResourcesDataSource::GetAccessControlAllowOriginForOrigin(
     return "null";
   }
   return origin;
-}
-
-bool BraveSharedResourcesDataSource::IsGzipped(const std::string& path) {
-  // Cannot access GetContentClient() from here as that is //content/public
-  // only. Therefore cannot access ContentClient::IsDataResourceGzipped, so go
-  // to the bundle directly.
-  return ui::ResourceBundle::GetSharedInstance().IsGzipped(GetIdrForPath(path));
 }
 
 }  // namespace brave_content

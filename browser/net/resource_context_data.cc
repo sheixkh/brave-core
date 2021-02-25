@@ -12,6 +12,7 @@
 #include "brave/browser/net/brave_proxying_web_socket.h"
 #include "brave/browser/net/brave_request_handler.h"
 #include "content/public/browser/browser_context.h"
+#include "net/cookies/site_for_cookies.h"
 
 // User data key for ResourceContextData.
 const void* const kResourceContextUserDataKey = &kResourceContextUserDataKey;
@@ -59,9 +60,10 @@ void ResourceContextData::StartProxying(
 BraveProxyingWebSocket* ResourceContextData::StartProxyingWebSocket(
     content::ContentBrowserClient::WebSocketFactory factory,
     const GURL& url,
-    const GURL& site_for_cookies,
+    const net::SiteForCookies& site_for_cookies,
     const base::Optional<std::string>& user_agent,
-    network::mojom::WebSocketHandshakeClientPtrInfo handshake_client,
+    mojo::PendingRemote<network::mojom::WebSocketHandshakeClient>
+        handshake_client,
     content::BrowserContext* browser_context,
     int render_process_id,
     int frame_id,
@@ -93,12 +95,11 @@ BraveProxyingWebSocket* ResourceContextData::StartProxyingWebSocket(
   request.render_frame_id = frame_id;
 
   auto proxy = std::make_unique<BraveProxyingWebSocket>(
-      std::move(factory), request,
-      network::mojom::WebSocketHandshakeClientPtr(std::move(handshake_client)),
+      std::move(factory), request, std::move(handshake_client),
       render_process_id, frame_tree_node_id, browser_context,
       self->request_id_generator_, self->request_handler_.get(),
       base::BindOnce(&ResourceContextData::RemoveProxyWebSocket,
-                          self->weak_factory_.GetWeakPtr()));
+                     self->weak_factory_.GetWeakPtr()));
 
   auto* raw_proxy = proxy.get();
   self->websocket_proxies_.emplace(std::move(proxy));
